@@ -105,8 +105,8 @@ public class FieldCentricDrive {
      */
     static boolean isInDeadzone(Gamepad gamepad)
     {
-        return Math.abs(gamepad.left_stick_x) < CONTROLLER_DEADZONE &&
-                Math.abs(gamepad.left_stick_y) < CONTROLLER_DEADZONE;
+        return Math.abs(gamepad.right_stick_x) < CONTROLLER_DEADZONE &&
+                Math.abs(gamepad.right_stick_y) < CONTROLLER_DEADZONE;
     }
 
     public void telemetry(Telemetry telemetry) {
