@@ -15,6 +15,11 @@ public abstract class NanoClock {
             public double seconds() {
                 return System.nanoTime() / 1e9;
             }
+
+            @Override
+            public double millis() {
+                return System.currentTimeMillis();
+            }
         };
     }
 
@@ -22,4 +27,9 @@ public abstract class NanoClock {
      * Returns the number of seconds since an arbitrary (yet consistent) origin.
      */
     public abstract double seconds();
+
+    /**
+     * Returns the number of milliseconds since an arbitrary (yet consistent) origin.
+     */
+    public abstract  double millis();
 }
