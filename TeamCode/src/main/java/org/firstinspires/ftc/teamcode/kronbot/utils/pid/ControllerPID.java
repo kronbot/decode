@@ -33,7 +33,7 @@ public class ControllerPID {
         return (kP * error) + (kI * integral) + (kD * derivative);
     }
 
-    private void reset()
+    public void reset()
     {
         lastError = 0;
         integral = 0;

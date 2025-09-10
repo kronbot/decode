@@ -64,6 +64,12 @@ public class FieldCentricDrive {
         double r = pidController.calculate(0, rotError) / 180;
         r = Math.clamp(r, -1.0, 1.0);
 
+        if(isInDeadzone(gamepad))
+        {
+            r = 0;
+            pidController.reset();
+        }
+
         double normalizer = Math.max(Math.abs(rotatedX) + Math.abs(rotatedY) + Math.abs(r), 1.0);
 
         double leftFrontPower = (rotatedY + rotatedX + r) / normalizer;
