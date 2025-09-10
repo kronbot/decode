@@ -6,8 +6,6 @@ import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ROBOT_SPEED
 
 import com.acmerobotics.dashboard.config.Config;
 
-import com.pedropathing.control.PIDFCoefficients;
-import com.pedropathing.control.PIDFController;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
