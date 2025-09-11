@@ -27,8 +27,11 @@ public class FieldCentricDrive {
     double rotatedY = 0;
 
     double angleOffset = 0.0;
+    double joystickAngleDeg;
+    boolean wasInDeadzone = false;
 
-    ControllerPID pidController = new ControllerPID(1, 0, 1);
+
+    ControllerPID pidController = new ControllerPID(1.8, 0.5, 0.1);
 
     public FieldCentricDrive(KronBot robot, Gamepad gamepad) {
         this.robot = robot;
@@ -42,11 +45,12 @@ public class FieldCentricDrive {
         double rotX = gamepad.right_stick_x;
         double rotY = gamepad.right_stick_y;
         // ToDo: test getHeading() and angleOffset positive and negative combos
-        double robotOrientation = -robot.gyroscope.getHeading() + angleOffset;
+        double heading = robot.gyroscope.getHeading();
+        double robotOrientation = heading + angleOffset;
 
         // Rotation matrix
-        rotatedX = x * Math.cos(robotOrientation) - y * Math.sin(robotOrientation);
-        rotatedY = x * Math.sin(robotOrientation) + y * Math.cos(robotOrientation);
+        rotatedX = x * Math.cos(Math.toRadians(-heading)) - y * Math.sin(Math.toRadians(-heading));
+        rotatedY = x * Math.sin(Math.toRadians(-heading)) + y * Math.cos(Math.toRadians(-heading));
 
         // Filter gamepad joystick inputs
         rotatedX = addons(rotatedX);
@@ -55,18 +59,40 @@ public class FieldCentricDrive {
         rotX = addons(rotX);
         rotY = addons(rotY);
 
-        double joystickAngleDeg = Math.toDegrees(Math.atan2(rotY, rotX));
+        if(isInDeadzone(gamepad))
+        {
+            if(!wasInDeadzone)
+            {
+                wasInDeadzone = true;
+                joystickAngleDeg = -heading;
+                pidController.reset();
+            }
+        }
+        else
+        {
+            if(wasInDeadzone)
+                wasInDeadzone = false;
 
-        double rotError = normalizeAngle(joystickAngleDeg - robotOrientation);
+            joystickAngleDeg = Math.toDegrees(Math.atan2(rotX, -rotY));
+        }
 
-        double r = pidController.calculate(0, rotError) / 180;
+        double rotError = normalizeAngle(joystickAngleDeg + robotOrientation);
+
+        double r = pidController.calculate(0, -rotError) / 180;
         r = Math.clamp(r, -1.0, 1.0);
 
-        if(isInDeadzone(gamepad))
+        if(Math.abs(rotError) < 2)
         {
             r = 0;
             pidController.reset();
         }
+
+        //r = 0;
+
+        //double rotPower = Math.abs(r);
+        //double movPower = Math.abs(rotatedX) + Math.abs(rotatedY);
+
+
 
         double normalizer = Math.max(Math.abs(rotatedX) + Math.abs(rotatedY) + Math.abs(r), 1.0);
 
@@ -76,7 +102,7 @@ public class FieldCentricDrive {
         double rightFrontPower = (rotatedY - rotatedX - r) / normalizer;
 
         robot.motors.leftFront.setPower(leftFrontPower);
-        robot.motors.leftRear.setPower(leftRearPower);
+        robot.motors.leftRear.setPower(-leftRearPower);
         robot.motors.rightRear.setPower(rightRearPower);
         robot.motors.rightFront.setPower(rightFrontPower);
     }
@@ -113,7 +139,7 @@ public class FieldCentricDrive {
         telemetry.addLine("---FIELD CENTRIC DRIVE---");
 
         telemetry.addData("Speed Multiplier", ROBOT_SPEED);
-        telemetry.addData("Robot Angle", robot.gyroscope.getHeading());
+        telemetry.addData("Robot Angle", robot.gyroscope.getHeading() + angleOffset);
 
         telemetry.addData("rotatedX", rotatedX);
         telemetry.addData("rotatedY", rotatedY);
@@ -139,8 +165,9 @@ public class FieldCentricDrive {
      * initialised orientation). <br><br>
      * Can be called in Init or during TeleOp
      */
-    public void setOrientationOffset(double offset) {
+    public void calibrateOrientation() {
         // This should automatically clamp offset to [-180, 180], worked on w3schools
-        angleOffset = Math.IEEEremainder(offset, 360);
+        angleOffset -= robot.gyroscope.getHeading() + angleOffset;
+        joystickAngleDeg = 0;
     }
 }

@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 import org.firstinspires.ftc.teamcode.kronbot.KronBot;
 import org.firstinspires.ftc.teamcode.kronbot.utils.components.FieldCentricDrive;
 import org.firstinspires.ftc.teamcode.kronbot.utils.Constants;
+import org.firstinspires.ftc.teamcode.kronbot.utils.wrappers.Button;
 
 /**
  * A test TeleOP program for the new Field Centric Driving
@@ -21,6 +22,8 @@ public class NewFieldCentricExOp extends LinearOpMode {
 
     Gamepad drivingGamepad;
 
+    Button recalibrateBut = new Button();
+
     @Override
     public void runOpMode() throws InterruptedException {
         robot.initSimpleDriving(hardwareMap);
@@ -29,17 +32,23 @@ public class NewFieldCentricExOp extends LinearOpMode {
 
         fieldCentricDrive = new FieldCentricDrive(robot, drivingGamepad);
 
-        fieldCentricDrive.setOrientationOffset(0);
 
         while (!isStopRequested() && !opModeIsActive()) {
             telemetry.addLine("Initialization Ready");
             telemetry.update();
         }
 
+
         if (isStopRequested()) return;
 
         while (opModeIsActive() && !isStopRequested()) {
+            recalibrateBut.updateButton(gamepad1.square);
+            recalibrateBut.shortPress();
 
+            if(gamepad1.square)
+            {
+                fieldCentricDrive.calibrateOrientation();
+            }
 
             fieldCentricDrive.run();
             fieldCentricDrive.telemetry(telemetry);
