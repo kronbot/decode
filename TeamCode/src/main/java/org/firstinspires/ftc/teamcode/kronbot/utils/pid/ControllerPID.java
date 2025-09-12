@@ -14,6 +14,7 @@ public class ControllerPID {
         this.kP = kP;
         this.kI = kI;
         this.kD = kD;
+        reset();
     }
 
     double lastError = 0;
@@ -36,6 +37,13 @@ public class ControllerPID {
         lastReference = reference;
 
         return (kP * error) + (kI * integral) + (kD * derivative);
+    }
+
+    public void reset()
+    {
+        lastError = 0;
+        integral = 0;
+        timer.reset();
     }
 
     boolean started = false;

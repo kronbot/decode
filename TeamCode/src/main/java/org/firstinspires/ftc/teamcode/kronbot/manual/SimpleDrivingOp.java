@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 
 import org.firstinspires.ftc.teamcode.kronbot.KronBot;
 import org.firstinspires.ftc.teamcode.kronbot.utils.components.FieldCentricDrive;
+import org.firstinspires.ftc.teamcode.kronbot.utils.components.FieldCentricDriveAbsolute;
 import org.firstinspires.ftc.teamcode.kronbot.utils.components.RobotCentricDrive;
 import org.firstinspires.ftc.teamcode.kronbot.utils.Constants;
 import org.firstinspires.ftc.teamcode.kronbot.utils.wrappers.Button;
@@ -21,6 +22,7 @@ public class SimpleDrivingOp extends LinearOpMode {
 
     RobotCentricDrive robotCentricDrive;
     FieldCentricDrive fieldCentricDrive;
+    FieldCentricDriveAbsolute fieldCentricDriveAbsolute;
 
     Gamepad drivingGamepad;
 
@@ -32,9 +34,11 @@ public class SimpleDrivingOp extends LinearOpMode {
 
         robotCentricDrive = new RobotCentricDrive(robot, drivingGamepad);
         fieldCentricDrive = new FieldCentricDrive(robot, drivingGamepad);
+        fieldCentricDriveAbsolute = new FieldCentricDriveAbsolute(robot, drivingGamepad);
 
         Button driveModeButton = new Button();
         Button reverseButton = new Button();
+        Button ungureanuButton = new Button();
 
         while (!isStopRequested() && !opModeIsActive()) {
             telemetry.addLine("Initialization Ready");
@@ -51,7 +55,14 @@ public class SimpleDrivingOp extends LinearOpMode {
             reverseButton.updateButton(drivingGamepad.circle);
             reverseButton.shortPress();
             robotCentricDrive.setReverse(reverseButton.getShortToggle());
-            if (!driveModeButton.getLongToggle()) {
+
+            ungureanuButton.updateButton(drivingGamepad.triangle);
+            ungureanuButton.shortPress();
+
+            if (ungureanuButton.getShortToggle()) {
+                fieldCentricDriveAbsolute.run();
+                fieldCentricDriveAbsolute.telemetry(telemetry);
+            } else if (!driveModeButton.getLongToggle()) {
                 robotCentricDrive.run();
                 robotCentricDrive.telemetry(telemetry);
             } else {
