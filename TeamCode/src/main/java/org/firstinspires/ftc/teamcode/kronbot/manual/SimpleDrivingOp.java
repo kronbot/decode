@@ -60,6 +60,7 @@ public class SimpleDrivingOp extends LinearOpMode {
             ungureanuButton.shortPress();
 
             if (ungureanuButton.getShortToggle()) {
+                telemetry.addLine("plang");
                 fieldCentricDriveAbsolute.run();
                 fieldCentricDriveAbsolute.telemetry(telemetry);
             } else if (!driveModeButton.getLongToggle()) {

@@ -30,6 +30,9 @@ public class FieldCentricDriveAbsolute {
     double joystickAngleDeg;
     boolean wasInDeadzone = false;
 
+    boolean reverse = false;
+    boolean robotCentricMovement = true;
+
 
     ControllerPID pidController = new ControllerPID(1.8, 0.5, 0.1);
 
@@ -41,23 +44,37 @@ public class FieldCentricDriveAbsolute {
     public void run() {
         robot.gyroscope.updateOrientation();
         double x = gamepad.left_stick_x;
-        double y = -gamepad.left_stick_y;
+        double y = gamepad.left_stick_y;
         double rotX = gamepad.right_stick_x;
         double rotY = gamepad.right_stick_y;
-        // ToDo: test getHeading() and angleOffset positive and negative combos
+
         double heading = robot.gyroscope.getHeading();
         double robotOrientation = heading + angleOffset;
 
-        // Rotation matrix
-        rotatedX = x * Math.cos(Math.toRadians(-heading)) - y * Math.sin(Math.toRadians(-heading));
-        rotatedY = x * Math.sin(Math.toRadians(-heading)) + y * Math.cos(Math.toRadians(-heading));
+        if(reverse)
+        {
+            x *= -1;
+            y *= -1;
+        }
+
+        if(robotCentricMovement) {
+            rotatedX = x;
+            rotatedY = y;
+        }
+        else {
+            // Rotation matrix
+            /// Doesn't work sometimes, don't know why.
+            rotatedX = x * Math.cos(Math.toRadians(-heading)) - y * Math.sin(Math.toRadians(-heading));
+            rotatedY = x * Math.sin(Math.toRadians(-heading)) + y * Math.cos(Math.toRadians(-heading));
+        }
+
 
         // Filter gamepad joystick inputs
         rotatedX = addons(rotatedX);
         rotatedY = addons(rotatedY);
         // Only used for these two for the deadzone
-        rotX = addons(rotX);
-        rotY = addons(rotY);
+        double rotXc = addons(rotX);
+        double rotYc = addons(rotY);
 
         if(isInDeadzone(gamepad))
         {
@@ -73,15 +90,22 @@ public class FieldCentricDriveAbsolute {
             if(wasInDeadzone)
                 wasInDeadzone = false;
 
-            joystickAngleDeg = Math.toDegrees(Math.atan2(rotX, -rotY));
+            joystickAngleDeg = Math.toDegrees(Math.atan2(rotXc, -rotYc));
         }
+        double rotError;
 
-        double rotError = normalizeAngle(joystickAngleDeg + robotOrientation);
+        if(reverse) // ToDo: Make sure this works
+            rotError = normalizeAngle(joystickAngleDeg + robotOrientation + 180);
+        else
+            rotError = normalizeAngle(joystickAngleDeg + robotOrientation);
+
+        // The robot should hopefully rotate slower when pushing the joystick less
+        rotError *= joystickPower(rotX, rotY);
 
         double r = pidController.calculate(0, -rotError) / 180;
-        r = Math.clamp(r, -1.0, 1.0);
+        r = Math.max(-1.0, Math.min(1.0, r));
 
-        if(Math.abs(rotError) < 2)
+        if(Math.abs(rotError) < 1.5)
         {
             r = 0;
             pidController.reset();
@@ -117,6 +141,15 @@ public class FieldCentricDriveAbsolute {
         return Math.signum(value) * poweredValue * ROBOT_SPEED; // ROBOT_SPEED should always be 1
     }
 
+    /**
+     * Returns the modulus of the joystick, squared
+     * (this means that the user has higher control at smaller modulus)
+     */
+    static double joystickPower(double x, double y)
+    {
+        return x * x + y * y;
+    }
+
     static double normalizeAngle(double angle)
     {
         angle = angle % 360;
@@ -125,14 +158,15 @@ public class FieldCentricDriveAbsolute {
         return angle;
     }
 
+
     /**
      *  Simple helper functon that returns true when left joystick is in deadzone. <br>
      *  (not normalized, since I reckon a square is a good enough approximation)
      */
     static boolean isInDeadzone(Gamepad gamepad)
     {
-        return Math.abs(gamepad.right_stick_x) < CONTROLLER_DEADZONE &&
-                Math.abs(gamepad.right_stick_y) < CONTROLLER_DEADZONE;
+        return Math.abs(gamepad.left_stick_x) < CONTROLLER_DEADZONE &&
+                Math.abs(gamepad.left_stick_y) < CONTROLLER_DEADZONE;
     }
 
     public void telemetry(Telemetry telemetry) {
@@ -170,4 +204,24 @@ public class FieldCentricDriveAbsolute {
         angleOffset -= robot.gyroscope.getHeading() + angleOffset;
         joystickAngleDeg = 0;
     }
+
+    /**
+     * Reverse what direction is forward, basically
+     */
+    public void setReverse(boolean reverse)
+    {
+        this.reverse = reverse;
+    }
+
+    /**
+     * If true, when moving the left joystick forward, the robot will move
+     * in it's forward direction.<br>
+     * If false, when moving the left joystick forward, the robot will move
+     * forward in the field (the same direction as when pointing forwards)
+     */
+    public void setDrivingMode(boolean mode)
+    {
+        robotCentricMovement = mode;
+    }
+
 }
