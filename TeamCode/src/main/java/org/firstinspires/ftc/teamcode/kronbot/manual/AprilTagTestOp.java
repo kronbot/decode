@@ -61,6 +61,10 @@ public class AprilTagTestOp extends LinearOpMode
                     telemetry.addLine(String.format("X: %.2f ft", detection.pose.x*FEET_PER_METER));
                     telemetry.addLine(String.format("Y: %.2f ft", detection.pose.y*FEET_PER_METER));
                     telemetry.addLine(String.format("Z: %.2f ft", detection.pose.z*FEET_PER_METER));
+
+                    telemetry.addLine(String.format("Rotation Yaw: %.2f degrees", Math.toDegrees(detection.pose.z)));
+                    telemetry.addLine(String.format("Rotation Pitch: %.2f degrees", Math.toDegrees(detection.pose.x)));
+                    telemetry.addLine(String.format("Rotation Roll: %.2f degrees", Math.toDegrees(detection.pose.y)));
                 }
             }
             else

@@ -21,9 +21,6 @@ public class MotorDriver {
         this.rightRear = rightRear;
         this.rightFront = rightFront;
 
-        this.rightRear.setDirection(DcMotorEx.Direction.REVERSE);
-        this.rightFront.setDirection(DcMotorEx.Direction.REVERSE);
-
         ArrayList<DcMotorEx> motors = new ArrayList<DcMotorEx>(Arrays.asList(leftRear, rightRear, leftFront, rightFront));
 
         for (DcMotorEx motor : motors) {
@@ -34,9 +31,9 @@ public class MotorDriver {
     }
 
     public void drive(double frontLeft, double frontRight, double backLeft, double backRight, double power) {
-        leftFront.setPower(-frontLeft * power);
+        leftFront.setPower(frontLeft * power);
         rightFront.setPower(frontRight * power);
-        leftRear.setPower(-backLeft * power);
+        leftRear.setPower(backLeft * power);
         rightRear.setPower(backRight * power);
     }
 }
