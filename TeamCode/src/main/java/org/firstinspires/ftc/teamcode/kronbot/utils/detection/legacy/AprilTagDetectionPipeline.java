@@ -29,13 +29,14 @@ public class AprilTagDetectionPipeline extends OpenCvPipeline
     // UNITS ARE PIXELS
     // NOTE: this calibration is for the C920 webcam at 800x448.
     // You will need to do your own calibration for other configurations!
-    public static double fx = 578.272;
-    public static double fy = 578.272;
-    public static double cx = 402.145;
-    public static double cy = 221.506;
+
+    public static double fx = 776.61;
+    public static double fy = 778.85;
+    public static double cx = 315.63;
+    public static double cy = 237.72;
 
     // UNITS ARE METERS
-    public static double TAG_SIZE = 0.166;
+    public static double TAG_SIZE = 0.165;
 
     // instance variables
 
@@ -103,9 +104,9 @@ public class AprilTagDetectionPipeline extends OpenCvPipeline
             Orientation rot = Orientation.getOrientation(detection.pose.R, AxesReference.INTRINSIC, AxesOrder.YXZ, AngleUnit.DEGREES);
 
             telemetry.addLine(String.format("\nDetected tag ID=%d", detection.id));
-            telemetry.addLine(String.format("Translation X: %.2f feet", detection.pose.x*FEET_PER_METER));
-            telemetry.addLine(String.format("Translation Y: %.2f feet", detection.pose.y*FEET_PER_METER));
-            telemetry.addLine(String.format("Translation Z: %.2f feet", detection.pose.z*FEET_PER_METER));
+            telemetry.addLine(String.format("Translation X: %.2f m", detection.pose.x));
+            telemetry.addLine(String.format("Translation Y: %.2f m", detection.pose.y));
+            telemetry.addLine(String.format("Translation Z: %.2f m", detection.pose.z));
 
             telemetry.addLine(String.format("Rotation Yaw: %.2f degrees", rot.firstAngle));
             telemetry.addLine(String.format("Rotation Pitch: %.2f degrees", rot.secondAngle));
