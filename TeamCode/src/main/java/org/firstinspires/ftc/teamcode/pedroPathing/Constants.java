@@ -11,11 +11,27 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-public class Constants {
-    public static FollowerConstants followerConstants = new FollowerConstants()
-            .mass(4);
+import java.sql.Time;
 
-    public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1);
+public class Constants {
+    public static final double TValue = 0.99;
+    public static final double Velocity = 0.1;
+    public static final double TimeoutConstraint = 100;
+
+    public static FollowerConstants followerConstants = new FollowerConstants()
+            .mass(4)
+            .forwardZeroPowerAcceleration(-25.9346931313679598)
+            .lateralZeroPowerAcceleration(-67.342491844080064);
+
+    public static PathConstraints pathConstraints = new PathConstraints(
+            TValue,
+            Velocity,
+            0.1,
+            0.009,
+            TimeoutConstraint,
+            1.25,
+            10,
+            1);
 
     public static MecanumConstants driveConstants = new MecanumConstants()
             .maxPower(1)
@@ -27,7 +43,11 @@ public class Constants {
             .leftFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
             .leftRearMotorDirection(DcMotorSimple.Direction.FORWARD)
             .rightFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
-            .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD);
+            .rightRearMotorDirection(DcMotorSimple.Direction.REVERSE)
+            /// ?
+            .xVelocity(78.261926752421046666666666666667)
+            .yVelocity(61.494551922189565);
+
 
     public static TwoWheelConstants localizerConstants = new TwoWheelConstants()
             .forwardEncoder_HardwareMapName("parallerOdometry")
@@ -38,12 +58,12 @@ public class Constants {
             .IMU_Orientation(
                     new RevHubOrientationOnRobot(
                             /// to be changed if needed
-                            RevHubOrientationOnRobot.LogoFacingDirection.UP,
-                            RevHubOrientationOnRobot.UsbFacingDirection.LEFT
+                            RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
+                            RevHubOrientationOnRobot.UsbFacingDirection.UP
                     )
             )
-            .forwardTicksToInches(1/307.699557) /// change
-            .strafeTicksToInches(1/307.699557) /// change
+            .forwardTicksToInches(1.0/307.699557) /// change
+            .strafeTicksToInches(1.0/307.699557) /// change
 
             ///  should not be necesarry
 //            .forwardEncoderDirection(Encoder.REVERSE)
