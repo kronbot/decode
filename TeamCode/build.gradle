@@ -32,6 +32,6 @@ dependencies {
     implementation project(':FtcRobotController')
     implementation 'com.acmerobotics.dashboard:dashboard:0.4.16'
     implementation 'com.android.extensions.xr:extensions-xr:1.0.0'
-    implementation 'com.github.FTC-PedroPathing:PedroPathing:v1.0.9'
+    implementation 'com.github.FTC-PedroPathing:PedroPathing:v2.0.0'
 
 }
