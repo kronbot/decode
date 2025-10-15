@@ -34,7 +34,8 @@ public class TestAuto extends LinearOpMode {
         Pose launchZone = coordinates(LaunchZone);
 
         follower.setStartingPose(startingPose);
-        PathChain pathChain = follower.pathBuilder()
+        //should move forward
+        PathChain pathChain1 = follower.pathBuilder()
                 .addPath(new BezierLine(startingPose, launchZone))
                 .setLinearHeadingInterpolation(startingPose.getHeading(), launchZone.getHeading())
                 .setBrakingStrength(1.3) //more precise but br br
@@ -46,11 +47,32 @@ public class TestAuto extends LinearOpMode {
         waitForStart();
 
         if(opModeIsActive()) {
-            follower.followPath(pathChain);
+            follower.followPath(pathChain1);
         }
 
         while (opModeIsActive() && !isStopRequested()) {
+
             follower.update();
+
+            Pose currentPose = follower.getPose();
+            double coordx = currentPose.getX();
+            double coordy = currentPose.getY();
+            currentPose.getHeading();
+
+            if(!follower.isBusy()) {
+                telemetry.addData("current coordx is: ", coordx);
+                telemetry.addData("current coordy is: ", coordy);
+                telemetry.addData("Heading", currentPose.getHeading());
+
+                telemetry.addLine("Path complete — running outtake");
+                robot.leftOuttake.setPower(1);
+                robot.rightOuttake.setPower(1);
+                sleep(4000);
+                robot.leftOuttake.setPower(0);
+                robot.rightOuttake.setPower(0);
+                break;
+            }
+
             telemetry.update();
         }
     }
