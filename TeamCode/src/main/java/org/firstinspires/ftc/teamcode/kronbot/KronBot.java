@@ -11,12 +11,19 @@ public class KronBot {
     public MotorDriver motors;
     public ControlHubGyroscope gyroscope;
 
+    public DcMotorEx leftOuttake;
+    public DcMotorEx rightOuttake;
+
     public void initMotors(HardwareMap hardwareMap) {
         DcMotorEx leftRear = hardwareMap.get(DcMotorEx.class, "leftRear");
         DcMotorEx leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
         DcMotorEx rightRear = hardwareMap.get(DcMotorEx.class, "rightRear");
         DcMotorEx rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
         rightRear.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        leftOuttake = hardwareMap.get(DcMotorEx.class, "leftOuttake");
+        rightOuttake = hardwareMap.get(DcMotorEx.class, "rightOuttake");
+
 
         motors = new MotorDriver();
         motors.init(leftRear, leftFront, rightRear, rightFront);
