@@ -50,7 +50,7 @@ public class Constants {
 
 
     public static TwoWheelConstants localizerConstants = new TwoWheelConstants()
-            .forwardEncoder_HardwareMapName("parallerOdometry")
+            .forwardEncoder_HardwareMapName("parallelOdometry")
             .strafeEncoder_HardwareMapName("perpendicularOdometry")
             .strafePodX(7.36) /// change
             .forwardPodY(7.36) /// change
@@ -58,7 +58,7 @@ public class Constants {
             .IMU_Orientation(
                     new RevHubOrientationOnRobot(
                             /// to be changed if needed
-                            RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
+                            RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
                             RevHubOrientationOnRobot.UsbFacingDirection.UP
                     )
             )

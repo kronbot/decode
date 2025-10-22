@@ -19,10 +19,16 @@ public final class AutonomousConstants {
         }
     }
 
-    public static Coordinates StartingPose = new Coordinates(10, 10, Math.toRadians(0));
-    public static Coordinates LaunchZone = new Coordinates(10, 25, Math.toRadians(0));
+    public static final Pose FIELD_CENTER = new Pose(0, 0, 0);
 
-    public static Pose coordinates(Coordinates coord) {
-        return new Pose(coord.x, coord.y, coord.heading);
+    public static Pose StartingPose = new Pose(0, 5, Math.toRadians(0));
+    public static Pose LaunchZone = new Pose(0, -5, Math.toRadians(0));
+
+    public static Pose coordinates(Pose relativePose) {
+        return new Pose(
+                FIELD_CENTER.getX() + relativePose.getX(),
+                FIELD_CENTER.getY() + relativePose.getY(),
+                FIELD_CENTER.getHeading() + relativePose.getHeading()
+        );
     }
 }
