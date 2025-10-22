@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.kronbot;
 
+
 import com.qualcomm.hardware.bosch.BHI260IMU;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -27,10 +28,20 @@ public class KronBot {
         leftOuttake = hardwareMap.get(DcMotorEx.class, "leftOuttake");
         rightOuttake = hardwareMap.get(DcMotorEx.class, "rightOuttake");
 
-        loaderServo = hardwareMap.get(Servo.class, "loaderServo");
 
         motors = new MotorDriver();
         motors.init(leftRear, leftFront, rightRear, rightFront);
+    }
+
+    public void initServos(HardwareMap hardwareMap) {
+
+        loaderServo = new Servo(hardwareMap);
+        loaderServo.init("loaderServo", true, false, 0, 0, 0);
+
+        loaderServo.setReversed(false);
+        loaderServo.runContinuous(false, false);
+
+
     }
 
     public void initIMU(HardwareMap hardwareMap) {
@@ -42,11 +53,13 @@ public class KronBot {
     public void initAutonomy(HardwareMap hardwareMap) {
         initMotors(hardwareMap);
         initIMU(hardwareMap);
+        initServos(hardwareMap);
     }
 
     public void initTeleop(HardwareMap hardwareMap) {
         initMotors(hardwareMap);
         initIMU(hardwareMap);
+        initServos(hardwareMap);
     }
 
     public void initSimpleDriving(HardwareMap hardwareMap) {

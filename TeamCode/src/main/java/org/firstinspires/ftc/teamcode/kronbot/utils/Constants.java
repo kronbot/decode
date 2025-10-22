@@ -36,5 +36,4 @@ public class Constants {
     public static LogoFacingDirection LOGO_FACING_DIRECTION = LogoFacingDirection.LEFT;
     public static UsbFacingDirection USB_FACING_DIRECTION = UsbFacingDirection.UP;
 
-    public static boolean LOADER_SERVO_REVERSED = false;
 }
