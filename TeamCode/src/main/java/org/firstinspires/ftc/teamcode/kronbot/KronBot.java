@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.teamcode.kronbot.utils.drivers.MotorDriver;
 import org.firstinspires.ftc.teamcode.kronbot.utils.wrappers.ControlHubGyroscope;
+import org.firstinspires.ftc.teamcode.kronbot.utils.wrappers.Servo;
 
 public class KronBot {
     public MotorDriver motors;
@@ -13,6 +14,8 @@ public class KronBot {
 
     public DcMotorEx leftOuttake;
     public DcMotorEx rightOuttake;
+
+    public Servo loaderServo;
 
     public void initMotors(HardwareMap hardwareMap) {
         DcMotorEx leftRear = hardwareMap.get(DcMotorEx.class, "leftRear");
@@ -24,6 +27,7 @@ public class KronBot {
         leftOuttake = hardwareMap.get(DcMotorEx.class, "leftOuttake");
         rightOuttake = hardwareMap.get(DcMotorEx.class, "rightOuttake");
 
+        loaderServo = hardwareMap.get(Servo.class, "loaderServo");
 
         motors = new MotorDriver();
         motors.init(leftRear, leftFront, rightRear, rightFront);

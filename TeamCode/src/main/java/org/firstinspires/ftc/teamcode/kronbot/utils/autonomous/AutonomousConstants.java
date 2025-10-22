@@ -7,18 +7,6 @@ import com.pedropathing.geometry.Pose;
 @Config
 public final class AutonomousConstants {
 
-    public static class Coordinates {
-        public double y;
-        public double x;
-        public double heading;
-
-        public Coordinates(double x, double y, double heading) {
-            this.x = x;
-            this.y = y;
-            this.heading = heading;
-        }
-    }
-
     public static final Pose FIELD_CENTER = new Pose(0, 0, 0);
 
     public static Pose StartingPose = new Pose(0, 5, Math.toRadians(0));
