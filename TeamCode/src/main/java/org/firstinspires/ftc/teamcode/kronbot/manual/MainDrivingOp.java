@@ -1,6 +1,9 @@
 package org.firstinspires.ftc.teamcode.kronbot.manual;
 
 
+
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.LOADER_SERVO_REVERSED;
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -53,11 +56,20 @@ public class MainDrivingOp extends LinearOpMode {
         while (opModeIsActive() && !isStopRequested()) {
             //Outtake
             if(gamepad1.left_bumper) {
-                robot.loaderServo.runContinuous(true, false);
+                if(!LOADER_SERVO_REVERSED)
+                    robot.loaderServo.setPosition(0);
+                else
+                    robot.loaderServo.setPosition(1);
             }
-            else if (!gamepad1.left_bumper && gamepad1.right_bumper) {
-                robot.loaderServo.runContinuous(false, true);
+            else {
+                double val = gamepad1.left_trigger;
+                if(!LOADER_SERVO_REVERSED)
+                    val = val / 2 + 0.5;
+                else
+                    val = 1 - (val / 2 + 0.5);
+                robot.loaderServo.setPosition(val);
             }
+
 
             if(!gamepad1.dpad_up) {
                 if(gamepad1.dpad_down) {

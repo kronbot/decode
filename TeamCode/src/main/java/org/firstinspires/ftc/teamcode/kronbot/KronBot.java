@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.kronbot;
 
 
+
 import com.qualcomm.hardware.bosch.BHI260IMU;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -34,14 +35,9 @@ public class KronBot {
     }
 
     public void initServos(HardwareMap hardwareMap) {
-
         loaderServo = new Servo(hardwareMap);
         loaderServo.init("loaderServo", true, false, 0, 0, 0);
-
-        loaderServo.setReversed(false);
         loaderServo.runContinuous(false, false);
-
-
     }
 
     public void initIMU(HardwareMap hardwareMap) {
