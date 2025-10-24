@@ -77,5 +77,9 @@ public class RobotCentricDrive {
         telemetry.addData("RightRear Power: ", robot.motors.rightRear.getPower());
         telemetry.addData("LeftFront Power: ", robot.motors.leftFront.getPower());
         telemetry.addData("RightFront Power: ", robot.motors.rightFront.getPower());
+
+        telemetry.addData("Stick Left X", gamepad.left_stick_x);
+        telemetry.addData("Stick Left Y", gamepad.left_stick_y);
+        telemetry.addData("Stick Right X", gamepad.right_stick_x);
     }
 }

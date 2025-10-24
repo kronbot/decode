@@ -71,8 +71,8 @@ public class MainDrivingOp extends LinearOpMode {
 
             if(!gamepad1.dpad_up) {
                 if(gamepad1.dpad_down) {
-                    robot.leftOuttake.setVelocity(1000);
-                    robot.rightOuttake.setVelocity(1000);
+                    robot.leftOuttake.setVelocity(2000);
+                    robot.rightOuttake.setVelocity(2000);
                 }
             }
             else {
@@ -82,10 +82,10 @@ public class MainDrivingOp extends LinearOpMode {
 
 
             // Wheels
-            driveModeButton.updateButton(drivingGamepad.square);
+            driveModeButton.updateButton(gamepad1.square);
             driveModeButton.longPress();
 
-            reverseButton.updateButton(drivingGamepad.circle);
+            reverseButton.updateButton(gamepad1.circle);
             reverseButton.shortPress();
 
             robotCentricDrive.setReverse(reverseButton.getShortToggle());

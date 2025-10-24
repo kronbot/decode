@@ -7,8 +7,8 @@ import com.pedropathing.geometry.Pose;
 @Config
 public final class AutonomousConstants {
     public static class Coordinates {
-        public double y;
         public double x;
+        public double y;
         public double heading;
 
         public Coordinates(double x, double y, double heading) {
@@ -21,7 +21,8 @@ public final class AutonomousConstants {
     public static final Pose FIELD_CENTER = new Pose(0, 0, 0);
 
     public static Coordinates StartingPose = new Coordinates(0, 0, 0);
-    public static Coordinates LaunchZone = new Coordinates(0, 0, 0);
+    public static Coordinates SpinPose = new Coordinates(0, 0, 3.15);
+    public static Coordinates LaunchZone = new Coordinates(30, 0, 0);
 
 //    public static Pose coordinates(Pose relativePose) {
 //        return new Pose(

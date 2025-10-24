@@ -63,15 +63,15 @@ public class Constants {
             .forwardTicksToInches(0.00294496)
             .strafeTicksToInches(0.0030090)
 
-//            .forwardEncoderDirection(Encoder.REVERSE)
-//            .forwardEncoderDirection(Encoder.REVERSE)
+            .forwardEncoderDirection(Encoder.REVERSE)
+            .strafeEncoderDirection(Encoder.FORWARD)
             ;
 
 
     public static Follower createFollower(HardwareMap hardwareMap) {
         return new FollowerBuilder(followerConstants, hardwareMap)
-                .pathConstraints(pathConstraints)
                 .mecanumDrivetrain(driveConstants)
+                .pathConstraints(pathConstraints)
                 .twoWheelLocalizer(localizerConstants)
                 .build();
     }

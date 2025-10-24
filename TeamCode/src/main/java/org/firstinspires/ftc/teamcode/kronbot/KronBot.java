@@ -33,10 +33,18 @@ public class KronBot {
 
         leftOuttake = hardwareMap.get(DcMotorEx.class, "leftOuttake");
         rightOuttake = hardwareMap.get(DcMotorEx.class, "rightOuttake");
+        leftOuttake.setDirection(DcMotorSimple.Direction.REVERSE);
 
 
         motors = new MotorDriver();
         motors.init(leftRear, leftFront, rightRear, rightFront);
+    }
+
+    public void initAutoMotors(HardwareMap hardwareMap) {
+        leftOuttake = hardwareMap.get(DcMotorEx.class, "leftOuttake");
+        rightOuttake = hardwareMap.get(DcMotorEx.class, "rightOuttake");
+        leftOuttake.setDirection(DcMotorSimple.Direction.REVERSE);
+
     }
 
     public void initServos(HardwareMap hardwareMap) {
@@ -59,8 +67,7 @@ public class KronBot {
     }
 
     public void initAutonomy(HardwareMap hardwareMap) {
-        initMotors(hardwareMap);
-        //initIMU2(hardwareMap);
+        initAutoMotors(hardwareMap);
         initServos(hardwareMap);
     }
 
