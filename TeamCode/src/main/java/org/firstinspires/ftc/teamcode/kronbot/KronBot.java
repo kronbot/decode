@@ -2,10 +2,15 @@ package org.firstinspires.ftc.teamcode.kronbot;
 
 
 
+import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
+
 import com.qualcomm.hardware.bosch.BHI260IMU;
+import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.kronbot.utils.drivers.MotorDriver;
 import org.firstinspires.ftc.teamcode.kronbot.utils.wrappers.ControlHubGyroscope;
 import org.firstinspires.ftc.teamcode.kronbot.utils.wrappers.Servo;
@@ -40,26 +45,33 @@ public class KronBot {
         loaderServo.runContinuous(false, false);
     }
 
-    public void initIMU(HardwareMap hardwareMap) {
-        BHI260IMU imu = hardwareMap.get(BHI260IMU.class, "imu");
+//    public void initIMU(HardwareMap hardwareMap) {
+//        BHI260IMU imu = hardwareMap.get(BHI260IMU.class, "imu");
+//        gyroscope = new ControlHubGyroscope(hardwareMap);
+//        gyroscope.init(imu);
+//    }
+
+    public void initIMU2(HardwareMap hardwareMap) {
+        BNO055IMU imu = hardwareMap.get(BNO055IMU.class, "imu");
         gyroscope = new ControlHubGyroscope(hardwareMap);
-        gyroscope.init(imu);
+        gyroscope.initExpansionIMU(imu);
+        gyroscope.updateOrientation();
     }
 
     public void initAutonomy(HardwareMap hardwareMap) {
         initMotors(hardwareMap);
-        initIMU(hardwareMap);
+        //initIMU2(hardwareMap);
         initServos(hardwareMap);
     }
 
     public void initTeleop(HardwareMap hardwareMap) {
         initMotors(hardwareMap);
-        initIMU(hardwareMap);
+        initIMU2(hardwareMap);
         initServos(hardwareMap);
     }
 
     public void initSimpleDriving(HardwareMap hardwareMap) {
-        initIMU(hardwareMap);
+        initIMU2(hardwareMap);
         initMotors(hardwareMap);
     }
 }

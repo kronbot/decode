@@ -14,9 +14,12 @@ public final class AutonomousConstants {
 
     public static Pose coordinates(Pose relativePose) {
         return new Pose(
-                FIELD_CENTER.getX() + relativePose.getX(),
-                FIELD_CENTER.getY() + relativePose.getY(),
-                FIELD_CENTER.getHeading() + relativePose.getHeading()
+//                FIELD_CENTER.getX() + relativePose.getX(),
+//                FIELD_CENTER.getY() + relativePose.getY(),
+//                FIELD_CENTER.getHeading() + relativePose.getHeading()
+                relativePose.getX(),
+                relativePose.getY(),
+                relativePose.getHeading()
         );
     }
 }

@@ -4,6 +4,7 @@ import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.LOGO_FACING
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.USB_FACING_DIRECTION;
 
 import com.qualcomm.hardware.bosch.BHI260IMU;
+import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.ImuOrientationOnRobot;
@@ -24,6 +25,7 @@ import org.firstinspires.ftc.teamcode.kronbot.utils.pid.ControllerPID;
  */
 public class ControlHubGyroscope {
     BHI260IMU imu;
+    BNO055IMU expansionIMU = null;
     HardwareMap hardwareMap;
 
     public double firstHeading = 0;
@@ -47,6 +49,37 @@ public class ControlHubGyroscope {
         this.imu.initialize(parameters);
     }
 
+    public void initExpansionIMU(BNO055IMU imu) {
+        this.expansionIMU = imu;
+
+        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
+        parameters.mode = BNO055IMU.SensorMode.IMU;  // Important: ensures only gyro + accel fusion
+        parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
+        parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+        parameters.loggingEnabled = false;
+        imu.initialize(parameters);
+
+        // Wait for it to calibrate
+        while (!imu.isGyroCalibrated()) {
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+
+        // Initialize first orientation reading
+        this.angularOrientation = imu.getAngularOrientation(
+                AxesReference.INTRINSIC,
+                AxesOrder.ZYX,
+                AngleUnit.DEGREES
+        );
+
+        // Disable control hub IMU
+        this.imu = null;
+    }
+
+
     Orientation angularOrientation;
     AngularVelocity angularVelocity;
 
@@ -55,7 +88,11 @@ public class ControlHubGyroscope {
 
     public void updateOrientation() {
         if (orientationUpdateTimer.milliseconds() > updateInterval) {
-            angularOrientation = imu.getRobotOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+            if (imu != null) {
+                angularOrientation = imu.getRobotOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+            } else if (expansionIMU != null) {
+                angularOrientation = expansionIMU.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+            }
             orientationUpdateTimer.reset();
         }
     }
@@ -64,7 +101,11 @@ public class ControlHubGyroscope {
 
     public void updateVelocity() {
         if (velocityUpdateTimer.milliseconds() > updateInterval) {
-            angularVelocity = imu.getRobotAngularVelocity(AngleUnit.DEGREES);
+            if (imu != null) {
+                angularVelocity = imu.getRobotAngularVelocity(AngleUnit.DEGREES);
+            } else if (expansionIMU != null) {
+                angularVelocity = expansionIMU.getAngularVelocity();
+            }
             velocityUpdateTimer.reset();
         }
     }

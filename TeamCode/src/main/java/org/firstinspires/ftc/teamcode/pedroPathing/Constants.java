@@ -39,7 +39,6 @@ public class Constants {
             .rightRearMotorName("rightRear")
             .leftRearMotorName("leftRear")
             .leftFrontMotorName("leftFront")
-            /// reverse if needed
             .leftFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
             .leftRearMotorDirection(DcMotorSimple.Direction.FORWARD)
             .rightFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
@@ -52,20 +51,18 @@ public class Constants {
     public static TwoWheelConstants localizerConstants = new TwoWheelConstants()
             .forwardEncoder_HardwareMapName("parallelOdometry")
             .strafeEncoder_HardwareMapName("perpendicularOdometry")
-            .strafePodX(7.36) /// change
-            .forwardPodY(7.36) /// change
+            .strafePodX(5.906)
+            .forwardPodY(8.661)
             .IMU_HardwareMapName("imu")
             .IMU_Orientation(
                     new RevHubOrientationOnRobot(
-                            /// to be changed if needed
                             RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
                             RevHubOrientationOnRobot.UsbFacingDirection.UP
                     )
             )
-            .forwardTicksToInches(1.0/307.699557) /// change
-            .strafeTicksToInches(1.0/307.699557) /// change
+            .forwardTicksToInches(0.00294496)
+            .strafeTicksToInches(0.0030090)
 
-            ///  should not be necesarry
 //            .forwardEncoderDirection(Encoder.REVERSE)
 //            .forwardEncoderDirection(Encoder.REVERSE)
             ;

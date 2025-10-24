@@ -33,6 +33,7 @@ public class MainDrivingOp extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         robot.initTeleop(hardwareMap);
+        telemetry.update();
 
         drivingGamepad = gamepad1;
         utilityGamepad = gamepad2;
@@ -42,9 +43,6 @@ public class MainDrivingOp extends LinearOpMode {
 
         Button driveModeButton = new Button();
         Button reverseButton = new Button();
-        Button loaderButton = new Button();
-
-
 
         while (!isStopRequested() && !opModeIsActive()) {
             telemetry.addLine("Initialization Ready");
@@ -73,8 +71,8 @@ public class MainDrivingOp extends LinearOpMode {
 
             if(!gamepad1.dpad_up) {
                 if(gamepad1.dpad_down) {
-                    robot.leftOuttake.setPower(1);
-                    robot.rightOuttake.setPower(1);
+                    robot.leftOuttake.setVelocity(2000);
+                    robot.rightOuttake.setVelocity(2000);
                 }
             }
             else {
@@ -104,6 +102,8 @@ public class MainDrivingOp extends LinearOpMode {
             double rightVel = robot.rightOuttake.getVelocity();
             telemetry.addData("rightVel is: ", rightVel);
 
+
+            telemetry.addData("Heading", robot.gyroscope.getHeading());
             telemetry.update();
 
 
