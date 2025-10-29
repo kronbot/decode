@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.kronbot.utils.tests;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.autonomous.AutonomousConstants.LaunchZone;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.autonomous.AutonomousConstants.SpinPose;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.autonomous.AutonomousConstants.StartingPose;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.autonomous.AutonomousConstants.coordinates;
 
@@ -12,6 +11,7 @@ import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
+import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -36,7 +36,6 @@ public class TestAuto extends LinearOpMode {
         telemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());
 
         Pose startingPose = coordinates(StartingPose);
-        Pose spinPose = coordinates(SpinPose);
         Pose launchZone = coordinates(LaunchZone);
 
         follower.setStartingPose(startingPose);
@@ -44,7 +43,9 @@ public class TestAuto extends LinearOpMode {
         telemetry.addData("Pedro heading", Math.toDegrees(follower.getPose().getHeading()));
         telemetry.update();
 
-        PathChain pathChain1 = follower.pathBuilder()
+        PathChain pathChain1;
+
+        pathChain1 = follower.pathBuilder()
                 .addPath(new BezierLine(startingPose, launchZone))
                 .setLinearHeadingInterpolation(startingPose.getHeading(), launchZone.getHeading())
                 .setBrakingStrength(1.3)

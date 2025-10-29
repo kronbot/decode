@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
 
+import com.pedropathing.control.FilteredPIDFCoefficients;
+import com.pedropathing.control.PIDFCoefficients;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.follower.FollowerConstants;
 import com.pedropathing.ftc.FollowerBuilder;
@@ -11,7 +13,6 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import java.sql.Time;
 
 public class Constants {
     public static final double TValue = 0.99;
@@ -19,9 +20,12 @@ public class Constants {
     public static final double TimeoutConstraint = 100;
 
     public static FollowerConstants followerConstants = new FollowerConstants()
+            .translationalPIDFCoefficients(new PIDFCoefficients(0.09, 0, 0.009, 0.03))
+            .headingPIDFCoefficients(new PIDFCoefficients(0.9, 0, 0.01, 0.05))
+            .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.2, 0, 0.009, 0.03, 0.5))
             .mass(6.54)
-            .forwardZeroPowerAcceleration(-25.9346931313679598)
-            .lateralZeroPowerAcceleration(-67.342491844080064);
+            .forwardZeroPowerAcceleration(-59)
+            .lateralZeroPowerAcceleration(-100);
 
     public static PathConstraints pathConstraints = new PathConstraints(
             TValue,
@@ -43,9 +47,9 @@ public class Constants {
             .leftRearMotorDirection(DcMotorSimple.Direction.FORWARD)
             .rightFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
             .rightRearMotorDirection(DcMotorSimple.Direction.REVERSE)
-            /// ?
-            .xVelocity(78.261926752421046666666666666667)
-            .yVelocity(61.494551922189565);
+
+            .xVelocity(93.675629)
+            .yVelocity(77.158601);
 
 
     public static TwoWheelConstants localizerConstants = new TwoWheelConstants()
@@ -60,8 +64,8 @@ public class Constants {
                             RevHubOrientationOnRobot.UsbFacingDirection.UP
                     )
             )
-            .forwardTicksToInches(0.00294496)
-            .strafeTicksToInches(0.0030090)
+            .forwardTicksToInches(0.00296496)
+            .strafeTicksToInches(0.003158)
 
             .forwardEncoderDirection(Encoder.REVERSE)
             .strafeEncoderDirection(Encoder.FORWARD)

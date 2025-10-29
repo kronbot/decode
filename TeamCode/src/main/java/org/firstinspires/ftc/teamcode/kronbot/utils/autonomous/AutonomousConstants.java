@@ -21,19 +21,12 @@ public final class AutonomousConstants {
     public static final Pose FIELD_CENTER = new Pose(0, 0, 0);
 
     public static Coordinates StartingPose = new Coordinates(0, 0, 0);
-    public static Coordinates SpinPose = new Coordinates(0, 0, 3.15);
-    public static Coordinates LaunchZone = new Coordinates(30, 0, 0);
+    public static Coordinates LaunchZone = new Coordinates(20, 0, 0);
 
-//    public static Pose coordinates(Pose relativePose) {
-//        return new Pose(
-////                FIELD_CENTER.getX() + relativePose.getX(),
-////                FIELD_CENTER.getY() + relativePose.getY(),
-////                FIELD_CENTER.getHeading() + relativePose.getHeading()
-//                relativePose.getX(),
-//                relativePose.getY(),
-//                relativePose.getHeading()
-//        );
-//    }
+    public static Coordinates MidPose1 = new Coordinates(40, 15, 0);
+    public static Coordinates MidPose2 = new Coordinates(57, 27, 0.85);
+
+
     public static Pose coordinates(Coordinates coord) {
         return new Pose(coord.x, coord.y, Math.toRadians(coord.heading));
     }
