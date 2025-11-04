@@ -113,19 +113,27 @@ public class Auto_v1Op extends OpMode {
             case 1:
                 // Wait until finished with first chain
                 if (!follower.isBusy()) {
-                    // Example action: shoot or spin motors
+                    robot.leftOuttake.setVelocity(launchSpeed);
+                    robot.rightOuttake.setVelocity(launchSpeed);
+                    sleep(3000);
                     robot.loaderServo.runContinuous(false, true);
-                    robot.leftOuttake.setPower(1);
-                    robot.rightOuttake.setPower(1);
                     sleep(2000);
+                    robot.loaderServo.runContinuous(false, false);
+                    sleep(1000);
+                    robot.loaderServo.runContinuous(false, true);
+                    sleep(1000);
+                    robot.loaderServo.runContinuous(false, false);
+                    sleep(2000);
+                    robot.loaderServo.runContinuous(false, true);
+                    sleep(1000);
                     robot.leftOuttake.setPower(0);
                     robot.rightOuttake.setPower(0);
                     robot.loaderServo.runContinuous(false, false);
                     sleep(5000);
 
                     // Start the next chain
-                    follower.followPath(secondPathChain);
-                    setPathState(2);
+//                    follower.followPath(secondPathChain);
+//                    setPathState(2);
                 }
                 break;
 

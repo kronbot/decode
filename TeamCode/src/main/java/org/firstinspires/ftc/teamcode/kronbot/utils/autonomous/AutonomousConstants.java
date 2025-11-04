@@ -21,14 +21,15 @@ public final class AutonomousConstants {
     public static final Pose FIELD_CENTER = new Pose(0, 0, 0);
 
     public static Coordinates StartingPose = new Coordinates(0, 0, 0);
-    public static Coordinates LaunchZone = new Coordinates(20, 0, 0);
+    public static Coordinates LaunchZone = new Coordinates(7, 67.42, 0.47);
 
+    public static double launchSpeed = 2110;
     public static Coordinates MidPose1 = new Coordinates(40, 15, 0);
     public static Coordinates MidPose2 = new Coordinates(57, 27, 0.85);
 
 
     public static Pose coordinates(Coordinates coord) {
-        return new Pose(coord.x, coord.y, Math.toRadians(coord.heading));
+        return new Pose(coord.x, coord.y, coord.heading);
     }
 
 }
