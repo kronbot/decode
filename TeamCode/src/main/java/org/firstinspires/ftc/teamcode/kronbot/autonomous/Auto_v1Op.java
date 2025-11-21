@@ -1,6 +1,6 @@
-package org.firstinspires.ftc.teamcode.kronbot.utils.autonomous;
+package org.firstinspires.ftc.teamcode.kronbot.autonomous;
 
-import static org.firstinspires.ftc.teamcode.kronbot.utils.autonomous.AutonomousConstants.*;
+import static org.firstinspires.ftc.teamcode.kronbot.autonomous.AutonomousConstants.*;
 
 import static java.lang.Thread.sleep;
 

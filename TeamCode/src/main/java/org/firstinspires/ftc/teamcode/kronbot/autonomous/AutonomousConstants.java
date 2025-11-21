@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.kronbot.utils.autonomous;
+package org.firstinspires.ftc.teamcode.kronbot.autonomous;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.pedropathing.geometry.Pose;

@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode.kronbot.utils.tests;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.autonomous.AutonomousConstants.LaunchZone;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.autonomous.AutonomousConstants.StartingPose;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.autonomous.AutonomousConstants.coordinates;
+import static org.firstinspires.ftc.teamcode.kronbot.autonomous.AutonomousConstants.LaunchZone;
+import static org.firstinspires.ftc.teamcode.kronbot.autonomous.AutonomousConstants.StartingPose;
+import static org.firstinspires.ftc.teamcode.kronbot.autonomous.AutonomousConstants.coordinates;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
@@ -11,11 +11,9 @@ import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
-import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 import org.firstinspires.ftc.teamcode.kronbot.KronBot;
 
