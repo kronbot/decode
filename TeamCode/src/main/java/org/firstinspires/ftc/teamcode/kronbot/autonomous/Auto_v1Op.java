@@ -57,18 +57,10 @@ public class Auto_v1Op extends OpMode {
 
     /** Build all paths for the auto **/
     public void buildPaths() {
-        // First PathChain: Go to launch zone
+
         goToLaunch = follower.pathBuilder()
                 .addPath(new BezierLine(startingPose, launchZone))
                 .setLinearHeadingInterpolation(startingPose.getHeading(), launchZone.getHeading())
-                .build();
-
-        // Second PathChain: midPose1 → midPose2
-        secondPathChain = follower.pathBuilder()
-                .addPath(new BezierLine(launchZone, midPose1))
-                .setLinearHeadingInterpolation(launchZone.getHeading(), midPose1.getHeading())
-                .addPath(new BezierLine(midPose1, midPose2))
-                .setLinearHeadingInterpolation(midPose1.getHeading(), midPose2.getHeading())
                 .build();
     }
 
@@ -105,13 +97,11 @@ public class Auto_v1Op extends OpMode {
     public void autonomousPathUpdate() throws InterruptedException {
         switch (pathState) {
             case 0:
-                // Start the first path chain
                 follower.followPath(goToLaunch);
                 setPathState(1);
                 break;
 
             case 1:
-                // Wait until finished with first chain
                 if (!follower.isBusy()) {
                     robot.leftOuttake.setVelocity(launchSpeed);
                     robot.rightOuttake.setVelocity(launchSpeed);
@@ -131,17 +121,14 @@ public class Auto_v1Op extends OpMode {
                     robot.loaderServo.runContinuous(false, false);
                     sleep(5000);
 
-                    // Start the next chain
-//                    follower.followPath(secondPathChain);
-//                    setPathState(2);
                 }
                 break;
 
             case 2:
-                // Wait until done with second path chain
+                // Wait until done
                 if (!follower.isBusy()) {
                     // Example action: maybe retract or park
-                    setPathState(-1); // Stop further actions
+                    setPathState(-1);
                 }
                 break;
 
