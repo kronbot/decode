@@ -59,13 +59,13 @@ public class MainDrivingOp extends LinearOpMode {
 
         while (opModeIsActive() && !isStopRequested()) {
             //Outtake servo
-            if(gamepad1.right_trigger > 0.5) {
+            if(gamepad1.left_trigger > 0.5) {
                 if(!LOADER_SERVO_REVERSED)
                     robot.loaderServo.setPosition(0);
                 else
                     robot.loaderServo.setPosition(1);
             } else {
-                double val = gamepad1.left_trigger;
+                double val = gamepad1.right_trigger;
                 if(!LOADER_SERVO_REVERSED)
                     val = val / 2 + 0.5;
                 else
