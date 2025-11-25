@@ -19,7 +19,7 @@ public class Constants {
     public static final double TimeoutConstraint = 100;
 
     public static FollowerConstants followerConstants = new FollowerConstants()
-            .mass(4)
+            .mass(6.54)
             .forwardZeroPowerAcceleration(-25.9346931313679598)
             .lateralZeroPowerAcceleration(-67.342491844080064);
 
@@ -52,8 +52,8 @@ public class Constants {
     public static TwoWheelConstants localizerConstants = new TwoWheelConstants()
             .forwardEncoder_HardwareMapName("parallerOdometry")
             .strafeEncoder_HardwareMapName("perpendicularOdometry")
-            .strafePodX(10) /// change
-            .forwardPodY(10) /// change
+            .strafePodX(7.36) /// change
+            .forwardPodY(7.36) /// change
             .IMU_HardwareMapName("imu")
             .IMU_Orientation(
                     new RevHubOrientationOnRobot(

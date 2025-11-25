@@ -33,30 +33,6 @@ public class Constants {
     public static int BLUE_HUE_LOW = 0;
     public static int BLUE_HUE_HIGH = 180;
 
-    public static double ARM_LEFT_INIT = 0.6;
-    public static double ARM_LEFT_MIN = 0.6;
-    public static double ARM_LEFT_MAX = 0.36;
-    public static double ARM_RIGHT_INIT = 0.73;
-    public static double ARM_RIGHT_MIN = 0.73;
-    public static double ARM_RIGHT_MAX = 0.2;
-
-    public static double CLAW_CLOSE = 0.5;
-    public static double CLAW_OPEN = 0.3;
-
-    public static double INTAKE_LEFT_MIN = 0.19;
-    public static double INTAKE_LEFT_MAX = 0.4;
-    public static double INTAKE_LEFT_UP = 0.19;
-    public static double INTAKE_RIGHT_MIN = 0.7;
-    public static double INTAKE_RIGHT_MAX = 9;
-    public static double INTAKE_RIGHT_UP = 0.7;
-
-
-    public static double SLIDE_LEFT_INIT = 0.59;
-    public static double SLIDE_LEFT_CLOSED = 0.59;
-    public static double SLIDE_LEFT_OPENED = 0.26;
-    public static double SLIDE_RIGHT_INIT = 0.38;
-    public static double SLIDE_RIGHT_CLOSED = 0.38;
-    public static double SLIDE_RIGHT_OPENED = 0.07;
     public static LogoFacingDirection LOGO_FACING_DIRECTION = LogoFacingDirection.LEFT;
     public static UsbFacingDirection USB_FACING_DIRECTION = UsbFacingDirection.UP;
 }

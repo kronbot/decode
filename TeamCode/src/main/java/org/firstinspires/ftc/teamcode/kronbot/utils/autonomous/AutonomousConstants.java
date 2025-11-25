@@ -19,8 +19,8 @@ public final class AutonomousConstants {
         }
     }
 
-    public static Coordinates StartingPose = new Coordinates(30, 0, Math.toRadians(180));
-    public static Coordinates LaunchZone = new Coordinates(26, 0, Math.toRadians(135));
+    public static Coordinates StartingPose = new Coordinates(10, 10, Math.toRadians(0));
+    public static Coordinates LaunchZone = new Coordinates(10, 25, Math.toRadians(0));
 
     public static Pose coordinates(Coordinates coord) {
         return new Pose(coord.x, coord.y, coord.heading);

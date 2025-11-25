@@ -4,6 +4,7 @@ import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.LIFT_INIT_P
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
 import org.firstinspires.ftc.teamcode.kronbot.KronBot;
@@ -40,6 +41,8 @@ public class MainDrivingOp extends LinearOpMode {
         Button driveModeButton = new Button();
         Button reverseButton = new Button();
 
+
+
         while (!isStopRequested() && !opModeIsActive()) {
             telemetry.addLine("Initialization Ready");
             telemetry.update();
@@ -63,7 +66,24 @@ public class MainDrivingOp extends LinearOpMode {
                 fieldCentricDrive.telemetry(telemetry);
             }
 
+            if(!gamepad1.dpad_up) {
+                if(gamepad1.dpad_down) {
+                    robot.leftOuttake.setPower(1);
+                    robot.rightOuttake.setPower(1);
+                }
+                double leftVel = robot.leftOuttake.getVelocity();
+                telemetry.addLine("leftVel is" + leftVel);
+                double rightVel = robot.leftOuttake.getVelocity();
+                telemetry.addLine("rightVel is" + rightVel);
+            }
+            else {
+                robot.leftOuttake.setPower(0);
+                robot.rightOuttake.setPower(0);
+            }
+
             telemetry.update();
+
+
         }
     }
 }
