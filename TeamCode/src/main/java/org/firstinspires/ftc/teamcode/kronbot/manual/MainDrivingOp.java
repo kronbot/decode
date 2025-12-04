@@ -6,6 +6,7 @@ import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.LOADER_SERV
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.maxVelocity;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.minVelocity;
 
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -15,7 +16,9 @@ import org.firstinspires.ftc.teamcode.kronbot.KronBot;
 import org.firstinspires.ftc.teamcode.kronbot.utils.components.FieldCentricDrive;
 import org.firstinspires.ftc.teamcode.kronbot.utils.components.RobotCentricDrive;
 import org.firstinspires.ftc.teamcode.kronbot.utils.Constants;
+import org.firstinspires.ftc.teamcode.kronbot.utils.detection.AprilTagWebcam;
 import org.firstinspires.ftc.teamcode.kronbot.utils.wrappers.Button;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
 /**
  * The main TeleOP program for the driving period of the game.
@@ -31,10 +34,13 @@ public class MainDrivingOp extends LinearOpMode {
 
     Gamepad drivingGamepad;
     Gamepad utilityGamepad;
+    AprilTagWebcam aprilTagWebcam = new AprilTagWebcam();
+    private FtcDashboard dashboard;
 
     @Override
     public void runOpMode() throws InterruptedException {
         robot.initTeleop(hardwareMap);
+        dashboard = FtcDashboard.getInstance();
         telemetry.update();
 
         drivingGamepad = gamepad1;
@@ -42,6 +48,12 @@ public class MainDrivingOp extends LinearOpMode {
 
         robotCentricDrive = new RobotCentricDrive(robot, drivingGamepad);
         fieldCentricDrive = new FieldCentricDrive(robot, drivingGamepad);
+
+        aprilTagWebcam.init(hardwareMap, telemetry);
+        if (aprilTagWebcam.getVisionPortal() != null) {
+            dashboard.startCameraStream(aprilTagWebcam.getVisionPortal(), 30);
+        }
+
 
         Button driveModeButton = new Button();
         Button reverseButton = new Button();
@@ -55,7 +67,10 @@ public class MainDrivingOp extends LinearOpMode {
             telemetry.update();
         }
 
-        if (isStopRequested()) return;
+        if (isStopRequested()) {
+            aprilTagWebcam.stop();
+            return;
+        }
 
         while (opModeIsActive() && !isStopRequested()) {
             //Outtake servo
@@ -117,16 +132,30 @@ public class MainDrivingOp extends LinearOpMode {
                 fieldCentricDrive.telemetry(telemetry);
             }
 
+            aprilTagWebcam.update();
+            AprilTagDetection tag24 = aprilTagWebcam.getTagBySpecificId(24);
+
+            if (tag24 != null) {
+                telemetry.addLine("=== TAG 24 DETECTED ===");
+                telemetry.addData("Distance (cm)", tag24.ftcPose.range);
+                telemetry.addData("X (cm)", tag24.ftcPose.x);
+                telemetry.addData("Y (cm)", tag24.ftcPose.y);
+                telemetry.addData("Z (cm)", tag24.ftcPose.z);
+                aprilTagWebcam.displayDetectionTelemetry(tag24);
+            } else {
+                telemetry.addLine("=== TAG 24 NOT FOUND ===");
+            }
+
+            telemetry.addLine("");
+            telemetry.addData("Left Shooter Vel", robot.leftOuttake.getVelocity());
+            telemetry.addData("Right Shooter Vel", robot.rightOuttake.getVelocity());
+
             double leftVel = robot.leftOuttake.getVelocity();
             telemetry.addData("leftVel is: ", leftVel);
             double rightVel = robot.rightOuttake.getVelocity();
             telemetry.addData("rightVel is: ", rightVel);
 
-
-            telemetry.addData("Heading", robot.gyroscope.getHeading());
             telemetry.update();
-
-
         }
     }
 }

@@ -20,8 +20,6 @@ public class AprilTagWebcamExample extends OpMode {
     public void init() {
         dashboard = FtcDashboard.getInstance();
 
-
-
         aprilTagWebcam.init(hardwareMap, telemetry);
         telemetry.addData("Status", "AprilTag Webcam Initialized");
 
