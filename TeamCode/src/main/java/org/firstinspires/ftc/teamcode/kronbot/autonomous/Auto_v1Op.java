@@ -28,8 +28,6 @@ public class Auto_v1Op extends OpMode {
     // Define poses
     Pose startingPose = coordinates(StartingPose);
     Pose launchZone = coordinates(LaunchZone);
-    Pose midPose1 = coordinates(MidPose1);
-    Pose midPose2 = coordinates(MidPose2);
 
     // Paths and PathChains
     private PathChain goToLaunch;
@@ -57,7 +55,6 @@ public class Auto_v1Op extends OpMode {
 
     /** Build all paths for the auto **/
     public void buildPaths() {
-
         goToLaunch = follower.pathBuilder()
                 .addPath(new BezierLine(startingPose, launchZone))
                 .setLinearHeadingInterpolation(startingPose.getHeading(), launchZone.getHeading())

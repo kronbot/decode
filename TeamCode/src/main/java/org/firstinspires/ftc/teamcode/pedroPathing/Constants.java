@@ -15,31 +15,28 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 
 public class Constants {
-    public static final double TValue = 0.99;
-    public static final double Velocity = 0.1;
-    public static final double TimeoutConstraint = 100;
+    public static final double TValue = 0;
+    public static final double Velocity = 0;
+    public static final double TimeoutConstraint = 0;
 
     public static FollowerConstants followerConstants = new FollowerConstants()
-            .translationalPIDFCoefficients(new PIDFCoefficients(0.09, 0, 0.009, 0.03))
-            .headingPIDFCoefficients(new PIDFCoefficients(0.9, 0, 0.01, 0.05))
-            .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.25, 0, 0.009, 0.04, 0.5)) //meh
-            .centripetalScaling(0.005)
-            .mass(6.54)
-            .forwardZeroPowerAcceleration(-59)
-            .lateralZeroPowerAcceleration(-100);
+//            code for pid tuning
+            .mass(0)
+            .forwardZeroPowerAcceleration(0)
+            .lateralZeroPowerAcceleration(0);
 
     public static PathConstraints pathConstraints = new PathConstraints(
             TValue,
             Velocity,
-            0.1,
-            0.009,
+            0,
+            0,
             TimeoutConstraint,
-            1.25,
-            10,
-            1);
+            0,
+            0,
+            0);
 
     public static MecanumConstants driveConstants = new MecanumConstants()
-            .maxPower(1)
+            .maxPower(0)
             .rightFrontMotorName("rightFront")
             .rightRearMotorName("rightRear")
             .leftRearMotorName("leftRear")
@@ -49,29 +46,30 @@ public class Constants {
             .rightFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
             .rightRearMotorDirection(DcMotorSimple.Direction.REVERSE)
 
-            .xVelocity(93.675629)
-            .yVelocity(77.158601);
+            .xVelocity(0)
+            .yVelocity(0);
 
 
     public static TwoWheelConstants localizerConstants = new TwoWheelConstants()
             .forwardEncoder_HardwareMapName("parallelOdometry")
             .strafeEncoder_HardwareMapName("perpendicularOdometry")
-            .strafePodX(5.906)
-            .forwardPodY(8.661)
+            .strafePodX(0)
+            .forwardPodY(0)
             .IMU_HardwareMapName("imu")
             .IMU_Orientation(
+                    //modify this so it's correct
                     new RevHubOrientationOnRobot(
-                            RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
-                            RevHubOrientationOnRobot.UsbFacingDirection.UP
+                            RevHubOrientationOnRobot.LogoFacingDirection.DOWN,
+                            RevHubOrientationOnRobot.UsbFacingDirection.LEFT
                     )
             )
-            .forwardTicksToInches(0.00296496)
-            .strafeTicksToInches(0.003158)
+            .forwardTicksToInches(0)
+            .strafeTicksToInches(0)
 
+            //needed?
             .forwardEncoderDirection(Encoder.REVERSE)
-            .strafeEncoderDirection(Encoder.FORWARD)
+            .strafeEncoderDirection(Encoder.REVERSE)
             ;
-
 
     public static Follower createFollower(HardwareMap hardwareMap) {
         return new FollowerBuilder(followerConstants, hardwareMap)
