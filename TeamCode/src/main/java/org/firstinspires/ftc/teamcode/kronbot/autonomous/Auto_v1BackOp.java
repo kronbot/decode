@@ -17,8 +17,8 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import org.firstinspires.ftc.teamcode.kronbot.KronBot;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
-@Autonomous(name = "Auto_v1", group = org.firstinspires.ftc.teamcode.kronbot.utils.Constants.TEST_GROUP)
-public class Auto_v1Op extends OpMode {
+@Autonomous(name = "Auto_v1_BACK", group = org.firstinspires.ftc.teamcode.kronbot.utils.Constants.TEST_GROUP)
+public class Auto_v1BackOp extends OpMode {
 
     private KronBot robot;
     private Follower follower;
@@ -26,10 +26,10 @@ public class Auto_v1Op extends OpMode {
     private int pathState;
 
     // Define poses
-    Pose startingPoseClose = coordinates(StartingPoseClose);
-    Pose launchZoneClose = coordinates(LaunchZoneClose);
-    Pose launchZoneClose2 = coordinates(LaunchZoneClose2);
-    Pose parkClose = coordinates(ParkClose);
+    Pose startingPoseBack = coordinates(StartingPoseBack);
+    Pose launchZoneBack = coordinates(LaunchZoneBack);
+    Pose parkBack = coordinates(ParkBack);
+
 
     // Paths and PathChains
     private PathChain goToLaunch;
@@ -49,7 +49,7 @@ public class Auto_v1Op extends OpMode {
         telemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());
 
         buildPaths();
-        follower.setStartingPose(startingPoseClose);
+        follower.setStartingPose(startingPoseBack);
 
         telemetry.addLine("Initialized. Waiting for start...");
         telemetry.update();
@@ -59,15 +59,13 @@ public class Auto_v1Op extends OpMode {
     public void buildPaths() {
 
         goToLaunch = follower.pathBuilder()
-                .addPath(new BezierLine(startingPoseClose, launchZoneClose))
-                .setLinearHeadingInterpolation(startingPoseClose.getHeading(), launchZoneClose.getHeading())
-                .addPath(new BezierLine(launchZoneClose, launchZoneClose2))
-                .setLinearHeadingInterpolation(launchZoneClose.getHeading(), launchZoneClose2.getHeading())
+                .addPath(new BezierLine(startingPoseBack, launchZoneBack))
+                .setLinearHeadingInterpolation(startingPoseBack.getHeading(), launchZoneBack.getHeading())
                 .build();
 
         goToPark = follower.pathBuilder()
-                .addPath(new BezierLine(launchZoneClose2, parkClose))
-                .setLinearHeadingInterpolation(launchZoneClose2.getHeading(), parkClose.getHeading())
+                .addPath(new BezierLine(launchZoneBack, parkBack))
+                .setLinearHeadingInterpolation(launchZoneBack.getHeading(), parkBack.getHeading())
                 .build();
     }
 
@@ -110,8 +108,8 @@ public class Auto_v1Op extends OpMode {
 
             case 1:
                 if (!follower.isBusy()) {
-                    robot.leftOuttake.setVelocity(launchSpeedClose);
-                    robot.rightOuttake.setVelocity(launchSpeedClose);
+                    robot.leftOuttake.setVelocity(launchSpeedBack);
+                    robot.rightOuttake.setVelocity(launchSpeedBack);
                     sleep(3000);
                     robot.loaderServo.runContinuous(false, true);
                     sleep(2000);
@@ -120,7 +118,7 @@ public class Auto_v1Op extends OpMode {
                     robot.loaderServo.runContinuous(false, true);
                     sleep(1000);
                     robot.loaderServo.runContinuous(false, false);
-                    sleep(2000);
+                    sleep(4000);
                     robot.loaderServo.runContinuous(false, true);
                     sleep(1000);
                     robot.leftOuttake.setPower(0);
@@ -128,7 +126,6 @@ public class Auto_v1Op extends OpMode {
                     robot.loaderServo.runContinuous(false, false);
                     sleep(5000);
 
-                    setPathState(2);
                 }
                 break;
 
@@ -146,7 +143,7 @@ public class Auto_v1Op extends OpMode {
                 break;
 
             case -1:
-                // Idle / done
+
                 break;
         }
     }

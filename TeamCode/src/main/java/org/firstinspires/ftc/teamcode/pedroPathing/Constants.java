@@ -68,7 +68,7 @@ public class Constants {
             .forwardTicksToInches(0.00296496)
             .strafeTicksToInches(0.003158)
 
-            .forwardEncoderDirection(Encoder.REVERSE)
+            .forwardEncoderDirection(Encoder.FORWARD)
             .strafeEncoderDirection(Encoder.FORWARD)
             ;
 

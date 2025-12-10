@@ -13,7 +13,6 @@ import org.firstinspires.ftc.teamcode.kronbot.utils.Constants;
 import org.firstinspires.ftc.teamcode.kronbot.utils.detection.AprilTagWebcam;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @TeleOp(name = "Webcam Driving", group = Constants.MAIN_GROUP)
@@ -34,20 +33,17 @@ public class WebcamDrivingOp extends LinearOpMode {
         //  SHOOTER LINEAR REGRESSION MODEL
         SimpleLinearRegression regression = new SimpleLinearRegression();
 
-        //replace with actual measured calibrations
+        //replaced with actual measured calibrations
         //distance meters, velocity
-        regression.addData(1.2, 2100);
-        regression.addData(1.5, 2250);
-        regression.addData(1.9, 2450);
-        regression.addData(2.3, 2700);
-        regression.addData(1.2, 2100);
-        regression.addData(1.5, 2250);
-        regression.addData(1.9, 2450);
-        regression.addData(2.3, 2700);
+        regression.addData(211, 1900);
+        regression.addData(239, 2000);
+        regression.addData(241, 2050);
+        regression.addData(250, 2100);
+        regression.addData(351, 2200);
+        regression.addData(379, 2300);
 
         boolean isLaunching = false;
         boolean wasRightBumperPressed = false;
-
 
         waitForStart();
 
