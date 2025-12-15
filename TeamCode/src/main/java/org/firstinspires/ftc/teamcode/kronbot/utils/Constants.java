@@ -38,5 +38,12 @@ public class Constants {
 
     public static boolean LOADER_SERVO_REVERSED = true;
     public static double minVelocity = 1900;
-    public static double maxVelocity = 2170;
+    public static double maxVelocity = 2500;
+
+    //AIM PID
+    public static double AIM_KP = 0.02;
+    public static double AIM_KI = 0.0;
+    public static double AIM_KD = 0.003;
+    public static double ANGLE_TOLERANCE = 2.0;
+    public static double MAX_ROTATION_POWER = 0.5;
 }

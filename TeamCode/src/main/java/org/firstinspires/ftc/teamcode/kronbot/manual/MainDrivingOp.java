@@ -17,6 +17,7 @@ import org.firstinspires.ftc.teamcode.kronbot.utils.components.FieldCentricDrive
 import org.firstinspires.ftc.teamcode.kronbot.utils.components.RobotCentricDrive;
 import org.firstinspires.ftc.teamcode.kronbot.utils.Constants;
 import org.firstinspires.ftc.teamcode.kronbot.utils.detection.AprilTagWebcam;
+import org.firstinspires.ftc.teamcode.kronbot.utils.pid.ControllerPID;
 import org.firstinspires.ftc.teamcode.kronbot.utils.wrappers.Button;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
@@ -35,6 +36,7 @@ public class MainDrivingOp extends LinearOpMode {
     Gamepad drivingGamepad;
     Gamepad utilityGamepad;
     AprilTagWebcam aprilTagWebcam = new AprilTagWebcam();
+    ControllerPID tagAlignmentPID = new ControllerPID(0.7, 0.3, 0.15);
     private FtcDashboard dashboard;
 
     @Override
@@ -53,10 +55,13 @@ public class MainDrivingOp extends LinearOpMode {
         if (aprilTagWebcam.getVisionPortal() != null) {
             dashboard.startCameraStream(aprilTagWebcam.getVisionPortal(), 30);
         }
+        tagAlignmentPID.reset();
 
 
         Button driveModeButton = new Button();
         Button reverseButton = new Button();
+        Button alignButton = new Button();
+        boolean alignmentPressed = false;
 
         boolean isLaunching = false;
         boolean wasRightBumperPressed = false;
@@ -116,6 +121,7 @@ public class MainDrivingOp extends LinearOpMode {
 
             wasRightBumperPressed = gamepad1.right_bumper;
 
+
             // Wheels
             driveModeButton.updateButton(gamepad1.square);
             driveModeButton.longPress();
@@ -133,29 +139,41 @@ public class MainDrivingOp extends LinearOpMode {
             }
 
             aprilTagWebcam.update();
-            AprilTagDetection tag24 = aprilTagWebcam.getTagBySpecificId(24);
+            AprilTagDetection tag = aprilTagWebcam.getTowerTags();
 
-            if (tag24 != null) {
-                telemetry.addLine("=== TAG 24 DETECTED ===");
-                telemetry.addData("Distance (cm)", tag24.ftcPose.range);
-                telemetry.addData("X (cm)", tag24.ftcPose.x);
-                telemetry.addData("Y (cm)", tag24.ftcPose.y);
-                telemetry.addData("Z (cm)", tag24.ftcPose.z);
-                aprilTagWebcam.displayDetectionTelemetry(tag24);
-            } else {
-                telemetry.addLine("=== TAG 24 NOT FOUND ===");
+            alignButton.updateButton(gamepad1.dpad_left);
+
+            if(alignmentPressed != alignButton.press() && alignButton.press())
+            {
+                tagAlignmentPID.reset();
+                alignmentPressed = alignButton.press();
             }
+
+            if(tag != null)
+            {
+                double bearing = tag.ftcPose.bearing;
+
+                if(Math.abs(bearing) > 1)
+                    if(alignmentPressed) {
+                        double value = tagAlignmentPID.calculate(0, bearing);
+
+                        robot.motors.leftFront.setPower(value);
+                        robot.motors.rightFront.setPower(-value);
+                        robot.motors.leftRear.setPower(value);
+                        robot.motors.rightRear.setPower(-value);
+                    }
+                    else {
+                        tagAlignmentPID.reset();
+                    }
+            }
+
+            alignmentPressed = alignButton.press();
 
             telemetry.addLine("");
             telemetry.addData("Left Shooter Vel", robot.leftOuttake.getVelocity());
             telemetry.addData("Right Shooter Vel", robot.rightOuttake.getVelocity());
 
-            double leftVel = robot.leftOuttake.getVelocity();
-            telemetry.addData("leftVel is: ", leftVel);
-            double rightVel = robot.rightOuttake.getVelocity();
-            telemetry.addData("rightVel is: ", rightVel);
-
             telemetry.update();
-        }
-    }
+}
+}
 }

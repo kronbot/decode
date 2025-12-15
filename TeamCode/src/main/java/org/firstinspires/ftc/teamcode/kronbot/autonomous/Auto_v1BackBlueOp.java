@@ -17,8 +17,8 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import org.firstinspires.ftc.teamcode.kronbot.KronBot;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
-@Autonomous(name = "Auto_v1_BACK", group = org.firstinspires.ftc.teamcode.kronbot.utils.Constants.TEST_GROUP)
-public class Auto_v1BackOp extends OpMode {
+@Autonomous(name = "Auto_v1_BACKBlue", group = org.firstinspires.ftc.teamcode.kronbot.utils.Constants.TEST_GROUP)
+public class Auto_v1BackBlueOp extends OpMode {
 
     private KronBot robot;
     private Follower follower;
@@ -26,8 +26,8 @@ public class Auto_v1BackOp extends OpMode {
     private int pathState;
 
     // Define poses
-    Pose startingPoseBack = coordinates(StartingPoseBack);
-    Pose launchZoneBack = coordinates(LaunchZoneBack);
+    Pose startingPoseBack = coordinates(StartingPoseBackBlue);
+    Pose launchZoneBack = coordinates(LaunchZoneBackBlue);
     Pose parkBack = coordinates(ParkBack);
 
 
@@ -111,7 +111,7 @@ public class Auto_v1BackOp extends OpMode {
                 if (!follower.isBusy()) {
                     robot.leftOuttake.setVelocity(launchSpeedBack);
                     robot.rightOuttake.setVelocity(launchSpeedBack);
-                    sleep(5000);
+                    sleep(3000);
                     robot.loaderServo.runContinuous(false, true);
                     sleep(2000);
                     robot.loaderServo.runContinuous(false, false);
@@ -122,10 +122,10 @@ public class Auto_v1BackOp extends OpMode {
                     sleep(4000);
                     robot.loaderServo.runContinuous(false, true);
                     sleep(1000);
-//                    robot.leftOuttake.setPower(0);
-//                    robot.rightOuttake.setPower(0);
-//                    robot.loaderServo.runContinuous(false, false);
-//                    sleep(2000);
+                    robot.leftOuttake.setPower(0);
+                    robot.rightOuttake.setPower(0);
+                    robot.loaderServo.runContinuous(false, false);
+                    sleep(2000);
 
                 }
                 break;
