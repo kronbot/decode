@@ -1,19 +1,16 @@
 package org.firstinspires.ftc.teamcode.kronbot;
 
 
-
-import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
-
-import com.qualcomm.hardware.bosch.BHI260IMU;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.kronbot.utils.drivers.MotorDriver;
 import org.firstinspires.ftc.teamcode.kronbot.utils.wrappers.ControlHubGyroscope;
 import org.firstinspires.ftc.teamcode.kronbot.utils.wrappers.Servo;
+import com.qualcomm.robotcore.hardware.ColorSensor;
+
 
 public class KronBot {
     public MotorDriver motors;
@@ -23,6 +20,8 @@ public class KronBot {
     public DcMotorEx rightOuttake;
 
     public Servo loaderServo;
+    public ColorSensor outtakeColor;
+
 
     public void initMotors(HardwareMap hardwareMap) {
         DcMotorEx leftRear = hardwareMap.get(DcMotorEx.class, "leftRear");
@@ -53,6 +52,11 @@ public class KronBot {
         loaderServo.runContinuous(false, false);
     }
 
+    public void initSensors(HardwareMap hardwareMap) {
+        outtakeColor = hardwareMap.get(ColorSensor.class, "outtakeColor");
+
+    }
+
 //    public void initIMU(HardwareMap hardwareMap) {
 //        BHI260IMU imu = hardwareMap.get(BHI260IMU.class, "imu");
 //        gyroscope = new ControlHubGyroscope(hardwareMap);
@@ -69,6 +73,7 @@ public class KronBot {
     public void initAutonomy(HardwareMap hardwareMap) {
         initAutoMotors(hardwareMap);
         initServos(hardwareMap);
+        initSensors(hardwareMap);
     }
 
     public void initTeleop(HardwareMap hardwareMap) {

@@ -30,6 +30,8 @@ public final class AutonomousConstants {
     public static Coordinates LaunchZoneBackBlue = new Coordinates(25, 0, 0);
     public static Coordinates ParkBack = new Coordinates(9.5, -4, -0.59);
     public static double launchSpeedBack = 2500;
+    public static final int BALL_EXIT_THRESHOLD = 150;
+
 
     public static Pose coordinates(Coordinates coord) {
         return new Pose(coord.x, coord.y, coord.heading);

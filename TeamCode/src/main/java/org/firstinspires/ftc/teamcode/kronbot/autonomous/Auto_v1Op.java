@@ -34,7 +34,6 @@ public class Auto_v1Op extends OpMode {
 
     // Paths and PathChains
     private PathChain goToLaunch;
-    private PathChain secondPathChain;
 
     @Override
     public void init() {
@@ -91,6 +90,8 @@ public class Auto_v1Op extends OpMode {
         telemetry.addData("X", currentPose.getX());
         telemetry.addData("Y", currentPose.getY());
         telemetry.addData("Heading (rad)", currentPose.getHeading());
+        telemetry.addData("Outtake Alpha", robot.outtakeColor.alpha());
+
         telemetry.update();
     }
 
@@ -124,7 +125,7 @@ public class Auto_v1Op extends OpMode {
 
                         case 2:
                             // Wait a bit to make sure ball is launched and stop servo
-                            if (pathTimer.getElapsedTimeSeconds() >= 2.0) {
+                            if (robot.outtakeColor.alpha() < BALL_EXIT_THRESHOLD) {
                                 robot.loaderServo.runContinuous(false, false);
                                 launchState++;
                                 pathTimer.resetTimer();
@@ -142,7 +143,7 @@ public class Auto_v1Op extends OpMode {
 
                         case 4:
                             // Stop servo between shots
-                            if (pathTimer.getElapsedTimeSeconds() >= 1.0) {
+                            if (robot.outtakeColor.alpha() < BALL_EXIT_THRESHOLD) {
                                 robot.loaderServo.runContinuous(false, false);
                                 launchState++;
                                 pathTimer.resetTimer();
@@ -160,7 +161,7 @@ public class Auto_v1Op extends OpMode {
 
                         case 6:
                             // Empty, stop motors
-                            if (pathTimer.getElapsedTimeSeconds() >= 1.0) {
+                            if (robot.outtakeColor.alpha() < BALL_EXIT_THRESHOLD) {
                                 robot.leftOuttake.setPower(0);
                                 robot.rightOuttake.setPower(0);
                                 robot.loaderServo.runContinuous(false, false);
