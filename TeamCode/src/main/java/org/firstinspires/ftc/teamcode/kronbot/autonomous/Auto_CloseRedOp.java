@@ -17,8 +17,8 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import org.firstinspires.ftc.teamcode.kronbot.KronBot;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
-@Autonomous(name = "Auto_v1", group = org.firstinspires.ftc.teamcode.kronbot.utils.Constants.TEST_GROUP)
-public class Auto_v1Op extends OpMode {
+@Autonomous(name = "RED Auto_Close", group = org.firstinspires.ftc.teamcode.kronbot.utils.Constants.TEST_GROUP)
+public class Auto_CloseRedOp extends OpMode {
 
     private KronBot robot;
     private Follower follower;
@@ -116,7 +116,7 @@ public class Auto_v1Op extends OpMode {
 
                         case 1:
                             // Wait for motors to reach speed and launch 1
-                            if (leftVel >= launchSpeedClose && rightVel >= launchSpeedClose) {
+                            if (leftVel >= (launchSpeedClose-50) && rightVel >= (launchSpeedClose-50)) {
                                 robot.loaderServo.runContinuous(false, true);
                                 launchState++;
                                 pathTimer.resetTimer();
@@ -124,8 +124,9 @@ public class Auto_v1Op extends OpMode {
                             break;
 
                         case 2:
-                            // Wait a bit to make sure ball is launched and stop servo
-                            if (robot.outtakeColor.alpha() < BALL_EXIT_THRESHOLD) {
+                            // Use color sensor to detect when ball is launched and stop servo (+timer for fallback safety)
+                            if (robot.outtakeColor.alpha() < BALL_EXIT_THRESHOLD
+                                    || pathTimer.getElapsedTimeSeconds() > 2.0) {
                                 robot.loaderServo.runContinuous(false, false);
                                 launchState++;
                                 pathTimer.resetTimer();
@@ -143,7 +144,8 @@ public class Auto_v1Op extends OpMode {
 
                         case 4:
                             // Stop servo between shots
-                            if (robot.outtakeColor.alpha() < BALL_EXIT_THRESHOLD) {
+                            if (robot.outtakeColor.alpha() < BALL_EXIT_THRESHOLD
+                                    || pathTimer.getElapsedTimeSeconds() > 2.0) {
                                 robot.loaderServo.runContinuous(false, false);
                                 launchState++;
                                 pathTimer.resetTimer();
@@ -161,7 +163,8 @@ public class Auto_v1Op extends OpMode {
 
                         case 6:
                             // Empty, stop motors
-                            if (robot.outtakeColor.alpha() < BALL_EXIT_THRESHOLD) {
+                            if (robot.outtakeColor.alpha() < BALL_EXIT_THRESHOLD
+                                    || pathTimer.getElapsedTimeSeconds() > 2.0) {
                                 robot.leftOuttake.setPower(0);
                                 robot.rightOuttake.setPower(0);
                                 robot.loaderServo.runContinuous(false, false);
@@ -172,7 +175,7 @@ public class Auto_v1Op extends OpMode {
 
                         case 7:
                             // Exit shooting loop
-                            if (pathTimer.getElapsedTimeSeconds() >= 5.0) {
+                            if (pathTimer.getElapsedTimeSeconds() >= 3.0) {
                                 launchState = 0;
                                 setPathState(2);
                             }

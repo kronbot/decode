@@ -73,9 +73,8 @@ public class MainDrivingNewOp extends LinearOpMode {
         while (!isStopRequested() && !opModeIsActive()) {
             telemetry.addLine("Initialization Ready");
             telemetry.update();
-
             return;
-            }
+        }
 
             //main loop
             while (opModeIsActive() && !isStopRequested()) {

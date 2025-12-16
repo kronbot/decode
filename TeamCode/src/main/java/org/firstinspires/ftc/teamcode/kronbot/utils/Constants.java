@@ -40,7 +40,7 @@ public class Constants {
     public static double minVelocity = 1900;
     public static double maxVelocity = 2500;
 
-    //AIM PID
+    //AIM PID - to be tuned
     public static double AIM_KP = 0.02;
     public static double AIM_KI = 0.0;
     public static double AIM_KD = 0.003;

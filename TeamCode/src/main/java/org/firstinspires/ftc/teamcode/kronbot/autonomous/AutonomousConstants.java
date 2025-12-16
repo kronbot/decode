@@ -30,6 +30,9 @@ public final class AutonomousConstants {
     public static Coordinates LaunchZoneBackBlue = new Coordinates(25, 0, 0);
     public static Coordinates ParkBack = new Coordinates(9.5, -4, -0.59);
     public static double launchSpeedBack = 2500;
+
+    //how much reflecting light is hitting the sensor? - to be tuned
+    //works regardless of color, just for the detection of the object in front of the sensor
     public static final int BALL_EXIT_THRESHOLD = 150;
 
 
