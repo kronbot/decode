@@ -23,12 +23,13 @@ public class Auto_BackBlueOp extends OpMode {
     private KronBot robot;
     private Follower follower;
     private Timer pathTimer, opmodeTimer;
-    private int pathState;
+    private int pathState, launchState;
 
     // Define poses
     Pose startingPoseBack = coordinates(StartingPoseBack);
     Pose launchZoneBack = coordinates(LaunchZoneBackBlue);
     Pose parkBack = coordinates(ParkBackBlue);
+    private double leftVel, rightVel;
 
 
     // Paths and PathChains
@@ -84,22 +85,24 @@ public class Auto_BackBlueOp extends OpMode {
     @Override
     public void loop() {
         follower.update();
-        try {
-            autonomousPathUpdate();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+
+        leftVel = robot.leftOuttake.getVelocity();
+        rightVel = robot.rightOuttake.getVelocity();
+
+        autonomousPathUpdate();
 
         Pose currentPose = follower.getPose();
         telemetry.addData("Path State", pathState);
         telemetry.addData("X", currentPose.getX());
         telemetry.addData("Y", currentPose.getY());
         telemetry.addData("Heading (rad)", currentPose.getHeading());
+        telemetry.addData("Left vel", robot.leftOuttake.getVelocity());
+        telemetry.addData("Right vel", robot.rightOuttake.getVelocity());
+
         telemetry.update();
     }
 
-    /** Handles autonomous path progression **/
-    public void autonomousPathUpdate() throws InterruptedException {
+    public void autonomousPathUpdate() {
 
         switch (pathState) {
             case 0:
@@ -109,28 +112,84 @@ public class Auto_BackBlueOp extends OpMode {
 
             case 1:
                 if (!follower.isBusy()) {
-                    robot.leftOuttake.setVelocity(launchSpeedBack);
-                    robot.rightOuttake.setVelocity(launchSpeedBack);
-                    sleep(3000);
-                    robot.loaderServo.runContinuous(false, true);
-                    sleep(2000);
-                    robot.loaderServo.runContinuous(false, false);
-                    sleep(4000);
-                    robot.loaderServo.runContinuous(false, true);
-                    sleep(1000);
-                    robot.loaderServo.runContinuous(false, false);
-                    sleep(4000);
-                    robot.loaderServo.runContinuous(false, true);
-                    sleep(1000);
-                    robot.leftOuttake.setPower(0);
-                    robot.rightOuttake.setPower(0);
-                    robot.loaderServo.runContinuous(false, false);
-                    sleep(2000);
+                    switch (launchState) {
+                        case 0:
+                            // Start outtake motors
+                            robot.leftOuttake.setVelocity(launchSpeedBack);
+                            robot.rightOuttake.setVelocity(launchSpeedBack);
+                            launchState++;
+                            pathTimer.resetTimer();
+                            break;
 
+                        case 1:
+                            // Wait for motors to reach speed and launch 1
+                            if (leftVel+100 >= launchSpeedBack && rightVel+100 >= launchSpeedBack && pathTimer.getElapsedTimeSeconds() >= 4.0) {
+                                robot.loaderServo.runContinuous(false, true);
+                                launchState++;
+                                pathTimer.resetTimer();
+                            }
+                            break;
+
+                        case 2:
+                            // Use color sensor to detect when ball is launched and stop servo (+timer for fallback safety)
+                            if (pathTimer.getElapsedTimeSeconds() > 1.0) {
+                                robot.loaderServo.runContinuous(false, false);
+                                launchState++;
+                                pathTimer.resetTimer();
+                            }
+                            break;
+
+                        case 3:
+                            // Launch 2
+                            if (leftVel+100 >= launchSpeedBack && rightVel+100 >= launchSpeedBack) {
+                                robot.loaderServo.runContinuous(false, true);
+                                launchState++;
+                                pathTimer.resetTimer();
+                            }
+                            break;
+
+                        case 4:
+                            // Stop servo between shots
+                            if (pathTimer.getElapsedTimeSeconds() > 1.0) {
+                                robot.loaderServo.runContinuous(false, false);
+                                launchState++;
+                                pathTimer.resetTimer();
+                            }
+                            break;
+
+                        case 5:
+                            // Launch 3
+                            if (leftVel+100 >= launchSpeedBack && rightVel+100 >= launchSpeedBack) {
+                                robot.loaderServo.runContinuous(false, true);
+                                launchState++;
+                                pathTimer.resetTimer();
+                            }
+                            break;
+
+                        case 6:
+                            // Empty, stop motors
+                            if (pathTimer.getElapsedTimeSeconds() > 1.0) {
+                                robot.leftOuttake.setPower(0);
+                                robot.rightOuttake.setPower(0);
+                                robot.loaderServo.runContinuous(false, false);
+                                launchState++;
+                                pathTimer.resetTimer();
+                            }
+                            break;
+
+                        case 7:
+                            // Exit shooting loop
+                            if (pathTimer.getElapsedTimeSeconds() >= 3.0) {
+                                launchState = 0;
+                                setPathState(2);
+                            }
+                            break;
+                    }
                 }
                 break;
 
             case 2:
+
                 if (!follower.isBusy()) {
                     follower.followPath(goToPark);
                     setPathState(3);
@@ -143,13 +202,14 @@ public class Auto_BackBlueOp extends OpMode {
                 }
                 break;
 
+
             case -1:
-                //stop();
+                // Idle / done
                 break;
         }
     }
 
-    /** Sets new path state and resets timer **/
+
     public void setPathState(int newState) {
         pathState = newState;
         pathTimer.resetTimer();
@@ -157,8 +217,6 @@ public class Auto_BackBlueOp extends OpMode {
 
     @Override
     public void stop() {
-
-        telemetry.addLine("stopped");
     }
 
 }
