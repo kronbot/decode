@@ -17,8 +17,8 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import org.firstinspires.ftc.teamcode.kronbot.KronBot;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
-@Autonomous(name = "Auto_v1_BACKBlue", group = org.firstinspires.ftc.teamcode.kronbot.utils.Constants.TEST_GROUP)
-public class Auto_v1BackBlueOp extends OpMode {
+@Autonomous(name = "BLUE Auto_Back", group = org.firstinspires.ftc.teamcode.kronbot.utils.Constants.TEST_GROUP)
+public class Auto_BackBlueOp extends OpMode {
 
     private KronBot robot;
     private Follower follower;
@@ -26,9 +26,9 @@ public class Auto_v1BackBlueOp extends OpMode {
     private int pathState;
 
     // Define poses
-    Pose startingPoseBack = coordinates(StartingPoseBackBlue);
+    Pose startingPoseBack = coordinates(StartingPoseBack);
     Pose launchZoneBack = coordinates(LaunchZoneBackBlue);
-    Pose parkBack = coordinates(ParkBack);
+    Pose parkBack = coordinates(ParkBackBlue);
 
 
     // Paths and PathChains
