@@ -28,7 +28,6 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 @TeleOp(name = "New Main Driving", group = Constants.MAIN_GROUP)
 public class MainDrivingNewOp extends LinearOpMode {
     private final KronBot robot = new KronBot();
-
     private RobotCentricDrive robotCentricDrive;
     private FieldCentricDrive fieldCentricDrive;
 
@@ -59,6 +58,7 @@ public class MainDrivingNewOp extends LinearOpMode {
         Button driveModeButton = new Button();
         Button reverseButton = new Button();
         Button aimButton = new Button();
+        Button aimButtonStop = new Button();
         buttonRebounceTimer = new Timer();
 
         autoAim = new AutoAim(robot);
@@ -81,7 +81,20 @@ public class MainDrivingNewOp extends LinearOpMode {
 
                 aimButton.updateButton(gamepad1.dpad_right);
                 aimButton.shortPress();
-                autoAimEnabled = aimButton.getShortToggle();
+
+                aimButtonStop.updateButton(gamepad1.dpad_left);
+                aimButtonStop.shortPress();
+
+                if (aimButton.getShortToggle() && !aimButtonStop.getShortToggle()) {
+                    autoAimEnabled = true;
+                    autoAim.reset();
+                    aimButton.resetToggles();
+                }
+                else if (aimButtonStop.getShortToggle()) {
+                    autoAimEnabled = false;
+                    autoAim.reset();
+                    aimButtonStop.resetToggles();
+                }
 
                 outake();
 

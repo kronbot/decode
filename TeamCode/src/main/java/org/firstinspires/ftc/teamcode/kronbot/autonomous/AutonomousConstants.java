@@ -21,15 +21,14 @@ public final class AutonomousConstants {
     public static Coordinates StartingPoseClose = new Coordinates(0, 0, 0);
     public static Coordinates LaunchZoneClose = new Coordinates(16, 32, -0.8);
     public static Coordinates LaunchZoneClose2 = new Coordinates(-6.22, 65.15, -0.84);
-    public static Coordinates ParkClose = new Coordinates(-5.22, 55.15, -0.84);
-    public static double launchSpeedClose = 2000;
+    public static Coordinates ParkClose = new Coordinates(-5, 0, 0);
+    public static double launchSpeedClose = 1900;
     public static Coordinates StartingPoseBack = new Coordinates(0, 0, 0);
-    public static Coordinates LaunchZoneBack = new Coordinates(9.5, -2.6, -0.59);
-
+    public static Coordinates LaunchZoneBack = new Coordinates(20, -2.3, -0.4);
+    public static Coordinates ParkBack = new Coordinates(40, 0, 0);
     public static Coordinates StartingPoseBackBlue  = new Coordinates(0, 0, 0);
     public static Coordinates LaunchZoneBackBlue = new Coordinates(25, 0, 0);
-    public static Coordinates ParkBack = new Coordinates(9.5, -4, -0.59);
-    public static double launchSpeedBack = 2500;
+    public static double launchSpeedBack = 2300;
 
     //how much reflecting light is hitting the sensor? - to be tuned
     //works regardless of color, just for the detection of the object in front of the sensor

@@ -73,7 +73,7 @@ public class KronBot {
     public void initAutonomy(HardwareMap hardwareMap) {
         initAutoMotors(hardwareMap);
         initServos(hardwareMap);
-        initSensors(hardwareMap);
+        //initSensors(hardwareMap);
     }
 
     public void initTeleop(HardwareMap hardwareMap) {

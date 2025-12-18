@@ -2,7 +2,7 @@ package org.firstinspires.ftc.teamcode.kronbot.autonomous;
 
 import static org.firstinspires.ftc.teamcode.kronbot.autonomous.AutonomousConstants.*;
 
-
+import static java.lang.Thread.sleep;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
@@ -17,21 +17,18 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import org.firstinspires.ftc.teamcode.kronbot.KronBot;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
-@Autonomous(name = "RED Auto_Close", group = org.firstinspires.ftc.teamcode.kronbot.utils.Constants.TEST_GROUP)
-public class Auto_CloseRedOp extends OpMode {
+@Autonomous(name = "RED Auto_Back", group = org.firstinspires.ftc.teamcode.kronbot.utils.Constants.TEST_GROUP)
+public class Auto_v1BackRedOp extends OpMode {
 
     private KronBot robot;
     private Follower follower;
     private Timer pathTimer, opmodeTimer;
-    private int pathState;
-    private int launchState;
+    private int pathState, launchState;
 
     // Define poses
-    Pose startingPose = coordinates(StartingPoseClose);
-    Pose launchZone = coordinates(LaunchZoneClose);
-
-    Pose launchZone2 = coordinates(LaunchZoneClose2);
-    Pose parkZone = coordinates(ParkClose);
+    Pose startingPose = coordinates(StartingPoseBack);
+    Pose launchZone = coordinates(LaunchZoneBack);
+    Pose parkZone = coordinates(ParkBack);
 
 
     private double leftVel, rightVel;
@@ -65,13 +62,11 @@ public class Auto_CloseRedOp extends OpMode {
         goToLaunch = follower.pathBuilder()
                 .addPath(new BezierLine(startingPose, launchZone))
                 .setLinearHeadingInterpolation(startingPose.getHeading(), launchZone.getHeading())
-                .addPath(new BezierLine(launchZone, launchZone2))
-                .setLinearHeadingInterpolation(launchZone.getHeading(), launchZone2.getHeading())
                 .build();
 
         goToPark = follower.pathBuilder()
-                .addPath(new BezierLine(launchZone2, parkZone))
-                .setLinearHeadingInterpolation(launchZone2.getHeading(), parkZone.getHeading())
+                .addPath(new BezierLine(launchZone, parkZone))
+                .setLinearHeadingInterpolation(launchZone.getHeading(), parkZone.getHeading())
                 .build();
     }
 
@@ -101,7 +96,6 @@ public class Auto_CloseRedOp extends OpMode {
         telemetry.addData("X", currentPose.getX());
         telemetry.addData("Y", currentPose.getY());
         telemetry.addData("Heading (rad)", currentPose.getHeading());
-        //telemetry.addData("Outtake Alpha", robot.outtakeColor.alpha());
         telemetry.addData("Left vel", robot.leftOuttake.getVelocity());
         telemetry.addData("Right vel", robot.rightOuttake.getVelocity());
 
@@ -121,15 +115,15 @@ public class Auto_CloseRedOp extends OpMode {
                     switch (launchState) {
                         case 0:
                             // Start outtake motors
-                            robot.leftOuttake.setVelocity(launchSpeedClose);
-                            robot.rightOuttake.setVelocity(launchSpeedClose);
+                            robot.leftOuttake.setVelocity(launchSpeedBack);
+                            robot.rightOuttake.setVelocity(launchSpeedBack);
                             launchState++;
                             pathTimer.resetTimer();
                             break;
 
                         case 1:
                             // Wait for motors to reach speed and launch 1
-                            if (leftVel+100 >= launchSpeedClose && rightVel+100 >= launchSpeedClose && pathTimer.getElapsedTimeSeconds() > 4.0) {
+                            if (leftVel+100 >= launchSpeedBack && rightVel+100 >= launchSpeedBack && pathTimer.getElapsedTimeSeconds() >= 4.0) {
                                 robot.loaderServo.runContinuous(false, true);
                                 launchState++;
                                 pathTimer.resetTimer();
@@ -147,7 +141,7 @@ public class Auto_CloseRedOp extends OpMode {
 
                         case 3:
                             // Launch 2
-                            if (leftVel+100 >= launchSpeedClose && rightVel+100 >= launchSpeedClose) {
+                            if (leftVel+100 >= launchSpeedBack && rightVel+100 >= launchSpeedBack) {
                                 robot.loaderServo.runContinuous(false, true);
                                 launchState++;
                                 pathTimer.resetTimer();
@@ -165,7 +159,7 @@ public class Auto_CloseRedOp extends OpMode {
 
                         case 5:
                             // Launch 3
-                            if (leftVel+100 >= launchSpeedClose  && rightVel+100 >= launchSpeedClose) {
+                            if (leftVel+100 >= launchSpeedBack && rightVel+100 >= launchSpeedBack) {
                                 robot.loaderServo.runContinuous(false, true);
                                 launchState++;
                                 pathTimer.resetTimer();
@@ -202,10 +196,10 @@ public class Auto_CloseRedOp extends OpMode {
                 }
                 break;
 
-           case 3:
+            case 3:
                 if (!follower.isBusy()) {
                     setPathState(-1);
-                    }
+                }
                 break;
 
 
