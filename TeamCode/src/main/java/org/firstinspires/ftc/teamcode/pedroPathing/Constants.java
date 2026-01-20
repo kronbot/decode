@@ -57,12 +57,12 @@ public class Constants {
             .forwardEncoder_HardwareMapName("parallelOdometry")
             .strafeEncoder_HardwareMapName("perpendicularOdometry")
             .strafePodX(5.906)
-            .forwardPodY(8.661)
+            .forwardPodY(-7.087)
             .IMU_HardwareMapName("imu")
             .IMU_Orientation(
                     new RevHubOrientationOnRobot(
-                            RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
-                            RevHubOrientationOnRobot.UsbFacingDirection.UP
+                            RevHubOrientationOnRobot.LogoFacingDirection.FORWARD,
+                            RevHubOrientationOnRobot.UsbFacingDirection.RIGHT
                     )
             )
             .forwardTicksToInches(0.00296496)
