@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.kronbot.manual;
+/*package org.firstinspires.ftc.teamcode.kronbot.manual;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -67,4 +67,4 @@ public class AprilTagWebcamExample extends OpMode {
         telemetry.addData("Status", "AprilTag Webcam Stopped");
         telemetry.update();
     }
-}
+}*/

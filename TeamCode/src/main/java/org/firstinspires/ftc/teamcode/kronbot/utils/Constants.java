@@ -37,6 +37,8 @@ public class Constants {
     public static UsbFacingDirection USB_FACING_DIRECTION = UsbFacingDirection.UP;
 
     public static boolean LOADER_SERVO_REVERSED = true;
+    public static double TURRET_SERVO_MAX = 180;
+    public static double TURRET_SERVO_MIN = 0;
     public static double minVelocity = 1900;
     public static double maxVelocity = 2500;
 

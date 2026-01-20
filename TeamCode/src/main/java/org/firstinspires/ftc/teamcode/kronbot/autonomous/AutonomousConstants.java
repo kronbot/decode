@@ -26,21 +26,19 @@ public final class AutonomousConstants {
 
     /// RED auto movement
     public static Coordinates StartingPoseClose = new Coordinates(0, 0, 0);
-    public static Coordinates LaunchZoneClose = new Coordinates(16, 32, -0.8);
-    public static Coordinates LaunchZoneClose2 = new Coordinates(-6.22, 65.15, -0.84);
-    public static Coordinates ParkClose = new Coordinates(-5, 0, 0);
+    public static Coordinates LaunchZoneClose = new Coordinates(-25, 32, -0.8);
+    public static Coordinates LaunchZoneClose2 = new Coordinates(-19, 55, -0.84);
+    public static Coordinates ParkClose = new Coordinates(-15, 0, 0);
     public static Coordinates StartingPoseBack = new Coordinates(0, 0, 0);
     public static Coordinates LaunchZoneBack = new Coordinates(20, -2.3, -0.4);
     public static Coordinates ParkBack = new Coordinates(40, 0, 0);
 
     /// BLUE auto movement
-    public static Coordinates LaunchZoneCloseBlue = new Coordinates(16, 32, -0.8);
-    public static Coordinates LaunchZoneClose2Blue = new Coordinates(-6.22, -65.15, 0.84);
+    public static Coordinates LaunchZoneCloseBlue = new Coordinates(16, -32, 0.7);
+    public static Coordinates LaunchZoneClose2Blue = new Coordinates(-25, -58, 0.8);
     public static Coordinates ParkCloseBlue = new Coordinates(-5, 0, 0);
-    public static Coordinates LaunchZoneBackBlue = new Coordinates(25, 0, 0);
+    public static Coordinates LaunchZoneBackBlue = new Coordinates(18, 2.3, 0.4);
     public static Coordinates ParkBackBlue = new Coordinates(40, 0, 0);
-
-
 
 
     public static Pose coordinates(Coordinates coord) {

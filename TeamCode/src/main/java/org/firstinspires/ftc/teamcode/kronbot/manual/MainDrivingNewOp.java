@@ -33,7 +33,7 @@ public class MainDrivingNewOp extends LinearOpMode {
 
     private Gamepad drivingGamepad;
     private AprilTagWebcam aprilTagWebcam = new AprilTagWebcam();
-    private AprilTagDetection tag24;
+    private AprilTagDetection tag24, tag20, tag;
     private FtcDashboard dashboard;
 
     //Control Variables
@@ -106,7 +106,7 @@ public class MainDrivingNewOp extends LinearOpMode {
                 reverseButton.shortPress();
 
                 robotCentricDrive.setReverse(reverseButton.getShortToggle());
-                if(!autoAimEnabled || tag24==null) {
+                if(!autoAimEnabled || tag==null) {
                     if (!driveModeButton.getLongToggle()) {
                         robotCentricDrive.run();
                         robotCentricDrive.telemetry(telemetry);
@@ -119,7 +119,8 @@ public class MainDrivingNewOp extends LinearOpMode {
 
                 // Webcam
                 aprilTagWebcam.update();
-                tag24 = aprilTagWebcam.getTagBySpecificId(24);
+                tag24 = aprilTagWebcam.getTagBySpecificId();
+                //tag23 = aprilTagWebcam.getTagBySpecificId(23);
 
                 // Outtake velocity telemetry
                 leftVel = robot.leftOuttake.getVelocity();
@@ -181,7 +182,7 @@ public class MainDrivingNewOp extends LinearOpMode {
 
         private void handleAutoAim(){
             if (autoAimEnabled && tag24 != null) {
-                double rotationPower = autoAim.calculateAimRotation(tag24);
+                double rotationPower = autoAim.calculateAimRotation(tag);
 
                 // manual drive cuz rotation is controlled by autoaim
                 double x = drivingGamepad.left_stick_x;

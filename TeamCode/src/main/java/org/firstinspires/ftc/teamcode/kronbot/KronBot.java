@@ -16,10 +16,10 @@ public class KronBot {
     public MotorDriver motors;
     public ControlHubGyroscope gyroscope;
 
-    public DcMotorEx leftOuttake;
-    public DcMotorEx rightOuttake;
-
+    public DcMotorEx intakeMotor, leftOuttake, rightOuttake;
     public Servo loaderServo;
+
+    public Servo turretServo;
     public ColorSensor outtakeColor;
 
 
@@ -30,26 +30,23 @@ public class KronBot {
         DcMotorEx rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
         rightRear.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        leftOuttake = hardwareMap.get(DcMotorEx.class, "leftOuttake");
-        rightOuttake = hardwareMap.get(DcMotorEx.class, "rightOuttake");
-        leftOuttake.setDirection(DcMotorSimple.Direction.REVERSE);
-
+        intakeMotor = hardwareMap.get(DcMotorEx.class, "intakeMotor");
+        //leftOuttake = hardwareMap.get(DcMotorEx.class, "nmk");
+        //rightOuttake = hardwareMap.get(DcMotorEx.class, "nmk2");
 
         motors = new MotorDriver();
         motors.init(leftRear, leftFront, rightRear, rightFront);
     }
 
     public void initAutoMotors(HardwareMap hardwareMap) {
-        leftOuttake = hardwareMap.get(DcMotorEx.class, "leftOuttake");
-        rightOuttake = hardwareMap.get(DcMotorEx.class, "rightOuttake");
-        leftOuttake.setDirection(DcMotorSimple.Direction.REVERSE);
-
+        intakeMotor = hardwareMap.get(DcMotorEx.class, "leftOuttake");
     }
 
     public void initServos(HardwareMap hardwareMap) {
         loaderServo = new Servo(hardwareMap);
-        loaderServo.init("loaderServo", true, false, 0, 0, 0);
-        loaderServo.runContinuous(false, false);
+        loaderServo.init("loader", true, false, 0, 0, 0);
+        turretServo = new Servo(hardwareMap);
+        turretServo.init("turretPivot", false, false, 0, 1, 0);
     }
 
     public void initSensors(HardwareMap hardwareMap) {

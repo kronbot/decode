@@ -3,6 +3,8 @@ package org.firstinspires.ftc.teamcode.kronbot.manual;
 
 
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.LOADER_SERVO_REVERSED;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.TURRET_SERVO_MAX;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.TURRET_SERVO_MIN;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.maxVelocity;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.minVelocity;
 
@@ -62,8 +64,10 @@ public class MainDrivingOp extends LinearOpMode {
         Button reverseButton = new Button();
         Button alignButton = new Button();
         boolean alignmentPressed = false;
-
-        boolean isLaunching = false;
+        Button pivotButton = new Button();
+        Button intakeMotor = new Button();
+        Button intakeMotorStop = new Button();
+        boolean isIntakeOn = false;
         boolean wasRightBumperPressed = false;
         double currentVelocity = 1300;
 
@@ -78,7 +82,7 @@ public class MainDrivingOp extends LinearOpMode {
         }
 
         while (opModeIsActive() && !isStopRequested()) {
-            //Outtake servo
+            //loader servo
             if(gamepad1.left_trigger > 0.5) {
                 if(!LOADER_SERVO_REVERSED)
                     robot.loaderServo.setPosition(0);
@@ -94,32 +98,56 @@ public class MainDrivingOp extends LinearOpMode {
                 robot.loaderServo.setPosition(val);
             }
 
-            //Outake Wheels
-            if (gamepad1.right_bumper && !wasRightBumperPressed) {
-                isLaunching = !isLaunching;
-
-                if (isLaunching) {
-                    currentVelocity = minVelocity;
-                }
-            }
-
-            if (isLaunching) {
-
-                if (gamepad1.dpad_up) {
-                    currentVelocity = maxVelocity;
-                } else if (gamepad1.dpad_down) {
-                    currentVelocity = minVelocity;
-                }
-
-                robot.leftOuttake.setVelocity(currentVelocity);
-                robot.rightOuttake.setVelocity(currentVelocity);
-
+            //pivot turret servo
+            pivotButton.updateButton(gamepad1.cross);
+            pivotButton.shortPress();
+            if(pivotButton.getShortToggle()) {
+                robot.turretServo.setPosition(TURRET_SERVO_MIN);
             } else {
-                robot.leftOuttake.setPower(0);
-                robot.rightOuttake.setPower(0);
+                robot.turretServo.setPosition(TURRET_SERVO_MAX);
             }
 
-            wasRightBumperPressed = gamepad1.right_bumper;
+            //intake motor
+            intakeMotor.updateButton(gamepad1.right_bumper);
+            intakeMotor.shortPress();
+            intakeMotorStop.updateButton(gamepad1.left_bumper);
+            intakeMotorStop.shortPress();
+            if(!isIntakeOn && intakeMotor.getShortToggle()) {
+                robot.intakeMotor.setPower(1);
+                isIntakeOn=true;
+            } else if (isIntakeOn && intakeMotorStop.getShortToggle()){
+                robot.intakeMotor.setPower(0);
+                isIntakeOn=false;
+                intakeMotor.resetToggles();
+                intakeMotorStop.resetToggles();
+            }
+
+            //Outake Wheels
+//            if (gamepad1.right_bumper && !wasRightBumperPressed) {
+//                isLaunching = !isLaunching;
+//
+//                if (isLaunching) {
+//                    currentVelocity = minVelocity;
+//                }
+//            }
+//
+//            if (isLaunching) {
+//
+//                if (gamepad1.dpad_up) {
+//                    currentVelocity = maxVelocity;
+//                } else if (gamepad1.dpad_down) {
+//                    currentVelocity = minVelocity;
+//                }
+//
+//                robot.leftOuttake.setVelocity(currentVelocity);
+//                robot.rightOuttake.setVelocity(currentVelocity);
+//
+//            } else {
+//                robot.leftOuttake.setPower(0);
+//                robot.rightOuttake.setPower(0);
+//            }
+//
+//            wasRightBumperPressed = gamepad1.right_bumper;
 
 
             // Wheels
@@ -168,10 +196,6 @@ public class MainDrivingOp extends LinearOpMode {
             }
 
             alignmentPressed = alignButton.press();
-
-            telemetry.addLine("");
-            telemetry.addData("Left Shooter Vel", robot.leftOuttake.getVelocity());
-            telemetry.addData("Right Shooter Vel", robot.rightOuttake.getVelocity());
 
             telemetry.update();
 }

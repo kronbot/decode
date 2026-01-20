@@ -156,7 +156,7 @@ public class Auto_CloseBlueOp extends OpMode {
 
                         case 4:
                             // Stop servo between shots
-                            if (pathTimer.getElapsedTimeSeconds() > 1.0) {
+                            if (pathTimer.getElapsedTimeSeconds() > 2.0) {
                                 robot.loaderServo.runContinuous(false, false);
                                 launchState++;
                                 pathTimer.resetTimer();

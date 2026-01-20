@@ -179,7 +179,7 @@ public class Auto_BackBlueOp extends OpMode {
 
                         case 7:
                             // Exit shooting loop
-                            if (pathTimer.getElapsedTimeSeconds() >= 3.0) {
+                            if (pathTimer.getElapsedTimeSeconds() >= 2.0) {
                                 launchState = 0;
                                 setPathState(2);
                             }
