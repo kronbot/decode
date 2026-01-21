@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.kronbot;
 
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -16,10 +17,10 @@ public class KronBot {
     public MotorDriver motors;
     public ControlHubGyroscope gyroscope;
 
-    public DcMotorEx intakeMotor, leftOuttake, rightOuttake;
+    public DcMotorEx intakeMotor, leftOuttake, rightOuttake, shooterMotor;
     public Servo loaderServo;
 
-    public Servo turretServo;
+    public Servo turretServo, angleServo;
     public ColorSensor outtakeColor;
 
 
@@ -31,9 +32,16 @@ public class KronBot {
         rightRear.setDirection(DcMotorSimple.Direction.REVERSE);
 
         intakeMotor = hardwareMap.get(DcMotorEx.class, "intakeMotor");
-        //leftOuttake = hardwareMap.get(DcMotorEx.class, "nmk");
-        //rightOuttake = hardwareMap.get(DcMotorEx.class, "nmk2");
-
+        shooterMotor = hardwareMap.get(DcMotorEx.class, "ShooterMotor");
+        shooterMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        shooterMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        shooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        shooterMotor.setVelocityPIDFCoefficients(
+                7.0,  // P - main stabilizer
+                0.1,   // I - usually 0
+                0.8,   // D - reduces overshoot
+                12.0   // F - feedforward (VERY important)
+        );
         motors = new MotorDriver();
         motors.init(leftRear, leftFront, rightRear, rightFront);
     }
@@ -46,7 +54,10 @@ public class KronBot {
         loaderServo = new Servo(hardwareMap);
         loaderServo.init("loader", true, false, 0, 0, 0);
         turretServo = new Servo(hardwareMap);
-        turretServo.init("turretPivot", false, false, 0, 1, 0);
+        turretServo.init("turretPivot", false, false, 0, 1, 0.5);
+        turretServo.setPosition(0.5);
+        angleServo = new Servo(hardwareMap);
+        angleServo.init("anglePivot", false, false, 0, 1, 0);
     }
 
     public void initSensors(HardwareMap hardwareMap) {

@@ -37,10 +37,12 @@ public class Constants {
     public static UsbFacingDirection USB_FACING_DIRECTION = UsbFacingDirection.UP;
 
     public static boolean LOADER_SERVO_REVERSED = true;
-    public static double TURRET_SERVO_MAX = 180;
+    public static double TURRET_SERVO_MAX = 0.3;
     public static double TURRET_SERVO_MIN = 0;
-    public static double minVelocity = 1900;
-    public static double maxVelocity = 2500;
+    public static double ANGLE_SERVO_MAX = 0.67;
+    public static double ANGLE_SERVO_MIN = 0;
+    public static double minVelocity = 1000;
+    public static double maxVelocity = 1500;
 
     //AIM PID - to be tuned
     public static double AIM_KP = 0.02;
