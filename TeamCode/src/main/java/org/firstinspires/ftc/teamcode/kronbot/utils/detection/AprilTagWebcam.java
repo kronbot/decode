@@ -117,11 +117,11 @@ public class AprilTagWebcam {
         }
     }
 
-    public AprilTagDetection getTagBySpecificId(){
+    public AprilTagDetection getTagBySpecificId(int id){
         for(AprilTagDetection detection : detectedTags){
-            //if(detection.id == id){
+            if(detection.id == id){
                 return detection;
-            //}
+            }
         }
         return null;
     }
