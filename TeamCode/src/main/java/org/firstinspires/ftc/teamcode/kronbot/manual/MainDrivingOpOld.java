@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.kronbot.manual;
 
 
-
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_MAX;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_MIN;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.LOADER_SERVO_REVERSED;
@@ -15,11 +14,10 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
-import org.firstinspires.ftc.teamcode.kronbot.KronBot;
 import org.firstinspires.ftc.teamcode.kronbot.Robot;
+import org.firstinspires.ftc.teamcode.kronbot.utils.Constants;
 import org.firstinspires.ftc.teamcode.kronbot.utils.components.FieldCentricDrive;
 import org.firstinspires.ftc.teamcode.kronbot.utils.components.RobotCentricDrive;
-import org.firstinspires.ftc.teamcode.kronbot.utils.Constants;
 import org.firstinspires.ftc.teamcode.kronbot.utils.detection.AprilTagWebcam;
 import org.firstinspires.ftc.teamcode.kronbot.utils.pid.ControllerPID;
 import org.firstinspires.ftc.teamcode.kronbot.utils.wrappers.Button;
@@ -30,8 +28,8 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
  *
  * @version 1.0
  */
-@TeleOp(name = "Main Driving", group = Constants.MAIN_GROUP)
-public class MainDrivingOp extends LinearOpMode {
+@TeleOp(name = "Main Driving before Telea", group = Constants.MAIN_GROUP)
+public class MainDrivingOpOld extends LinearOpMode {
     private final Robot robot = new Robot();
 
     RobotCentricDrive robotCentricDrive;
@@ -182,45 +180,38 @@ public class MainDrivingOp extends LinearOpMode {
             reverseButton.updateButton(gamepad1.circle);
             reverseButton.shortPress();
 
-            robotCentricDrive.setReverse(reverseButton.getShortToggle());
-            if (!driveModeButton.getLongToggle()) {
-                robotCentricDrive.run();
-                robotCentricDrive.telemetry(telemetry);
-            } else {
-                fieldCentricDrive.run();
-                fieldCentricDrive.telemetry(telemetry);
-            }
 
-            aprilTagWebcam.update();
-            AprilTagDetection tag = aprilTagWebcam.getTowerTags();
 
-            alignButton.updateButton(gamepad1.dpad_left);
-
-            if(alignmentPressed != alignButton.press() && alignButton.press())
-            {
-                tagAlignmentPID.reset();
-                alignmentPressed = alignButton.press();
-            }
-
-            if(tag != null)
-            {
-                double bearing = tag.ftcPose.bearing;
-
-                if(Math.abs(bearing) > 1)
-                    if(alignmentPressed) {
-                        double value = tagAlignmentPID.calculate(0, bearing);
-
-                        robot.motors.leftFront.setPower(value);
-                        robot.motors.rightFront.setPower(-value);
-                        robot.motors.leftRear.setPower(value);
-                        robot.motors.rightRear.setPower(-value);
-                    }
-                    else {
-                        tagAlignmentPID.reset();
-                    }
-            }
-
-            alignmentPressed = alignButton.press();
+//            aprilTagWebcam.update();
+//            AprilTagDetection tag = aprilTagWebcam.getTowerTags();
+//
+//            alignButton.updateButton(gamepad1.dpad_left);
+//
+//            if(alignmentPressed != alignButton.press() && alignButton.press())
+//            {
+//                tagAlignmentPID.reset();
+//                alignmentPressed = alignButton.press();
+//            }
+//
+//            if(tag != null)
+//            {
+//                double bearing = tag.ftcPose.bearing;
+//
+//                if(Math.abs(bearing) > 1)
+//                    if(alignmentPressed) {
+//                        double value = tagAlignmentPID.calculate(0, bearing);
+//
+//                        robot.motors.leftFront.setPower(value);
+//                        robot.motors.rightFront.setPower(-value);
+//                        robot.motors.leftRear.setPower(value);
+//                        robot.motors.rightRear.setPower(-value);
+//                    }
+//                    else {
+//                        tagAlignmentPID.reset();
+//                    }
+//            }
+//
+//            alignmentPressed = alignButton.press();
 
             telemetry.addData("shooter motor vel:", robot.shooterMotor.getVelocity());
             telemetry.addData("angle servo pos:", robot.turretServo.getPosition());
