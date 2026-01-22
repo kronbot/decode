@@ -133,8 +133,13 @@ public class TurretDataOp extends LinearOpMode {
                 // Map joystick range [-1, 1] to servo range [ANGLE_SERVO_MIN, 1.0] (full servo range)
                 double rightStickY = -gamepad1.right_stick_y; // Inverted for intuitive control
                 if (Math.abs(rightStickY) > 0.05) { // Deadzone
-                    // Map from [-1, 1] to [ANGLE_SERVO_MIN, 1.0]
-                    currentAngleServoPosition = ANGLE_SERVO_MIN + ((rightStickY + 1) / 2.0) * (1.0 - ANGLE_SERVO_MIN);
+                    // Adjust position incrementally based on joystick input
+                    // The multiplier (0.005) controls sensitivity - adjust as needed
+                    double increment = rightStickY * 0.005;
+                    currentAngleServoPosition += increment;
+
+                    // Clamp to valid servo range
+                    currentAngleServoPosition = Math.max(ANGLE_SERVO_MIN, Math.min(ANGLE_SERVO_MAX, currentAngleServoPosition));
                 }
                 robot.angleServo.setPosition(currentAngleServoPosition);
 

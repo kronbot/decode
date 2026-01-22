@@ -72,6 +72,7 @@ public class MainDrivingOp extends LinearOpMode {
         Button testButton = new Button();
 
         boolean isIntakeOn = false;
+        boolean loaderOn = false;
         boolean wasShooterButtonPressed = false;
         boolean isLaunching = false;
         double currentVelocity = 1300;
@@ -89,37 +90,42 @@ public class MainDrivingOp extends LinearOpMode {
         while (opModeIsActive() && !isStopRequested()) {
             //loader servo
             if(gamepad1.left_trigger > 0.5) {
+                loaderOn = true;
                 if(!LOADER_SERVO_REVERSED)
                     robot.loaderServo.setPosition(0);
                 else
                     robot.loaderServo.setPosition(1);
+
+                if(isIntakeOn)
+                    robot.intakeMotor.setPower(-1);
             } else {
+                loaderOn=false;
                 double val = gamepad1.right_trigger;
                 if(!LOADER_SERVO_REVERSED)
                     val = val / 2 + 0.5;
-                else
+                else {
                     val = 1 - (val / 2 + 0.5);
-
+//                    if(isIntakeOn)
+//                        robot.intakeMotor.setPower(-1);
+                }
                 robot.loaderServo.setPosition(val);
             }
 
             //pivot turret servo
-            pivotButton.updateButton(gamepad1.triangle);
-            pivotButton.shortPress();
-            if(pivotButton.getShortToggle()) {
-                robot.turretServo.setPosition(TURRET_SERVO_MIN);
-            } else {
-                robot.turretServo.setPosition(TURRET_SERVO_MAX);
-            }
+//            pivotButton.updateButton(gamepad1.triangle);
+//            pivotButton.shortPress();
+//            if(pivotButton.shortPress()) {
+//                robot.turretServo.setPosition(robot.turretServo.getPosition() == TURRET_SERVO_MAX ? TURRET_SERVO_MIN : TURRET_SERVO_MAX);
+//            }
 
             //test
-            testButton.updateButton(gamepad1.dpad_right);
-            testButton.shortPress();
-            if(testButton.getShortToggle()) {
-                robot.angleServo.setPosition(ANGLE_SERVO_MIN);
-            } else {
-                robot.angleServo.setPosition(ANGLE_SERVO_MAX);
-            }
+//            testButton.updateButton(gamepad1.dpad_right);
+//            testButton.shortPress();
+//            if(testButton.getShortToggle()) {
+//                robot.angleServo.setPosition(ANGLE_SERVO_MIN);
+//            } else {
+//                robot.angleServo.setPosition(ANGLE_SERVO_MAX);
+//            }
 
             //intake motor
             intakeMotor.updateButton(gamepad1.right_bumper);
@@ -134,7 +140,8 @@ public class MainDrivingOp extends LinearOpMode {
                 isIntakeOn=false;
                 intakeMotor.resetToggles();
                 intakeMotorStop.resetToggles();
-            }
+            } else if (isIntakeOn && !loaderOn)
+                robot.intakeMotor.setPower(1);
 
             //Outake motor
             if (gamepad1.cross && !wasShooterButtonPressed) {
@@ -216,6 +223,7 @@ public class MainDrivingOp extends LinearOpMode {
             alignmentPressed = alignButton.press();
 
             telemetry.addData("shooter motor vel:", robot.shooterMotor.getVelocity());
+            telemetry.addData("angle servo pos:", robot.turretServo.getPosition());
             telemetry.update();
 }
 }

@@ -55,7 +55,7 @@ public class KronBot {
         loaderServo.init("loader", true, false, 0, 0, 0);
         turretServo = new Servo(hardwareMap);
         turretServo.init("turretPivot", false, false, 0, 1, 0.5);
-        turretServo.setPosition(0.5);
+
         angleServo = new Servo(hardwareMap);
         angleServo.init("anglePivot", false, false, 0, 1, 0);
     }
