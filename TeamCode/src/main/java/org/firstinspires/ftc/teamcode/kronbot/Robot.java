@@ -30,7 +30,7 @@ public class Robot extends KronBot {
         this.turret = new Turret();
     }
     
-    // Get the singleton instance
+    /** Get the singleton instance */
     public static Robot getInstance() {
         if (instance == null) {
             instance = new Robot();
@@ -38,7 +38,7 @@ public class Robot extends KronBot {
         return instance;
     }
     
-    // Initialize robot and all systems
+    /** Initialize robot and all systems */
     public void init(HardwareMap hardwareMap) {
         super.init(hardwareMap);
         initSystems();
@@ -51,7 +51,7 @@ public class Robot extends KronBot {
         turret.init();
     }
     
-    // Updates all systems
+    /** Updates all systems */
     public void updateAllSystems() {
         outtake.update();
         intake.update();
@@ -59,7 +59,7 @@ public class Robot extends KronBot {
         turret.update();
     }
 
-    public class Outtake {
+    public static class Outtake {
         public boolean on = false;
         public float dist = 0;
         public double angle = 0;
@@ -95,19 +95,24 @@ public class Robot extends KronBot {
     }
 
     public class Loader {
-        public  boolean on=false, reversed=false;
-        private final double stopped = 0.5, forward = 1.0, reverse = 0;
+        /** A value from -1 to 1 to control a Continuous Servo, with 0 being off */
+        public double speed = 0;
+
+        /** If true, the servo will spin reversed to how it normally would.<br>
+         * When false the servo will spin clockwise when speed is 1.
+         * When true, the servo will spin counterclockwise when speed is 1.
+         */
+        public boolean reversed = false;
 
         public void init() {
-            loaderServo.setPosition(stopped);
+            loaderServo.setPosition(0.5);
         }
 
         public void update() {
-            if (loaderServo != null)
-                if(on)
-                    loaderServo.setPosition(reversed ? reverse : forward);
-                else
-                    loaderServo.setPosition(stopped);
+            if (loaderServo != null) { // Este necesar daca este accesat deja in init fara a verifica sa nu fie null?
+                loaderServo.setPosition((speed + 1) / 2);
+            }
+
         }
 
     }

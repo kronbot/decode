@@ -19,17 +19,18 @@ import org.firstinspires.ftc.teamcode.kronbot.utils.Constants;
 @TeleOp(name = "Main Driving after Telea", group = Constants.MAIN_GROUP)
 public class MainDrivingOp extends OpMode {
     private final Robot robot = Robot.getInstance();
-    private  Controls drivingGP = new Controls(gamepad1);
-    private  Controls utilityGP = new Controls(gamepad2);
+    private final Controls drivingGP = new Controls(gamepad1);
+    private final Controls utilityGP = new Controls(gamepad2);
 
     private RobotCentricDrive robotCentricDrive;
-    private FieldCentricDrive fieldCentricDrive;
+    //private FieldCentricDrive fieldCentricDrive;
 
     private FtcDashboard dashboard;
 
     @Override
     public void init(){
         robot.init(hardwareMap);
+        robot.loader.reversed = true;
     }
 
     @Override
@@ -41,7 +42,7 @@ public class MainDrivingOp extends OpMode {
     @Override
     public void start(){
         robotCentricDrive = new RobotCentricDrive(robot, gamepad1);
-        fieldCentricDrive = new FieldCentricDrive(robot, gamepad1);
+        //fieldCentricDrive = new FieldCentricDrive(robot, gamepad1);
     }
 
     @Override
@@ -51,25 +52,11 @@ public class MainDrivingOp extends OpMode {
         utilityGP.update();
 
         //Intake
-        if(utilityGP.rightBumper.shortPressed())
-            robot.intake.on = true;
-        else if(utilityGP.leftBumper.shortPressed())
-            robot.intake.on = false;
+        if(utilityGP.rightBumper.shortToggle())
+            robot.intake.on = !robot.intake.on;
 
         //Loader
-        if(utilityGP.leftTrigger > 0.5){
-            robot.loader.on = true;
-            robot.loader.reversed = false;
-
-            robot.intake.reversed = false;
-        }
-        else if(utilityGP.rightTrigger > 0.5){
-            robot.loader.on = true;
-            robot.loader.reversed = true;
-
-            robot.intake.reversed = true;
-        } else
-            robot.loader.on = false;
+        robot.loader.speed = utilityGP.rightTrigger - utilityGP.leftTrigger;
 
         //Update robot systems status
         movement();
@@ -79,16 +66,16 @@ public class MainDrivingOp extends OpMode {
     private void movement(){
         robotCentricDrive.run();
         robotCentricDrive.telemetry(telemetry);
-
-//        robotCentricDrive.setReverse(drivingGP.circle.pressed());
-//        if (!driveModeButton.getLongToggle()) {
-//            robotCentricDrive.run();
-//            robotCentricDrive.telemetry(telemetry);
-//        } else {
-//            fieldCentricDrive.run();
-//            fieldCentricDrive.telemetry(telemetry);
-//        }
-
+        /*
+        robotCentricDrive.setReverse(drivingGP.circle.pressed());
+        if (!driveModeButton.getLongToggle()) {
+            robotCentricDrive.run();
+            robotCentricDrive.telemetry(telemetry);
+        } else {
+            fieldCentricDrive.run();
+            fieldCentricDrive.telemetry(telemetry);
+        }
+        */
     }
 
     @Override

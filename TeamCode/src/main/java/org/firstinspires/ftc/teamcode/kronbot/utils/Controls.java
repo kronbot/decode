@@ -1,13 +1,21 @@
 package org.firstinspires.ftc.teamcode.kronbot.utils;
 
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.CONTROLLER_DEADZONE;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.POWER_EXPONENT;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ROBOT_SPEED;
+
 import com.qualcomm.robotcore.hardware.Gamepad;
 import org.firstinspires.ftc.teamcode.kronbot.utils.wrappers.Button;
 
 public class Controls {
     private Gamepad gamepad;
+
+    /** Wrapper for a controller's joystick.<br>
+     * The joystick axes have dead-zone correction.
+     */
     public class Joystick{
         public ButtonWrapper button;
-        public float x,y;
+        public double x,y;
         private boolean left;
 
         public Joystick(boolean left) {
@@ -18,6 +26,7 @@ public class Controls {
                 this.button = new ButtonWrapper(()->gamepad.right_stick_button);
         }
 
+        /** Automatically called by update() in Controls */
         public void update(){
             this.button.update();
             if(left){
@@ -26,6 +35,18 @@ public class Controls {
             } else {
                 this.x = gamepad.right_stick_x;
                 this.y = gamepad.right_stick_y;
+            }
+
+            if (Math.abs(this.x) < CONTROLLER_DEADZONE) this.x = 0;
+            else {
+                double normalizedValue = (Math.abs(this.x) - CONTROLLER_DEADZONE) / (1 - CONTROLLER_DEADZONE);
+                this.x = Math.signum(this.x) * normalizedValue;
+            }
+
+            if (Math.abs(this.y) < CONTROLLER_DEADZONE) this.y = 0;
+            else {
+                double normalizedValue = (Math.abs(this.y) - CONTROLLER_DEADZONE) / (1 - CONTROLLER_DEADZONE);
+                this.y = Math.signum(this.y) * normalizedValue;
             }
         }
     }
@@ -68,7 +89,7 @@ public class Controls {
         rightStick = new Joystick(false);
     }
 
-    // Update all buttons (call once per loop)
+    /** Update all buttons (call once per loop) */
     public void update() {
         cross.update();
         circle.update();
@@ -88,7 +109,7 @@ public class Controls {
         rightStick.update();
     }
 
-    // Wrapper that simplifies button usage
+    /** Wrapper that simplifies button usage */
     public static class ButtonWrapper {
         private final Button button = new Button();
         private final BooleanSupplier supplier;
@@ -97,27 +118,38 @@ public class Controls {
             this.supplier = supplier;
         }
 
+        /**
+         * Calls update on the underlying Button class. Used to update timings for toggles (mainly).
+         * Automatically called by update() in Controls
+         */
         void update() {
             button.updateButton(supplier.get());
         }
 
+        /** True if button pressed. */
         public boolean pressed() {
             return button.press();
         }
 
-        public boolean shortPressed() {
+        /** Toggle on short button presses (taps). Value flips on button release. */
+        public boolean shortToggle() {
             button.shortPress();
             return button.getShortToggle();
         }
 
-        public boolean longPressed() {
+        /** Toggle on long button presses (holding the button for a bit more). Value flips on button release. */
+        public boolean longToggle() {
             button.longPress();
             return button.getLongToggle();
         }
 
+        /** Returns true only the first time it is called after the button was pressed. */
         public boolean justPressed() {
             return button.toggle();
         }
+
+        /** Returns true only the first time it is called after the button was released. */
+        public boolean justReleased() { return button.releaseToggle(); }
     }
 
     @FunctionalInterface

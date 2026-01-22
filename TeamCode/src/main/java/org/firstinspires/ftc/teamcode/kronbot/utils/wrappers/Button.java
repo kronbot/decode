@@ -25,9 +25,15 @@ public class Button {
         return buttonValue;
     }
 
+    // Used for press toggle
     boolean lastIteration = false;
     boolean currentIteration = false;
     boolean toggleStatus = false;
+
+    // Used for release toggle
+    boolean releaseLastIteration = false;
+    boolean releaseCurrentIteration = false;
+    boolean releaseToggleStatus = false;
 
     public boolean toggle() {
         lastIteration = currentIteration;
@@ -36,6 +42,25 @@ public class Button {
         if (!lastIteration && currentIteration) {
             if (!lockedToggle) {
                 toggleStatus = !toggleStatus;
+                lockedToggle = true;
+            }
+            return true;
+
+        } else {
+            lockedToggle = false;
+        }
+
+        return false;
+    }
+
+
+    public boolean releaseToggle() {
+        releaseLastIteration = releaseCurrentIteration;
+        releaseCurrentIteration = buttonValue;
+
+        if (releaseLastIteration && !releaseCurrentIteration) {
+            if (!lockedToggle) {
+                releaseToggleStatus = !releaseToggleStatus;
                 lockedToggle = true;
             }
             return true;

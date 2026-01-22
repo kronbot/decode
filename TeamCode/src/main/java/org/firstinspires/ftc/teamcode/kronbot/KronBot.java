@@ -14,11 +14,11 @@ import com.qualcomm.robotcore.hardware.ColorSensor;
 
 
 public class KronBot {
-    public MotorDriver motors;
-    public ControlHubGyroscope gyroscope;
+    public static MotorDriver motors;
+    public static ControlHubGyroscope gyroscope;
 
-    public DcMotorEx intakeMotor, leftOuttake, rightOuttake, shooterMotor;
-    public Servo loaderServo;
+    public static DcMotorEx intakeMotor, leftOuttake, rightOuttake, shooterMotor;
+    public static Servo loaderServo;
 
     public Servo turretServo, angleServo;
     public ColorSensor outtakeColor;
