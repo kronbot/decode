@@ -40,7 +40,8 @@ public class Constants {
     public static double TURRET_SERVO_MAX = 1;
     public static double TURRET_SERVO_MIN = 0;
     public static double ANGLE_SERVO_MAX = 0.78;
-    public static double ANGLE_SERVO_MIN = 0.7;
+    public static double ANGLE_SERVO_CLOSE = 0.7;
+    public static double ANGLE_SERVO_MIN = 0;
     public static double minVelocity = 1140;
     public static double maxVelocity = 1500;
 

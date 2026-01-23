@@ -54,7 +54,7 @@ public class Controls {
 
     public Controls(Gamepad gamepad) {
         this.gamepad = gamepad;
-        cross = new ButtonWrapper(() -> gamepad.cross);
+        cross = new ButtonWrapper(() -> gamepad.a);
         circle = new ButtonWrapper(() -> gamepad.circle);
         square = new ButtonWrapper(() -> gamepad.square);
         triangle = new ButtonWrapper(() -> gamepad.triangle);
