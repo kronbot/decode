@@ -30,6 +30,10 @@ public class MainDrivingOp extends OpMode {
     private FtcDashboard dashboard;
 
     private boolean autoAimEnabled = false;
+    boolean manualOuttake = false;
+    private boolean outtakeWasOn = false;
+
+
 
     @Override
     public void init(){
@@ -108,22 +112,32 @@ public class MainDrivingOp extends OpMode {
         }
 
         //Shoot Close/Far
-        if (utilityGP.cross.justPressed()) {
+        if (!manualOuttake && drivingGP.cross.justPressed()) {
             robot.shootClose.activate();
         }
 
-        if (utilityGP.triangle.justPressed()) {
+        if (!manualOuttake && drivingGP.triangle.justPressed()) {
             robot.shootFar.activate();
         }
 
-        //Outtake
-        //if(drivingGP.leftBumper.justPressed())
-            //robot.outtake.on = !robot.outtake.on;
+        //Manual Outtake
+        if(!autoAimEnabled && drivingGP.leftBumper.justPressed()) {
+            robot.outtake.on = !robot.outtake.on;
+            manualOuttake=!manualOuttake;
+        }
 
         //stop whole outtake
-        if (utilityGP.circle.justPressed()) {
+        if (drivingGP.circle.justPressed()) {
             robot.outtake.on = false;
         }
+
+        // Short rumble for driver to be sure that outtake has stopped
+        if (outtakeWasOn && !robot.outtake.on) {
+            gamepad2.rumble(300);
+        }
+        //update prev state
+        outtakeWasOn = robot.outtake.on;
+
 
 
         //Update robot systems status
