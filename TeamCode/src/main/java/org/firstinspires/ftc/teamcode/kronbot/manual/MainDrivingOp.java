@@ -7,9 +7,11 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.kronbot.Robot;
 import org.firstinspires.ftc.teamcode.kronbot.utils.Controls;
+import org.firstinspires.ftc.teamcode.kronbot.utils.components.AutoAim;
 import org.firstinspires.ftc.teamcode.kronbot.utils.components.FieldCentricDrive;
 import org.firstinspires.ftc.teamcode.kronbot.utils.components.RobotCentricDrive;
 import org.firstinspires.ftc.teamcode.kronbot.utils.Constants;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
 /**
  * The main TeleOP program for the driving period of the game.
@@ -19,17 +21,31 @@ import org.firstinspires.ftc.teamcode.kronbot.utils.Constants;
 @TeleOp(name = "Main Driving after Telea", group = Constants.MAIN_GROUP)
 public class MainDrivingOp extends OpMode {
     private final Robot robot = Robot.getInstance();
-    private  Controls drivingGP = new Controls(gamepad1);
-    private  Controls utilityGP = new Controls(gamepad2);
+    private  Controls drivingGP;
+    private  Controls utilityGP;
+    private AutoAim autoAim;
 
     private RobotCentricDrive robotCentricDrive;
     private FieldCentricDrive fieldCentricDrive;
-
     private FtcDashboard dashboard;
+
+    private boolean autoAimEnabled = false;
 
     @Override
     public void init(){
         robot.init(hardwareMap);
+
+        dashboard = FtcDashboard.getInstance();
+
+        robot.webcam.init(hardwareMap, telemetry);
+        if (robot.webcam.getVisionPortal() != null) {
+            dashboard.startCameraStream(robot.webcam.getVisionPortal(), 30);
+        }
+
+        autoAim = new AutoAim(robot, 0.5, 1);
+
+        drivingGP = new Controls(gamepad1);
+        utilityGP = new Controls(gamepad2);
     }
 
     @Override
@@ -51,43 +67,82 @@ public class MainDrivingOp extends OpMode {
         utilityGP.update();
 
         //Intake
-        if(utilityGP.rightBumper.shortPressed())
-            robot.intake.on = true;
-        else if(utilityGP.leftBumper.shortPressed())
-            robot.intake.on = false;
+        if(drivingGP.rightBumper.shortPressed())
+            robot.intake.on = !robot.intake.on;
 
         //Loader
-        if(utilityGP.leftTrigger > 0.5){
+        if(drivingGP.leftTrigger > 0.5){
             robot.loader.on = true;
             robot.loader.reversed = false;
 
-            robot.intake.reversed = false;
+            robot.intake.reversed = true;
         }
-        else if(utilityGP.rightTrigger > 0.5){
+        else if(drivingGP.rightTrigger > 0.5){
             robot.loader.on = true;
             robot.loader.reversed = true;
 
-            robot.intake.reversed = true;
-        } else
+            robot.intake.reversed = false;
+        } else{
             robot.loader.on = false;
+            robot.intake.reversed=false;
+        }
+
+        //Auto aim toggle
+        if(drivingGP.square.shortPressed())
+            autoAimEnabled = !autoAimEnabled;
+
+
+        AprilTagDetection tag = robot.webcam.getTowerTags();
+        autoAim.telemetry(telemetry, tag);
+
+        //Turret/Angle aiming
+        if(autoAimEnabled){
+            //To do
+//            robot.webcam.update();
+
+            robot.turret.angle = autoAim.calculateServoPosition(tag);
+
+        } else {
+            //Turret aiming
+            if(drivingGP.dpadLeft.pressed())
+                robot.turret.angle += 0.01;
+            else if(drivingGP.dpadRight.pressed())
+                robot.turret.angle -= 0.01;
+
+            //Angle aiming
+            if(drivingGP.dpadUp.pressed())
+                robot.outtake.angle += 0.01;
+            else if(drivingGP.dpadDown.pressed())
+                robot.outtake.angle -= 0.01;
+        }
+
+        //Outtake
+        if(drivingGP.leftBumper.shortPressed())
+            robot.outtake.on = !robot.outtake.on;
 
         //Update robot systems status
         movement();
         robot.updateAllSystems();
+        _telemetry();
+        robot.webcam.update();
     }
 
+    private boolean reverseMovement=false, drivingMode=false;//False for robot centric, true for field centric
     private void movement(){
-        robotCentricDrive.run();
-        robotCentricDrive.telemetry(telemetry);
+        if(drivingGP.rightStick.button.shortPressed())
+            reverseMovement = !reverseMovement;
 
-//        robotCentricDrive.setReverse(drivingGP.circle.pressed());
-//        if (!driveModeButton.getLongToggle()) {
-//            robotCentricDrive.run();
-//            robotCentricDrive.telemetry(telemetry);
-//        } else {
-//            fieldCentricDrive.run();
-//            fieldCentricDrive.telemetry(telemetry);
-//        }
+//        if(drivingGP.circle.longPressed())
+//            drivingMode = !drivingMode;
+
+        robotCentricDrive.setReverse(reverseMovement);
+        if (!drivingMode) {
+            robotCentricDrive.run();
+            robotCentricDrive.telemetry(telemetry);
+        } else {
+            fieldCentricDrive.run();
+            fieldCentricDrive.telemetry(telemetry);
+        }
 
     }
 
@@ -96,4 +151,14 @@ public class MainDrivingOp extends OpMode {
         robot.webcam.stop();
     }
 
+
+    public void _telemetry(){
+        telemetry.addData("shooter motor vel:", robot.shooterMotor.getVelocity());
+        telemetry.addData("angle servo pos:", robot.turretServo.getPosition());
+
+        robot.intake.telemetry(telemetry);
+        robot.loader.telemetry(telemetry);
+        drivingGP.telemetry(telemetry);
+        telemetry.update();
+    }
 }

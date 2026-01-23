@@ -182,7 +182,7 @@ public class MainDrivingNewOp extends LinearOpMode {
 
         private void handleAutoAim(){
             if (autoAimEnabled && tag24 != null) {
-                double rotationPower = autoAim.calculateAimRotation(tag);
+                double rotationPower = 0;
 
                 // manual drive cuz rotation is controlled by autoaim
                 double x = drivingGamepad.left_stick_x;
@@ -191,7 +191,7 @@ public class MainDrivingNewOp extends LinearOpMode {
                 if (Math.abs(x) < 0.1) x = 0;
                 if (Math.abs(y) < 0.1) y = 0;
 
-                autoAim.applyAimToDrive(x, y, rotationPower);
+//                autoAim.applyAimToDrive(x, y, rotationPower);
 
                 autoAim.telemetry(telemetry, tag24);
 

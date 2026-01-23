@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode.kronbot;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
+
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.kronbot.utils.detection.AprilTagWebcam;
 
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_MAX;
@@ -49,6 +51,9 @@ public class Robot extends KronBot {
         intake.init();
         loader.init();
         turret.init();
+
+        //Add other intis here
+
     }
     
     // Updates all systems
@@ -57,23 +62,43 @@ public class Robot extends KronBot {
         intake.update();
         loader.update();
         turret.update();
+
+        //Add other updates here
+//        webcam.update();
     }
 
     public class Outtake {
         public boolean on = false;
-        public float dist = 0;
         public double angle = 0;
+        public double velocity;
         public boolean reversed = false;
 
         public void init() {
             on = false;
             reversed = false;
+            velocity = minVelocity;
         }
 
         public void update(){
             if(on){
-
+                shooterMotor.setPower(1);
+                shooterMotor.setVelocity(velocity);
+            } else {
+                shooterMotor.setPower(0);
+                shooterMotor.setVelocity(0);
             }
+
+            angleServo.setPosition(Math.clamp(angle, ANGLE_SERVO_MIN, ANGLE_SERVO_MAX));
+        }
+
+        public void telemetry(Telemetry telemetry) {
+            telemetry.addLine("=== OUTTAKE STATUS ===");
+            telemetry.addData("On", on);
+            telemetry.addData("Reversed", reversed);
+            telemetry.addData("Target Velocity", "%.0f", velocity);
+            telemetry.addData("Actual Velocity", "%.0f", shooterMotor.getVelocity());
+            telemetry.addData("Angle", "%.3f", angle);
+            telemetry.addData("Angle Servo Pos", "%.3f", angleServo.getPosition());
         }
 
     }
@@ -84,13 +109,20 @@ public class Robot extends KronBot {
 
         public void init() {
             on = false;
-            power = 0;
             intakeMotor.setPower(0);
         }
 
         public void update() {
             if (intakeMotor != null)
                 intakeMotor.setPower(on ? (reversed ? power * -1 : power) : 0);
+        }
+
+        public void telemetry(Telemetry telemetry) {
+            telemetry.addLine("=== INTAKE STATUS ===");
+            telemetry.addData("On", on);
+            telemetry.addData("Reversed", reversed);
+            telemetry.addData("Power", "%.2f", power);
+            telemetry.addData("Actual Power", "%.2f", intakeMotor.getPower());
         }
     }
 
@@ -103,38 +135,58 @@ public class Robot extends KronBot {
         }
 
         public void update() {
-            if (loaderServo != null)
                 if(on)
                     loaderServo.setPosition(reversed ? reverse : forward);
                 else
                     loaderServo.setPosition(stopped);
         }
 
+        public void telemetry(Telemetry telemetry) {
+            telemetry.addLine("=== LOADER STATUS ===");
+            telemetry.addData("On", on);
+            telemetry.addData("Reversed", reversed);
+            telemetry.addData("Servo Position", "%.3f", loaderServo.getPosition());
+            String state = on ? (reversed ? "Reverse" : "Forward") : "Stopped";
+            telemetry.addData("State", state);
+        }
+
     }
 
     public class Turret {
-        private double turretPosition = 0.5;
-        private double anglePosition = 0.5;
+        public double angle = 0.5;
 
         public void init() {
-            turretPosition = 0.5;
-            anglePosition = 0.5;
+            angle = 0.5;
         }
 
         public void update() {
             if (turretServo != null) {
-                turretServo.setPosition(turretPosition);
+                turretServo.setPosition(Math.clamp(angle, TURRET_SERVO_MIN, TURRET_SERVO_MAX));
             }
-            if (angleServo != null) {
-                angleServo.setPosition(anglePosition);
-            }
+        }
+
+        public void telemetry(Telemetry telemetry) {
+            telemetry.addLine("=== TURRET STATUS ===");
+            telemetry.addData("Target Angle", "%.3f", angle);
+            telemetry.addData("Servo Position", "%.3f", turretServo.getPosition());
+            telemetry.addData("Servo Range", "%.3f - %.3f", TURRET_SERVO_MIN, TURRET_SERVO_MAX);
         }
     }
 
     public class Wheels{
+        public void init(){
 
+        }
         public void update(){
 
+        }
+
+        public void telemetry(Telemetry telemetry) {
+            telemetry.addLine("=== WHEELS STATUS ===");
+            telemetry.addData("Left Front Power", "%.2f", motors.leftFront.getPower());
+            telemetry.addData("Right Front Power", "%.2f", motors.rightFront.getPower());
+            telemetry.addData("Left Rear Power", "%.2f", motors.leftRear.getPower());
+            telemetry.addData("Right Rear Power", "%.2f", motors.rightRear.getPower());
         }
     }
 }

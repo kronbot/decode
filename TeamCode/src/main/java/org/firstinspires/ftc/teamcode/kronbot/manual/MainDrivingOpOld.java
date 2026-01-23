@@ -168,6 +168,7 @@ public class MainDrivingOpOld extends LinearOpMode {
 
             } else {
                 robot.shooterMotor.setPower(0);
+                robot.shooterMotor.setVelocity(0);
             }
 
             wasShooterButtonPressed = gamepad1.cross;

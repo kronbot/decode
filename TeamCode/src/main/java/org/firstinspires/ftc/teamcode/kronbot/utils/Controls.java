@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.kronbot.utils;
 
 import com.qualcomm.robotcore.hardware.Gamepad;
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.kronbot.utils.wrappers.Button;
 
 public class Controls {
@@ -88,6 +89,43 @@ public class Controls {
         rightStick.update();
     }
 
+    // Display all controller inputs in telemetry
+    public void telemetry(Telemetry telemetry) {
+        telemetry.addLine("=== CONTROLLER INPUTS ===");
+        
+        // Face buttons
+        telemetry.addData("Cross (X)", cross.pressed());
+        telemetry.addData("Circle (O)", circle.pressed());
+        telemetry.addData("Square (□)", square.pressed());
+        telemetry.addData("Triangle (△)", triangle.pressed());
+        
+        // Bumpers
+        telemetry.addData("Left Bumper", leftBumper.pressed());
+        telemetry.addData("Right Bumper", rightBumper.pressed());
+        
+        // Triggers
+        telemetry.addData("Left Trigger", "%.2f", leftTrigger);
+        telemetry.addData("Right Trigger", "%.2f", rightTrigger);
+        
+        // D-pad
+        telemetry.addData("D-pad Up", dpadUp.pressed());
+        telemetry.addData("D-pad Down", dpadDown.pressed());
+        telemetry.addData("D-pad Left", dpadLeft.pressed());
+        telemetry.addData("D-pad Right", dpadRight.pressed());
+        
+        // Left stick
+        telemetry.addLine("--- Left Stick ---");
+        telemetry.addData("Left Stick X", "%.2f", leftStick.x);
+        telemetry.addData("Left Stick Y", "%.2f", leftStick.y);
+        telemetry.addData("Left Stick Button", leftStick.button.pressed());
+        
+        // Right stick
+        telemetry.addLine("--- Right Stick ---");
+        telemetry.addData("Right Stick X", "%.2f", rightStick.x);
+        telemetry.addData("Right Stick Y", "%.2f", rightStick.y);
+        telemetry.addData("Right Stick Button", rightStick.button.pressed());
+    }
+
     // Wrapper that simplifies button usage
     public static class ButtonWrapper {
         private final Button button = new Button();
@@ -117,6 +155,10 @@ public class Controls {
 
         public boolean justPressed() {
             return button.toggle();
+        }
+
+        public void resetToggles(){
+            button.resetToggles();
         }
     }
 
