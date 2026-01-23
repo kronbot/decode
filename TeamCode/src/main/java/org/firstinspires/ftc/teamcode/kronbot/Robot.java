@@ -23,6 +23,10 @@ public class Robot extends KronBot {
     public final Intake intake;
     public final Loader loader;
     public final Turret turret;
+
+    public final ShootFar shootFar;
+
+    public final ShootClose shootClose;
     
     // Private constructor
     public Robot() {
@@ -30,6 +34,8 @@ public class Robot extends KronBot {
         this.intake = new Intake();
         this.loader = new Loader();
         this.turret = new Turret();
+        this.shootFar = new ShootFar();
+        this.shootClose = new ShootClose();
     }
     
     // Get the singleton instance
@@ -88,7 +94,7 @@ public class Robot extends KronBot {
                 shooterMotor.setVelocity(0);
             }
 
-            angleServo.setPosition(Math.clamp(angle, ANGLE_SERVO_MIN, ANGLE_SERVO_MAX));
+            angleServo.setPosition(Math.min(Math.max(angle, ANGLE_SERVO_MIN), ANGLE_SERVO_MAX));
         }
 
         public void telemetry(Telemetry telemetry) {
@@ -127,27 +133,25 @@ public class Robot extends KronBot {
     }
 
     public class Loader {
-        public  boolean on=false, reversed=false;
-        private final double stopped = 0.5, forward = 1.0, reverse = 0;
+        public double speed;
+        public boolean reversed = false;
 
         public void init() {
-            loaderServo.setPosition(stopped);
+            loaderServo.setPosition(0.5);
         }
 
         public void update() {
-                if(on)
-                    loaderServo.setPosition(reversed ? reverse : forward);
-                else
-                    loaderServo.setPosition(stopped);
+            if(!reversed)
+                loaderServo.setPosition((speed + 1) / 2);
+            else
+                loaderServo.setPosition(1 - ((speed + 1) / 2));
         }
 
         public void telemetry(Telemetry telemetry) {
             telemetry.addLine("=== LOADER STATUS ===");
-            telemetry.addData("On", on);
+            telemetry.addData("Speed", speed);
             telemetry.addData("Reversed", reversed);
             telemetry.addData("Servo Position", "%.3f", loaderServo.getPosition());
-            String state = on ? (reversed ? "Reverse" : "Forward") : "Stopped";
-            telemetry.addData("State", state);
         }
 
     }
@@ -172,6 +176,43 @@ public class Robot extends KronBot {
             telemetry.addData("Servo Range", "%.3f - %.3f", TURRET_SERVO_MIN, TURRET_SERVO_MAX);
         }
     }
+
+    public class ShootClose {
+
+        public void activate() {
+            // Turn shooter on
+            outtake.on = true;
+
+            // Set shooter velocity
+            outtake.velocity = minVelocity;
+
+            // Set angle servo
+            outtake.angle = ANGLE_SERVO_MIN;
+
+            // Set turret position
+            turret.angle = TURRET_SERVO_MIN;
+        }
+
+        public void deactivate() {
+            outtake.on = false;
+        }
+    }
+
+    public class ShootFar {
+
+        public void activate() {
+            outtake.on = true;
+            outtake.velocity = maxVelocity;
+            outtake.angle = ANGLE_SERVO_MAX;
+            turret.angle = TURRET_SERVO_MAX;
+        }
+
+        public void deactivate() {
+            outtake.on = false;
+        }
+    }
+
+
 
     public class Wheels{
         public void init(){

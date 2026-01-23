@@ -18,7 +18,7 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
  *
  * @version 1.0
  */
-@TeleOp(name = "Main Driving after Telea", group = Constants.MAIN_GROUP)
+@TeleOp(name = "Main Driving", group = Constants.MAIN_GROUP)
 public class MainDrivingOp extends OpMode {
     private final Robot robot = Robot.getInstance();
     private  Controls drivingGP;
@@ -30,10 +30,15 @@ public class MainDrivingOp extends OpMode {
     private FtcDashboard dashboard;
 
     private boolean autoAimEnabled = false;
+    boolean manualOuttake = false;
+    private boolean outtakeWasOn = false;
+
+
 
     @Override
     public void init(){
         robot.init(hardwareMap);
+        robot.loader.reversed = true;
 
         dashboard = FtcDashboard.getInstance();
 
@@ -67,25 +72,15 @@ public class MainDrivingOp extends OpMode {
         utilityGP.update();
 
         //Intake
-        if(drivingGP.rightBumper.shortPressed())
+        if(drivingGP.rightBumper.justPressed())
             robot.intake.on = !robot.intake.on;
 
         //Loader
-        if(drivingGP.leftTrigger > 0.5){
-            robot.loader.on = true;
-            robot.loader.reversed = false;
-
+        robot.loader.speed = drivingGP.rightTrigger - drivingGP.leftTrigger;
+        if(robot.loader.speed < -0.25)
             robot.intake.reversed = true;
-        }
-        else if(drivingGP.rightTrigger > 0.5){
-            robot.loader.on = true;
-            robot.loader.reversed = true;
-
+        else
             robot.intake.reversed = false;
-        } else{
-            robot.loader.on = false;
-            robot.intake.reversed=false;
-        }
 
         //Auto aim toggle
         if(drivingGP.square.shortPressed())
@@ -100,7 +95,7 @@ public class MainDrivingOp extends OpMode {
             //To do
 //            robot.webcam.update();
 
-            robot.turret.angle = autoAim.calculateServoPosition(tag);
+            //robot.turret.angle = autoAim.calculateServoPosition(tag);
 
         } else {
             //Turret aiming
@@ -116,9 +111,34 @@ public class MainDrivingOp extends OpMode {
                 robot.outtake.angle -= 0.01;
         }
 
-        //Outtake
-        if(drivingGP.leftBumper.shortPressed())
+        //Shoot Close/Far
+        if (!manualOuttake && drivingGP.cross.justPressed()) {
+            robot.shootClose.activate();
+        }
+
+        if (!manualOuttake && drivingGP.triangle.justPressed()) {
+            robot.shootFar.activate();
+        }
+
+        //Manual Outtake
+        if(!autoAimEnabled && drivingGP.leftBumper.justPressed()) {
             robot.outtake.on = !robot.outtake.on;
+            manualOuttake=!manualOuttake;
+        }
+
+        //stop whole outtake
+        if (drivingGP.circle.justPressed()) {
+            robot.outtake.on = false;
+        }
+
+        // Short rumble for driver to be sure that outtake has stopped
+        if (outtakeWasOn && !robot.outtake.on) {
+            gamepad2.rumble(300);
+        }
+        //update prev state
+        outtakeWasOn = robot.outtake.on;
+
+
 
         //Update robot systems status
         movement();
@@ -158,6 +178,7 @@ public class MainDrivingOp extends OpMode {
 
         robot.intake.telemetry(telemetry);
         robot.loader.telemetry(telemetry);
+        robot.outtake.telemetry(telemetry);
         drivingGP.telemetry(telemetry);
         telemetry.update();
     }
