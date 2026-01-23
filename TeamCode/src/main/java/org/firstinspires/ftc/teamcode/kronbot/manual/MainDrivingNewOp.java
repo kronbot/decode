@@ -119,7 +119,7 @@ public class MainDrivingNewOp extends LinearOpMode {
 
                 // Webcam
                 aprilTagWebcam.update();
-                tag24 = aprilTagWebcam.getTagBySpecificId();
+                //tag24 = aprilTagWebcam.getTagBySpecificId();
                 //tag23 = aprilTagWebcam.getTagBySpecificId(23);
 
                 // Outtake velocity telemetry

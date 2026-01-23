@@ -44,6 +44,12 @@ public class Constants {
     public static double minVelocity = 1000;
     public static double maxVelocity = 1500;
 
+    //Tuning Constants
+    public static double TEST_LAUNCH_MOTOR_DELTA = 0.1;
+    public static double TEST_LAUNCH_ANGLE_DELTA = 0.075;
+    public static double TEST_TURRET_PIVOT_DELTA = 0.05;
+
+
     //AIM PID - to be tuned
     public static double AIM_KP = 0.02;
     public static double AIM_KI = 0.0;
