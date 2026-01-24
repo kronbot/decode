@@ -15,7 +15,7 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
 import java.util.List;
 
-@TeleOp(name = "Webcam Driving", group = Constants.MAIN_GROUP)
+//@TeleOp(name = "Webcam Driving", group = Constants.MAIN_GROUP)
 public class WebcamDrivingOp extends LinearOpMode {
 
     private final KronBot robot = new KronBot();

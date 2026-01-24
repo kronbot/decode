@@ -13,7 +13,7 @@ import org.firstinspires.ftc.teamcode.kronbot.utils.Constants;
  *
  * @version 1.0
  */
-@TeleOp(name = "Field Centric Example", group = Constants.MAIN_GROUP)
+//@TeleOp(name = "Field Centric Example", group = Constants.MAIN_GROUP)
 public class NewFieldCentricExOp extends LinearOpMode {
     private final KronBot robot = new KronBot();
 

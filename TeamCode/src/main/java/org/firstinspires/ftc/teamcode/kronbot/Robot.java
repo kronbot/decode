@@ -172,6 +172,11 @@ public class Robot extends KronBot {
 
         public void update() {
             if (turretServo != null) {
+                if(angle > Math.PI)
+                    angle = -2 * Math.PI + angle;
+                if(angle < -Math.PI)
+                    angle = 2 * Math.PI + angle;
+
                 double robotRelativeAngle = angle - (gyroscope.getHeading() * 0.01745329); // deg to radian
                 servoPosition = robotRelativeAngle * TURRET_SERVO_UNITS_PER_RAD + 0.5;
 

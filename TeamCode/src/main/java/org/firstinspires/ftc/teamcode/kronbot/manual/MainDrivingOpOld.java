@@ -28,7 +28,7 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
  *
  * @version 1.0
  */
-@TeleOp(name = "Main Driving before Telea", group = Constants.MAIN_GROUP)
+//@TeleOp(name = "Main Driving before Telea", group = Constants.MAIN_GROUP)
 public class MainDrivingOpOld extends LinearOpMode {
     private final Robot robot = new Robot();
 

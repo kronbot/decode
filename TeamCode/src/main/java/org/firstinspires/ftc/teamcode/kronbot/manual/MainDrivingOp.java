@@ -4,6 +4,7 @@ import com.acmerobotics.dashboard.FtcDashboard;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.kronbot.Robot;
 import org.firstinspires.ftc.teamcode.kronbot.utils.Controls;
@@ -33,7 +34,7 @@ public class MainDrivingOp extends OpMode {
     boolean manualOuttake = false;
     private boolean outtakeWasOn = false;
 
-
+    ElapsedTime turretTimer = new ElapsedTime();
 
     @Override
     public void init(){
@@ -99,10 +100,46 @@ public class MainDrivingOp extends OpMode {
 
         } else {
             //Turret aiming
-            if(drivingGP.dpadLeft.pressed())
-                robot.turret.angle += 0.01;
-            else if(drivingGP.dpadRight.pressed())
-                robot.turret.angle -= 0.01;
+            if(drivingGP.dpadLeft.pressed()) {
+
+                //if button is pressed for longer, increase increment
+                if (turretTimer.seconds() == 0) {
+                    turretTimer.reset();
+                }
+                double increment = 0.03;
+
+                if (turretTimer.seconds() > 1) {
+                    increment = 0.07;
+                }
+
+                if (turretTimer.seconds() > 1.5) {
+                    increment = 0.1;
+                }
+                robot.turret.angle += increment;
+
+            }
+
+            else if(drivingGP.dpadRight.pressed()) {
+
+                double decrement = 0.03;
+
+                if (turretTimer.seconds() == 0) {
+                    turretTimer.reset();
+                }
+
+                if (turretTimer.seconds() > 1) {
+                    decrement = 0.07;
+                }
+
+                if (turretTimer.seconds() > 1.5) {
+                    decrement = 0.1;
+                }
+
+                robot.turret.angle -= decrement;
+            } else {
+                turretTimer.reset();
+            }
+
 
             //Angle aiming
             if(drivingGP.dpadUp.pressed())
@@ -129,8 +166,6 @@ public class MainDrivingOp extends OpMode {
             else
                 robot.shoot.activateLast();
         }
-
-
 
         //Update robot systems status
         movement();
