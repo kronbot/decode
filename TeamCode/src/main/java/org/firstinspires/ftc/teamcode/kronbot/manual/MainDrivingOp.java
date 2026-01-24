@@ -73,11 +73,19 @@ public class MainDrivingOp extends OpMode {
         utilityGP.update();
 
         //Intake
-        if(drivingGP.rightBumper.justPressed())
-            robot.intake.on = !robot.intake.on;
+        double intakeInput = -utilityGP.rightStick.y;
+
+        if (Math.abs(intakeInput) > 0.1) {
+            robot.intake.on = true;
+            robot.intake.reversed = intakeInput < 0;
+        } else {
+            robot.intake.on = false;
+            robot.intake.reversed = false;
+        }
+
 
         //Loader
-        robot.loader.speed = drivingGP.rightTrigger - drivingGP.leftTrigger;
+        robot.loader.speed = utilityGP.rightTrigger - utilityGP.leftTrigger;
         if(robot.loader.speed < -0.25)
             robot.intake.reversed = true;
         else
