@@ -73,31 +73,27 @@ public class MainDrivingOp extends OpMode {
         utilityGP.update();
 
         //Intake
-        double intakeInput = -utilityGP.rightStick.y;
-
-        if (Math.abs(intakeInput) > 0.1) {
-            robot.intake.on = true;
-            robot.intake.reversed = intakeInput < 0;
-        } else {
-            robot.intake.on = false;
-            robot.intake.reversed = false;
-        }
+        robot.intake.speed = utilityGP.rightStick.y;
 
 
         //Loader
-        robot.loader.speed = utilityGP.rightTrigger - utilityGP.leftTrigger;
-        if(robot.loader.speed < -0.25)
-            robot.intake.reversed = true;
-        else
-            robot.intake.reversed = false;
+        if(!drivingGP.rightBumper.pressed()) {
+            robot.loader.speed = utilityGP.leftStick.y;
+        }
+        else {
+            robot.loader.speed = drivingGP.rightTrigger - drivingGP.leftTrigger;
+            if(robot.loader.speed > 0.1)
+                robot.intake.speed = 0.2;
+            else if(robot.loader.speed < -0.2)
+                robot.intake.speed = -0.1;
+            else
+                robot.intake.speed = 0;
+        }
 
-        //Auto aim toggle
-        if(drivingGP.square.shortPressed())
-            autoAimEnabled = !autoAimEnabled;
 
 
-        AprilTagDetection tag = robot.webcam.getTowerTags();
-        autoAim.telemetry(telemetry, tag);
+        //AprilTagDetection tag = robot.webcam.getTowerTags();
+        //autoAim.telemetry(telemetry, tag);
 
         //Turret/Angle aiming
         if(autoAimEnabled){
@@ -157,29 +153,31 @@ public class MainDrivingOp extends OpMode {
         }
 
         //Shoot Close/Far
-        if (!manualOuttake && drivingGP.cross.justPressed()) {
-            robot.shoot.activateClose();
+        if (drivingGP.triangle.justPressed()) {
+            robot.shoot.activateRange(1);
+        }
+        if(drivingGP.square.justPressed()) {
+            robot.shoot.activateRange(2);
+        }
+        if (drivingGP.cross.justPressed()) {
+            robot.shoot.activateRange(3);
+        }
+        if(drivingGP.circle.justPressed()) {
+            robot.shoot.activateRange(4);
         }
 
-        if (!manualOuttake && drivingGP.triangle.justPressed()) {
-            robot.shoot.activateFar();
-        }
-
-        //Manual Outtake
         if(!autoAimEnabled && drivingGP.leftBumper.justPressed()) {
             if(robot.outtake.on) {
                 robot.shoot.deactivate();
-                gamepad1.rumble(0, 1, 300);
+                gamepad1.rumble(1, 0, 100);
             }
-            else
-                robot.shoot.activateLast();
         }
 
         //Update robot systems status
         movement();
         robot.updateAllSystems();
         _telemetry();
-        robot.webcam.update();
+        //robot.webcam.update();
     }
 
     private boolean reverseMovement=false, drivingMode=false;//False for robot centric, true for field centric

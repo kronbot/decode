@@ -1,6 +1,11 @@
 package org.firstinspires.ftc.teamcode.kronbot;
 
 
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KD;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KF;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KI;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KP;
+
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -40,10 +45,10 @@ public class KronBot {
         shooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooterMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         shooterMotor.setVelocityPIDFCoefficients(
-                7.0,  // P - main stabilizer
-                0.1,   // I - usually 0
-                0.8,   // D - reduces overshoot
-                12.0   // F - feedforward (VERY important)
+                9,   // P - main stabilizer
+                0.2,   // I - usually 0
+                4,   // D - reduces overshoot
+                10    // F - feedforward (VERY important)
         );
         motors = new MotorDriver();
         motors.init(leftRear, leftFront, rightRear, rightFront);

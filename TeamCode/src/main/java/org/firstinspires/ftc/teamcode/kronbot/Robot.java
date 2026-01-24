@@ -11,6 +11,14 @@ import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_MAX;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_MIN;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.LOADER_SERVO_REVERSED;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_1_ANGLE;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_1_VELOCITY;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_2_ANGLE;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_2_VELOCITY;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_3_ANGLE;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_3_VELOCITY;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_4_ANGLE;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_4_VELOCITY;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.TURRET_SERVO_MAX;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.TURRET_SERVO_MIN;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.TURRET_SERVO_UNITS_PER_RAD;
@@ -87,13 +95,57 @@ public class Robot extends KronBot {
             velocity = minVelocity;
         }
 
+        /** Configures the launch angle and launch motor speed for the given distance.<br>
+         *  Returns true if a good configuration is possible (If the distance is in the correct range)
+         * @param distance The distance, measured horizontally, from the tower wall to the center of the turret.
+         * @return  Returns true if a configuration is possible
+         */
+        public boolean configureDistance(double distance) {
+            if(distance < 20)
+                return false;
+            double shooterVel = 0;
+            double servoAngle = 0;
+
+            // magic numbers for quadratics from desmos
+            if(distance < 46)
+                servoAngle = 0;
+            else if(distance < 150)
+                servoAngle = -0.0000557692 * (distance * distance) + 0.0181423 * distance - 0.716538;
+            else
+                servoAngle = 0.75;
+
+            if(distance < 215) {
+                shooterVel = -0.00460596 * (distance * distance) + 3.42411 * distance + 752.43325;
+            }
+            else if(distance > 250 && distance < 375)
+                shooterVel = 1400; // todo: check if this speed works
+
+            on = true;
+            velocity = shooterVel;
+            angle = servoAngle;
+
+            return true;
+        }
+
         public void update(){
             if(on){
                 shooterMotor.setPower(1);
                 shooterMotor.setVelocity(velocity);
             } else {
-                shooterMotor.setPower(0);
-                shooterMotor.setVelocity(0);
+                if(shooterMotor.getVelocity() < 21) {
+                    shooterMotor.setPower(0);
+                }
+                else if(shooterMotor.getVelocity() < 200) {
+                    shooterMotor.setPower(-0.15);
+                }
+                else if(shooterMotor.getVelocity() < 300) {
+                    shooterMotor.setPower(-0.1);
+                }
+                else if(shooterMotor.getVelocity() < 500) {
+                    shooterMotor.setPower(0.05);
+                }
+                else
+                    shooterMotor.setPower(0);
             }
 
             angleServo.setPosition(Math.min(Math.max(angle, ANGLE_SERVO_MIN), ANGLE_SERVO_MAX));
@@ -114,22 +166,27 @@ public class Robot extends KronBot {
     }
 
     public class Intake {
-        public boolean on = false, reversed = false;
+        public boolean reversed = false;
+        public double speed = 0;
         public double power = 1.0;
 
         public void init() {
-            on = false;
+            speed = 0;
             intakeMotor.setPower(0);
         }
 
         public void update() {
-            if (intakeMotor != null)
-                intakeMotor.setPower(on ? (reversed ? power * -1 : power) : 0);
+            if (intakeMotor != null) {
+                double output = speed * power;
+                if(reversed)
+                    output = -output;
+                intakeMotor.setPower(output);
+            }
         }
 
         public void telemetry(Telemetry telemetry) {
             telemetry.addLine("=== INTAKE STATUS ===");
-            telemetry.addData("On", on);
+            telemetry.addData("Speed", speed);
             telemetry.addData("Reversed", reversed);
             telemetry.addData("Power", "%.2f", power);
             telemetry.addData("Actual Power", "%.2f", intakeMotor.getPower());
@@ -230,27 +287,27 @@ public class Robot extends KronBot {
     }
 
     public class Shoot {
-        private boolean lastRange = false;
-        public void activateClose() {
-            outtake.on = true;
-            outtake.velocity = minVelocity;
-            outtake.angle = ANGLE_SERVO_CLOSE;
-
-            lastRange = false;
-        }
-        public void activateFar() {
-            outtake.on = true;
-            outtake.velocity = maxVelocity;
-            outtake.angle = ANGLE_SERVO_FAR;
-            //turret.angle = TURRET_SERVO_MAX;
-
-            lastRange = true;
-        }
-        public void activateLast() {
-            if(!lastRange)
-                activateClose();
-            else
-                activateFar();
+        public void activateRange(int range) {
+            switch (range) {
+                case 1:
+                    outtake.on = true;
+                    outtake.velocity = RANGE_1_VELOCITY;
+                    outtake.angle = RANGE_1_ANGLE;
+                    break;
+                case 2:
+                    outtake.on = true;
+                    outtake.velocity = RANGE_2_VELOCITY;
+                    outtake.angle = RANGE_2_ANGLE;
+                    break;
+                case 3:
+                    outtake.on = true;
+                    outtake.velocity = RANGE_3_VELOCITY;
+                    outtake.angle = RANGE_3_ANGLE;
+                case 4:
+                    outtake.on = true;
+                    outtake.velocity = RANGE_4_VELOCITY;
+                    outtake.angle = RANGE_4_ANGLE;
+            }
         }
 
         public void deactivate() {

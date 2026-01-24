@@ -42,18 +42,36 @@ public class Constants {
     public static double TURRET_SERVO_MAX = 0.82;
     public static double TURRET_SERVO_MIN = 0.19;
     public static double TURRET_SERVO_UNITS_PER_RAD = 0.160746493;
-    public static double ANGLE_SERVO_MAX = 0.75;
+    public static double ANGLE_SERVO_MAX = 0.72;
     public static double ANGLE_SERVO_CLOSE = 0.7;
 
-    public static double ANGLE_SERVO_FAR = 0.75;
+    public static double ANGLE_SERVO_FAR = 0.72;
     public static double ANGLE_SERVO_MIN = 0;
     public static double minVelocity = 1140;
     public static double maxVelocity = 1500;
+
+    public static double RANGE_1_ANGLE = 0;
+    public static double RANGE_1_VELOCITY = 900;
+
+    public static double RANGE_2_ANGLE = 0.5;
+    public static double RANGE_2_VELOCITY = 1080;
+
+    public static double RANGE_3_ANGLE = 0.72;
+    public static double RANGE_3_VELOCITY = 1260;
+
+    public static double RANGE_4_ANGLE = 0.72;
+    public static double RANGE_4_VELOCITY = 1450;
 
     //Tuning Constants
     public static double TEST_LAUNCH_MOTOR_DELTA = 0.1;
     public static double TEST_LAUNCH_ANGLE_DELTA = 0.075;
     public static double TEST_TURRET_PIVOT_DELTA = 0.05;
+
+    // Outtake motor PID
+    public static double OUT_MOTOR_KP = 7;
+    public static double OUT_MOTOR_KI = 0;
+    public static double OUT_MOTOR_KD = 0.8;
+    public static double OUT_MOTOR_KF = 10;
 
 
     //AIM PID - to be tuned
