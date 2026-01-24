@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode.kronbot.autonomous;
 
 import static org.firstinspires.ftc.teamcode.kronbot.autonomous.AutonomousConstants.*;
-
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_CLOSE;
 
 
 import com.acmerobotics.dashboard.FtcDashboard;
@@ -34,7 +34,7 @@ public class Auto_CloseBlueOp extends OpMode {
     Pose parkZone = coordinates(ParkCloseBlue);
 
 
-    private double leftVel, rightVel;
+    private double motorVel;
 
     // Paths and PathChains
     private PathChain goToLaunch, goToPark;
@@ -85,14 +85,17 @@ public class Auto_CloseBlueOp extends OpMode {
     public void start() {
         opmodeTimer.resetTimer();
         setPathState(0);
+
+        robot.turretServo.setPosition(0.5);
+        robot.angleServo.setPosition(angleServoClose);
+        robot.loaderServo.runContinuous(false, false);
     }
 
     @Override
     public void loop() {
         follower.update();
 
-        leftVel = robot.leftOuttake.getVelocity();
-        rightVel = robot.rightOuttake.getVelocity();
+        motorVel = robot.shooterMotor.getVelocity();
 
         autonomousPathUpdate();
 
@@ -102,8 +105,7 @@ public class Auto_CloseBlueOp extends OpMode {
         telemetry.addData("Y", currentPose.getY());
         telemetry.addData("Heading (rad)", currentPose.getHeading());
         //telemetry.addData("Outtake Alpha", robot.outtakeColor.alpha());
-        telemetry.addData("Left vel", robot.leftOuttake.getVelocity());
-        telemetry.addData("Right vel", robot.rightOuttake.getVelocity());
+        telemetry.addData("Shooter Motor vel", robot.shooterMotor.getVelocity());
 
         telemetry.update();
     }
@@ -129,7 +131,7 @@ public class Auto_CloseBlueOp extends OpMode {
 
                         case 1:
                             // Wait for motors to reach speed and launch 1
-                            if (leftVel+100 >= launchSpeedClose && rightVel+100 >= launchSpeedClose && pathTimer.getElapsedTimeSeconds() > 4.0) {
+                            if (motorVel+100 >= launchSpeedClose && motorVel+100 >= launchSpeedClose && pathTimer.getElapsedTimeSeconds() > 4.0) {
                                 robot.loaderServo.runContinuous(false, true);
                                 launchState++;
                                 pathTimer.resetTimer();
@@ -147,7 +149,7 @@ public class Auto_CloseBlueOp extends OpMode {
 
                         case 3:
                             // Launch 2
-                            if (leftVel+100 >= launchSpeedClose && rightVel+100 >= launchSpeedClose) {
+                            if (motorVel+100 >= launchSpeedClose && motorVel+100 >= launchSpeedClose) {
                                 robot.loaderServo.runContinuous(false, true);
                                 launchState++;
                                 pathTimer.resetTimer();
@@ -158,6 +160,7 @@ public class Auto_CloseBlueOp extends OpMode {
                             // Stop servo between shots
                             if (pathTimer.getElapsedTimeSeconds() > 2.0) {
                                 robot.loaderServo.runContinuous(false, false);
+                                robot.intakeMotor.setPower(1);
                                 launchState++;
                                 pathTimer.resetTimer();
                             }
@@ -165,7 +168,7 @@ public class Auto_CloseBlueOp extends OpMode {
 
                         case 5:
                             // Launch 3
-                            if (leftVel+100 >= launchSpeedClose  && rightVel+100 >= launchSpeedClose) {
+                            if (motorVel+100 >= launchSpeedClose  && motorVel+100 >= launchSpeedClose) {
                                 robot.loaderServo.runContinuous(false, true);
                                 launchState++;
                                 pathTimer.resetTimer();
@@ -175,8 +178,8 @@ public class Auto_CloseBlueOp extends OpMode {
                         case 6:
                             // Empty, stop motors
                             if (pathTimer.getElapsedTimeSeconds() > 1.0) {
-                                robot.leftOuttake.setPower(0);
-                                robot.rightOuttake.setPower(0);
+                                robot.shooterMotor.setPower(0);
+                                robot.intakeMotor.setPower(0);
                                 robot.loaderServo.runContinuous(false, false);
                                 launchState++;
                                 pathTimer.resetTimer();

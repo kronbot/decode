@@ -18,8 +18,10 @@ public final class AutonomousConstants {
         }
     }
 
-    public static double launchSpeedClose = 1900;
-    public static double launchSpeedBack = 2300;
+    public static double launchSpeedClose = 1150;
+    public static double launchSpeedBack = 1550;
+    public static double angleServoBack = 0.6;
+    public static double angleServoClose = 0.65;
     //how much reflecting light is hitting the sensor? - to be tuned
     //works regardless of color, just for the detection of the object in front of the sensor
     public static final int BALL_EXIT_THRESHOLD = 150;

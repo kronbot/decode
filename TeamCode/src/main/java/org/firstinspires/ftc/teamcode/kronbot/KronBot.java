@@ -50,12 +50,24 @@ public class KronBot {
     }
 
     public void initAutoMotors(HardwareMap hardwareMap) {
-        intakeMotor = hardwareMap.get(DcMotorEx.class, "leftOuttake");
+        intakeMotor = hardwareMap.get(DcMotorEx.class, "intakeMotor");
+        shooterMotor = hardwareMap.get(DcMotorEx.class, "ShooterMotor");
+        shooterMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        shooterMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        shooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        shooterMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        shooterMotor.setVelocityPIDFCoefficients(
+                7.0,  // P - main stabilizer
+                0.1,   // I - usually 0
+                0.8,   // D - reduces overshoot
+                12.0   // F - feedforward (VERY important)
+        );
     }
 
     public void initServos(HardwareMap hardwareMap) {
         loaderServo = new Servo(hardwareMap);
         loaderServo.init("loader", true, false, 0, 0, 0);
+        loaderServo.runContinuous(false, false);
         turretServo = new Servo(hardwareMap);
         turretServo.init("turretPivot", false, false, 0, 1, 0.5);
 
