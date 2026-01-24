@@ -113,30 +113,22 @@ public class MainDrivingOp extends OpMode {
 
         //Shoot Close/Far
         if (!manualOuttake && drivingGP.cross.justPressed()) {
-            robot.shootClose.activate();
+            robot.shoot.activateClose();
         }
 
         if (!manualOuttake && drivingGP.triangle.justPressed()) {
-            robot.shootFar.activate();
+            robot.shoot.activateFar();
         }
 
         //Manual Outtake
         if(!autoAimEnabled && drivingGP.leftBumper.justPressed()) {
-            robot.outtake.on = !robot.outtake.on;
-            manualOuttake=!manualOuttake;
+            if(robot.outtake.on) {
+                robot.shoot.deactivate();
+                gamepad1.rumble(0, 1, 300);
+            }
+            else
+                robot.shoot.activateLast();
         }
-
-        //stop whole outtake
-        if (drivingGP.circle.justPressed()) {
-            robot.outtake.on = false;
-        }
-
-        // Short rumble for driver to be sure that outtake has stopped
-        if (outtakeWasOn && !robot.outtake.on) {
-            gamepad2.rumble(300);
-        }
-        //update prev state
-        outtakeWasOn = robot.outtake.on;
 
 
 

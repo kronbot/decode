@@ -6,6 +6,8 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.kronbot.utils.detection.AprilTagWebcam;
 
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_CLOSE;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_FAR;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_MAX;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_MIN;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.LOADER_SERVO_REVERSED;
@@ -25,10 +27,7 @@ public class Robot extends KronBot {
     public final Intake intake;
     public final Loader loader;
     public final Turret turret;
-
-    public final ShootFar shootFar;
-
-    public final ShootClose shootClose;
+    public final Shoot shoot;
     
     // Private constructor
     public Robot() {
@@ -36,8 +35,7 @@ public class Robot extends KronBot {
         this.intake = new Intake();
         this.loader = new Loader();
         this.turret = new Turret();
-        this.shootFar = new ShootFar();
-        this.shootClose = new ShootClose();
+        this.shoot = new Shoot();
     }
     
     // Get the singleton instance
@@ -201,10 +199,10 @@ public class Robot extends KronBot {
             outtake.velocity = minVelocity;
 
             // Set angle servo
-            outtake.angle = ANGLE_SERVO_MIN;
+            outtake.angle = ANGLE_SERVO_CLOSE;
 
             // Set turret position
-            turret.angle = TURRET_SERVO_MIN;
+            //turret.angle = TURRET_SERVO_MIN;
         }
 
         public void deactivate() {
@@ -218,7 +216,7 @@ public class Robot extends KronBot {
             outtake.on = true;
             outtake.velocity = maxVelocity;
             outtake.angle = ANGLE_SERVO_MAX;
-            turret.angle = TURRET_SERVO_MAX;
+            //turret.angle = TURRET_SERVO_MAX;
         }
 
         public void deactivate() {
@@ -226,6 +224,36 @@ public class Robot extends KronBot {
         }
     }
 
+    public class Shoot {
+        private boolean lastRange = false;
+        public void activateClose() {
+            outtake.on = true;
+            outtake.velocity = minVelocity;
+            outtake.angle = ANGLE_SERVO_CLOSE;
+
+            lastRange = false;
+        }
+        public void activateFar() {
+            outtake.on = true;
+            outtake.velocity = maxVelocity;
+            outtake.angle = ANGLE_SERVO_FAR;
+            //turret.angle = TURRET_SERVO_MAX;
+
+            lastRange = true;
+        }
+        public void activateLast() {
+            if(!lastRange)
+                activateClose();
+            else
+                activateFar();
+        }
+
+        public void deactivate() {
+            outtake.on = false;
+            outtake.velocity = 0;
+            outtake.angle = ANGLE_SERVO_MIN;
+        }
+    }
 
 
     public class Wheels{

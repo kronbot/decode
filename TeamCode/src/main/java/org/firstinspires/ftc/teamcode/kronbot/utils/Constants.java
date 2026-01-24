@@ -44,6 +44,8 @@ public class Constants {
     public static double TURRET_SERVO_UNITS_PER_RAD = 0.160746493;
     public static double ANGLE_SERVO_MAX = 0.75;
     public static double ANGLE_SERVO_CLOSE = 0.7;
+
+    public static double ANGLE_SERVO_FAR = 0.75;
     public static double ANGLE_SERVO_MIN = 0;
     public static double minVelocity = 1140;
     public static double maxVelocity = 1500;
@@ -52,18 +54,6 @@ public class Constants {
     public static double TEST_LAUNCH_MOTOR_DELTA = 0.1;
     public static double TEST_LAUNCH_ANGLE_DELTA = 0.075;
     public static double TEST_TURRET_PIVOT_DELTA = 0.05;
-
-    // PedroPathing constants
-    public static TwoWheelConstants localizerConstants = new TwoWheelConstants()
-            .forwardEncoder_HardwareMapName("parallelOdometry")
-            .strafeEncoder_HardwareMapName("perpendicularOdometry")
-            .IMU_HardwareMapName("imu")
-            .IMU_Orientation(
-                    new RevHubOrientationOnRobot(
-                            RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
-                            RevHubOrientationOnRobot.UsbFacingDirection.UP
-                    )
-            );
 
 
     //AIM PID - to be tuned
