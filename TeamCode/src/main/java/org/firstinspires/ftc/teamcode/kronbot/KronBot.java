@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.kronbot;
 
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -16,6 +17,7 @@ import com.qualcomm.robotcore.hardware.ColorSensor;
 public class KronBot {
     public MotorDriver motors;
     public ControlHubGyroscope gyroscope;
+    public ModernRoboticsI2cRangeSensor rangeSensor;
 
     public DcMotorEx intakeMotor, leftOuttake, rightOuttake, shooterMotor;
     public Servo loaderServo;
@@ -36,6 +38,7 @@ public class KronBot {
         shooterMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         shooterMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         shooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        shooterMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         shooterMotor.setVelocityPIDFCoefficients(
                 7.0,  // P - main stabilizer
                 0.1,   // I - usually 0
@@ -61,8 +64,8 @@ public class KronBot {
     }
 
     public void initSensors(HardwareMap hardwareMap) {
-        outtakeColor = hardwareMap.get(ColorSensor.class, "outtakeColor");
-
+        //outtakeColor = hardwareMap.get(ColorSensor.class, "outtakeColor");
+        rangeSensor = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "rangeSensor");
     }
 
 //    public void initIMU(HardwareMap hardwareMap) {
@@ -81,13 +84,14 @@ public class KronBot {
     public void initAutonomy(HardwareMap hardwareMap) {
         initAutoMotors(hardwareMap);
         initServos(hardwareMap);
-        //initSensors(hardwareMap);
+        initSensors(hardwareMap);
     }
 
     public void initTeleop(HardwareMap hardwareMap) {
         initMotors(hardwareMap);
         initIMU2(hardwareMap);
         initServos(hardwareMap);
+        initSensors(hardwareMap);
     }
 
     public void initSimpleDriving(HardwareMap hardwareMap) {
@@ -99,5 +103,6 @@ public class KronBot {
         initMotors(hardwareMap);
         initIMU2(hardwareMap);
         initServos(hardwareMap);
+        initSensors(hardwareMap);
     }
 }

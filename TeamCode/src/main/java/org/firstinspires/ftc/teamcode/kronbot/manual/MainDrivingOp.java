@@ -179,6 +179,7 @@ public class MainDrivingOp extends OpMode {
         robot.intake.telemetry(telemetry);
         robot.loader.telemetry(telemetry);
         robot.outtake.telemetry(telemetry);
+        robot.turret.telemetry(telemetry);
         drivingGP.telemetry(telemetry);
         telemetry.update();
     }

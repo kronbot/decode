@@ -117,7 +117,7 @@ public class AutoAim {
             telemetry.addData("Target Bearing", "%.1f°", tag.ftcPose.bearing);
             telemetry.addData("On Target", isOnTarget(tag));
             telemetry.addData("Servo Position", "%.3f", servoPosition);
-            telemetry.addData("Distance to Target", "%.1f cm", tag.ftcPose.range);
+            telemetry.addData("Distance to Target", "%.1f cm", tag.ftcPose.y);
         } else {
             telemetry.addData("Target", "NOT DETECTED");
         }

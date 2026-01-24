@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.kronbot;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.kronbot.utils.detection.AprilTagWebcam;
 
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_MAX;
@@ -10,6 +11,7 @@ import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.LOADER_SERVO_REVERSED;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.TURRET_SERVO_MAX;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.TURRET_SERVO_MIN;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.TURRET_SERVO_UNITS_PER_RAD;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.maxVelocity;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.minVelocity;
 
@@ -69,6 +71,8 @@ public class Robot extends KronBot {
         loader.update();
         turret.update();
 
+        gyroscope.updateOrientation();
+
         //Add other updates here
 //        webcam.update();
     }
@@ -103,8 +107,10 @@ public class Robot extends KronBot {
             telemetry.addData("Reversed", reversed);
             telemetry.addData("Target Velocity", "%.0f", velocity);
             telemetry.addData("Actual Velocity", "%.0f", shooterMotor.getVelocity());
+            telemetry.addData("Motor Power", "%.3f", shooterMotor.getPower());
             telemetry.addData("Angle", "%.3f", angle);
             telemetry.addData("Angle Servo Pos", "%.3f", angleServo.getPosition());
+            telemetry.addData("Distance", "%.3f", rangeSensor.cmUltrasonic() * 1.08644 + 17.20917); // magic numbers from desmos
         }
 
     }
@@ -157,21 +163,29 @@ public class Robot extends KronBot {
     }
 
     public class Turret {
-        public double angle = 0.5;
+        /** Angle in radians from straight ahead */
+        public double angle = 0;
+        private double servoPosition;
 
         public void init() {
-            angle = 0.5;
+            angle = 0;
+            servoPosition = 0.5;
         }
 
         public void update() {
             if (turretServo != null) {
-                turretServo.setPosition(Math.clamp(angle, TURRET_SERVO_MIN, TURRET_SERVO_MAX));
+                double robotRelativeAngle = angle - (gyroscope.getHeading() * 0.01745329); // deg to radian
+                servoPosition = robotRelativeAngle * TURRET_SERVO_UNITS_PER_RAD + 0.5;
+
+
+                turretServo.setPosition(Math.clamp(servoPosition, TURRET_SERVO_MIN, TURRET_SERVO_MAX));
             }
         }
 
         public void telemetry(Telemetry telemetry) {
             telemetry.addLine("=== TURRET STATUS ===");
             telemetry.addData("Target Angle", "%.3f", angle);
+            telemetry.addData("Robot Heading", "%.4f", gyroscope.getHeading());
             telemetry.addData("Servo Position", "%.3f", turretServo.getPosition());
             telemetry.addData("Servo Range", "%.3f - %.3f", TURRET_SERVO_MIN, TURRET_SERVO_MAX);
         }

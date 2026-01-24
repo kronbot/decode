@@ -24,7 +24,7 @@ public class Constants {
             .headingPIDFCoefficients(new PIDFCoefficients(0.9, 0, 0.01, 0.05))
             .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.25, 0, 0.009, 0.04, 0.5)) //meh
             .centripetalScaling(0.005)
-            .mass(6.54)
+            .mass(10.6)
             .forwardZeroPowerAcceleration(-59)
             .lateralZeroPowerAcceleration(-100);
 
@@ -56,8 +56,8 @@ public class Constants {
     public static TwoWheelConstants localizerConstants = new TwoWheelConstants()
             .forwardEncoder_HardwareMapName("parallelOdometry")
             .strafeEncoder_HardwareMapName("perpendicularOdometry")
-            .strafePodX(5.906)
-            .forwardPodY(-7.087)
+            .strafePodX(-6.6929)
+            .forwardPodY(-4.92125)
             .IMU_HardwareMapName("imu")
             .IMU_Orientation(
                     new RevHubOrientationOnRobot(
@@ -69,7 +69,7 @@ public class Constants {
             .strafeTicksToInches(0.003158)
 
             .forwardEncoderDirection(Encoder.FORWARD)
-            .strafeEncoderDirection(Encoder.FORWARD)
+            .strafeEncoderDirection(Encoder.REVERSE)
             ;
 
 
