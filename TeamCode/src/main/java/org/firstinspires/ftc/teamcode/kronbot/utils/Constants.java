@@ -6,6 +6,8 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot.LogoFacingDirection;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot.UsbFacingDirection;
 
+import org.firstinspires.ftc.teamcode.kronbot.autonomous.AutonomousConstants;
+
 /**
  * Constants for KronBot viewable from dashboard
  *
@@ -61,6 +63,8 @@ public class Constants {
 
     public static double RANGE_4_ANGLE = 0.72;
     public static double RANGE_4_VELOCITY = 1400;
+
+    public static AutonomousConstants.Coordinates TestPoseStart = new AutonomousConstants.Coordinates(0, 0, 0);
 
     //Tuning Constants
     public static double TEST_LAUNCH_MOTOR_DELTA = 0.1;

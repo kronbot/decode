@@ -36,7 +36,6 @@ public class MainDrivingOp extends OpMode {
     private FtcDashboard dashboard;
 
     private boolean autoAimEnabled = false;
-    boolean manualOuttake = false;
 
     ElapsedTime turretTimer = new ElapsedTime();
 
@@ -219,7 +218,6 @@ public class MainDrivingOp extends OpMode {
     public void stop(){
         robot.webcam.stop();
     }
-
 
     public void _telemetry(){
         telemetry.addData("shooter motor vel:", robot.shooterMotor.getVelocity());
