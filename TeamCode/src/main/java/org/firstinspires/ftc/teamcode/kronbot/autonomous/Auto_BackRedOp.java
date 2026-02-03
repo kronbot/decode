@@ -119,14 +119,17 @@ public class Auto_BackRedOp extends OpMode {
                     switch (launchState) {
                         case 0:
                             // Start outtake motors
-                            robot.shooterMotor.setVelocity(launchSpeedBack);
-                            launchState++;
-                            pathTimer.resetTimer();
+                            if(pathTimer.getElapsedTimeSeconds() >= 16.0) {
+                                robot.shooterMotor.setVelocity(launchSpeedBack);
+                                launchState++;
+                                pathTimer.resetTimer();
+                            }
+
                             break;
 
                         case 1:
                             // Wait for motors to reach speed and launch 1
-                            if (motorVel+100 >= launchSpeedBack && motorVel+100 >= launchSpeedBack && pathTimer.getElapsedTimeSeconds() >= 4.0) {
+                            if (motorVel+100 >= launchSpeedBack && motorVel+100 >= launchSpeedBack) {
                                 robot.loaderServo.runContinuous(false, true);
                                 launchState++;
                                 pathTimer.resetTimer();
@@ -153,7 +156,7 @@ public class Auto_BackRedOp extends OpMode {
 
                         case 4:
                             // Stop servo between shots
-                            if (pathTimer.getElapsedTimeSeconds() > 1.0) {
+                            if (pathTimer.getElapsedTimeSeconds() > 1.5) {
                                 robot.loaderServo.runContinuous(false, false);
                                 robot.intakeMotor.setPower(1);
                                 launchState++;

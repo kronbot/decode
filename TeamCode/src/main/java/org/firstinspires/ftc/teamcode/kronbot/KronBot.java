@@ -106,19 +106,19 @@ public class KronBot {
 
     public void initTeleop(HardwareMap hardwareMap) {
         initMotors(hardwareMap);
-        initIMU2(hardwareMap);
+        //initIMU2(hardwareMap);
         initServos(hardwareMap);
         initSensors(hardwareMap);
     }
 
     public void initSimpleDriving(HardwareMap hardwareMap) {
-        initIMU2(hardwareMap);
+        //initIMU2(hardwareMap);
         initMotors(hardwareMap);
     }
 
     public void init(HardwareMap hardwareMap){
         initMotors(hardwareMap);
-        initIMU2(hardwareMap);
+        //initIMU2(hardwareMap);
         initServos(hardwareMap);
         initSensors(hardwareMap);
     }

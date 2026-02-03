@@ -51,16 +51,16 @@ public class Constants {
     public static double maxVelocity = 1500;
 
     public static double RANGE_1_ANGLE = 0;
-    public static double RANGE_1_VELOCITY = 900;
+    public static double RANGE_1_VELOCITY = 950;
 
     public static double RANGE_2_ANGLE = 0.5;
     public static double RANGE_2_VELOCITY = 1080;
 
     public static double RANGE_3_ANGLE = 0.72;
-    public static double RANGE_3_VELOCITY = 1260;
+    public static double RANGE_3_VELOCITY = 1200;
 
     public static double RANGE_4_ANGLE = 0.72;
-    public static double RANGE_4_VELOCITY = 1450;
+    public static double RANGE_4_VELOCITY = 1400;
 
     //Tuning Constants
     public static double TEST_LAUNCH_MOTOR_DELTA = 0.1;

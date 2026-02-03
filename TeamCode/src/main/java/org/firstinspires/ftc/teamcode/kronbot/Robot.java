@@ -1,11 +1,13 @@
 package org.firstinspires.ftc.teamcode.kronbot;
 
+import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.kronbot.utils.detection.AprilTagWebcam;
 
+import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.gamepad1;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_CLOSE;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_FAR;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_MAX;
@@ -287,27 +289,37 @@ public class Robot extends KronBot {
     }
 
     public class Shoot {
-        public void activateRange(int range) {
+        public void activateRange(int range, Gamepad gamepad) {
             switch (range) {
                 case 1:
                     outtake.on = true;
                     outtake.velocity = RANGE_1_VELOCITY;
                     outtake.angle = RANGE_1_ANGLE;
+                    //if(outtake.velocity>=RANGE_1_VELOCITY-100)
+                    //   gamepad.rumble(1, 0, 100);
                     break;
                 case 2:
                     outtake.on = true;
                     outtake.velocity = RANGE_2_VELOCITY;
                     outtake.angle = RANGE_2_ANGLE;
+                    //if(outtake.velocity>=RANGE_2_VELOCITY-100)
+                    //    gamepad.rumble(1, 0, 100);
                     break;
                 case 3:
                     outtake.on = true;
                     outtake.velocity = RANGE_3_VELOCITY;
                     outtake.angle = RANGE_3_ANGLE;
+                    //if(outtake.velocity>=RANGE_3_VELOCITY-100)
+                    //    gamepad.rumble(1, 0, 100);
+                    break;
                 case 4:
                     outtake.on = true;
                     outtake.velocity = RANGE_4_VELOCITY;
                     outtake.angle = RANGE_4_ANGLE;
+                    //if(outtake.velocity>=RANGE_4_VELOCITY-100)
+                    //    gamepad.rumble(1, 0, 100);
             }
+
         }
 
         public void deactivate() {

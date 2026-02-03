@@ -1,5 +1,10 @@
 package org.firstinspires.ftc.teamcode.kronbot.manual;
 
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_1_VELOCITY;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_2_VELOCITY;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_3_VELOCITY;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_4_VELOCITY;
+
 import com.acmerobotics.dashboard.FtcDashboard;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -32,9 +37,11 @@ public class MainDrivingOp extends OpMode {
 
     private boolean autoAimEnabled = false;
     boolean manualOuttake = false;
-    private boolean outtakeWasOn = false;
 
     ElapsedTime turretTimer = new ElapsedTime();
+
+    boolean rumbled = false;
+    double targetVel = -1;
 
     @Override
     public void init(){
@@ -90,8 +97,6 @@ public class MainDrivingOp extends OpMode {
                 robot.intake.speed = 0;
         }
 
-
-
         //AprilTagDetection tag = robot.webcam.getTowerTags();
         //autoAim.telemetry(telemetry, tag);
 
@@ -144,7 +149,6 @@ public class MainDrivingOp extends OpMode {
                 turretTimer.reset();
             }
 
-
             //Angle aiming
             if(drivingGP.dpadUp.pressed())
                 robot.outtake.angle += 0.01;
@@ -154,22 +158,34 @@ public class MainDrivingOp extends OpMode {
 
         //Shoot Close/Far
         if (drivingGP.triangle.justPressed()) {
-            robot.shoot.activateRange(1);
+            robot.shoot.activateRange(1, gamepad1);
+            targetVel = RANGE_1_VELOCITY;
         }
         if(drivingGP.square.justPressed()) {
-            robot.shoot.activateRange(2);
+            robot.shoot.activateRange(2, gamepad1);
+            targetVel = RANGE_2_VELOCITY;
         }
         if (drivingGP.cross.justPressed()) {
-            robot.shoot.activateRange(3);
+            robot.shoot.activateRange(3, gamepad1);
+            targetVel = RANGE_3_VELOCITY;
         }
         if(drivingGP.circle.justPressed()) {
-            robot.shoot.activateRange(4);
+            robot.shoot.activateRange(4, gamepad1);
+            targetVel = RANGE_4_VELOCITY;
+        }
+
+        if(targetVel > 0 && robot.shooterMotor.getVelocity() >= targetVel - 50)
+        {
+            gamepad1.rumble(1, 0, 250);
+            rumbled = true;
         }
 
         if(!autoAimEnabled && drivingGP.leftBumper.justPressed()) {
             if(robot.outtake.on) {
                 robot.shoot.deactivate();
-                gamepad1.rumble(1, 0, 100);
+                gamepad1.rumble(1, 1, 100);
+                targetVel = -1;
+                rumbled = false;
             }
         }
 
