@@ -12,6 +12,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.teamcode.kronbot.Robot;
 import org.firstinspires.ftc.teamcode.kronbot.utils.Constants;
 import org.firstinspires.ftc.teamcode.kronbot.utils.Controls;
+import org.firstinspires.ftc.teamcode.kronbot.utils.PoseStorage;
 import org.firstinspires.ftc.teamcode.kronbot.utils.components.FieldCentricDrive;
 import org.firstinspires.ftc.teamcode.kronbot.utils.components.RobotCentricDrive;
 
@@ -31,7 +32,8 @@ public class PinpointOp extends OpMode {
     private boolean reverseMovement = false;
     private boolean drivingMode = false;
     private Follower follower;
-    Pose startingPose = coordinates(TestPoseStart);
+    Pose startingPose = PoseStorage.loadPose();
+    //set the pose that the robot got from the end of auto
 
     @Override
     public void init() {
@@ -46,7 +48,6 @@ public class PinpointOp extends OpMode {
         FtcDashboard dashboard = FtcDashboard.getInstance();
         telemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());
 
-        //set pose zero at teleop start ??
         follower.setStartingPose(startingPose);
     }
 

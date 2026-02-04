@@ -15,6 +15,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.teamcode.kronbot.KronBot;
+import org.firstinspires.ftc.teamcode.kronbot.utils.PoseStorage;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @Autonomous(name = "BLUE Auto_Close", group = org.firstinspires.ftc.teamcode.kronbot.utils.Constants.TEST_GROUP)
@@ -27,7 +28,7 @@ public class Auto_CloseBlueOp extends OpMode {
     private int launchState;
 
     // Define poses
-    Pose startingPose = coordinates(StartingPoseClose);
+    Pose startingPose = coordinates(StartingPoseCloseBlue);
     Pose launchZone = coordinates(LaunchZoneCloseBlue);
 
     Pose launchZone2 = coordinates(LaunchZoneClose2Blue);
@@ -213,7 +214,9 @@ public class Auto_CloseBlueOp extends OpMode {
 
 
             case -1:
-                // Idle / done
+                Pose finalPose = follower.getPose();
+                PoseStorage.savePose(finalPose);
+
                 break;
         }
     }
