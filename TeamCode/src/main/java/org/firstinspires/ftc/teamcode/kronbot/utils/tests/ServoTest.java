@@ -22,12 +22,12 @@ public class ServoTest extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
 
         Servo[] servos = new Servo[SERVO_COUNT];
-        servos[0] = hardwareMap.get(Servo.class, "servo1");
-        servos[1] = hardwareMap.get(Servo.class, "servo2");
-        servos[2] = hardwareMap.get(Servo.class, "servo3");
-        servos[3] = hardwareMap.get(Servo.class, "servo4");
-        servos[4] = hardwareMap.get(Servo.class, "servo5");
-        servos[5] = hardwareMap.get(Servo.class, "servo6");
+        servos[0] = hardwareMap.get(Servo.class, "anglePivot");
+//        servos[1] = hardwareMap.get(Servo.class, "servo2");
+//        servos[2] = hardwareMap.get(Servo.class, "servo3");
+//        servos[3] = hardwareMap.get(Servo.class, "servo4");
+//        servos[4] = hardwareMap.get(Servo.class, "servo5");
+//        servos[5] = hardwareMap.get(Servo.class, "servo6");
 
         telemetry.addLine("INITIALIZED");
         telemetry.update();

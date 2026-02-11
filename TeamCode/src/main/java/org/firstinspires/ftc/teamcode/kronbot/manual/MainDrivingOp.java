@@ -1,221 +1,233 @@
 package org.firstinspires.ftc.teamcode.kronbot.manual;
 
-import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.LOADER_SERVO_REVERSED;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.maxVelocity;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.minVelocity;
-
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_1_VELOCITY;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_2_VELOCITY;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_3_VELOCITY;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_4_VELOCITY;
 
 import com.acmerobotics.dashboard.FtcDashboard;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.Gamepad;
-import com.pedropathing.util.Timer;
 
-import org.firstinspires.ftc.teamcode.kronbot.KronBot;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.teamcode.kronbot.Robot;
+import org.firstinspires.ftc.teamcode.kronbot.utils.Controls;
 import org.firstinspires.ftc.teamcode.kronbot.utils.components.AutoAim;
 import org.firstinspires.ftc.teamcode.kronbot.utils.components.FieldCentricDrive;
 import org.firstinspires.ftc.teamcode.kronbot.utils.components.RobotCentricDrive;
 import org.firstinspires.ftc.teamcode.kronbot.utils.Constants;
-import org.firstinspires.ftc.teamcode.kronbot.utils.detection.AprilTagWebcam;
-import org.firstinspires.ftc.teamcode.kronbot.utils.wrappers.Button;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
-
 
 /**
  * The main TeleOP program for the driving period of the game.
+ *
  * @version 1.0
  */
 @TeleOp(name = "Main Driving", group = Constants.MAIN_GROUP)
-public class MainDrivingOp extends LinearOpMode {
-    private final KronBot robot = new KronBot();
+public class MainDrivingOp extends OpMode {
+    private final Robot robot = Robot.getInstance();
+    private  Controls drivingGP;
+    private  Controls utilityGP;
+    private AutoAim autoAim;
 
     private RobotCentricDrive robotCentricDrive;
     private FieldCentricDrive fieldCentricDrive;
-
-    private Gamepad drivingGamepad, utilityGamepad;
-    private AprilTagWebcam aprilTagWebcam = new AprilTagWebcam();
-    private AprilTagDetection tag24;
     private FtcDashboard dashboard;
 
-    //Control Variables
-    private boolean isLaunching = false,  autoAimEnabled = false;
-    private double currentVelocity = 1300, rightVel, leftVel;
-    private Timer buttonRebounceTimer;
+    private boolean autoAimEnabled = false;
 
-    AutoAim autoAim;
+    ElapsedTime turretTimer = new ElapsedTime();
+
+    boolean rumbled = false;
+    double targetVel = -1;
 
     @Override
-    public void runOpMode() throws InterruptedException {
+    public void init(){
+        robot.init(hardwareMap);
+        robot.loader.reversed = true;
 
-        // INIT objects
-        robot.initTeleop(hardwareMap);
         dashboard = FtcDashboard.getInstance();
 
-        drivingGamepad = gamepad1;
-        utilityGamepad = gamepad2;
+        robot.webcam.init(hardwareMap, telemetry);
+        if (robot.webcam.getVisionPortal() != null) {
+            dashboard.startCameraStream(robot.webcam.getVisionPortal(), 30);
+        }
 
-        robotCentricDrive = new RobotCentricDrive(robot, drivingGamepad);
-        fieldCentricDrive = new FieldCentricDrive(robot, drivingGamepad);
+        autoAim = new AutoAim(robot, 0.5, 1);
 
-        Button driveModeButton = new Button();
-        Button reverseButton = new Button();
-        Button aimButton = new Button();
-        buttonRebounceTimer = new Timer();
+        drivingGP = new Controls(gamepad1);
+        utilityGP = new Controls(gamepad2);
+    }
 
-        autoAim = new AutoAim(robot);
-
-
-        //INIT telemetry and webcam
+    @Override
+    public void init_loop(){
+        telemetry.addLine("Initialization Ready");
         telemetry.update();
-        aprilTagWebcam.init(hardwareMap, telemetry);
-        if (aprilTagWebcam.getVisionPortal() != null) {
-            dashboard.startCameraStream(aprilTagWebcam.getVisionPortal(), 30);
+    }
+
+    @Override
+    public void start(){
+        robotCentricDrive = new RobotCentricDrive(robot, gamepad1);
+        fieldCentricDrive = new FieldCentricDrive(robot, gamepad1);
+    }
+
+    @Override
+    public void loop(){
+        //Update controller inputs
+        drivingGP.update();
+        utilityGP.update();
+
+        //Intake
+        robot.intake.speed = utilityGP.rightStick.y;
+
+
+        //Loader
+        if(!drivingGP.rightBumper.pressed()) {
+            robot.loader.speed = utilityGP.leftStick.y;
+        }
+        else {
+            robot.loader.speed = drivingGP.rightTrigger - drivingGP.leftTrigger;
+            if(robot.loader.speed > 0.1)
+                robot.intake.speed = 0.2;
+            else if(robot.loader.speed < -0.2)
+                robot.intake.speed = -0.1;
+            else
+                robot.intake.speed = 0;
         }
 
-        while (!isStopRequested() && !opModeIsActive()) {
-            telemetry.addLine("Initialization Ready");
-            telemetry.update();
-        }
+        //AprilTagDetection tag = robot.webcam.getTowerTags();
+        //autoAim.telemetry(telemetry, tag);
 
-        if (isStopRequested()) {
-            aprilTagWebcam.stop();
-            return;
-        }
+        //Turret/Angle aiming
+        if(autoAimEnabled){
+            //To do
+//            robot.webcam.update();
 
-        //main loop
-        while (opModeIsActive() && !isStopRequested()) {
+            //robot.turret.angle = autoAim.calculateServoPosition(tag);
 
-            aimButton.updateButton(gamepad1.dpad_right);
-            aimButton.shortPress();
-            autoAimEnabled = aimButton.getShortToggle();
+        } else {
+            //Turret aiming
+            if(drivingGP.dpadLeft.pressed()) {
 
-            outake();
-
-            // Driving
-            driveModeButton.updateButton(gamepad1.square);
-            driveModeButton.longPress();
-
-            reverseButton.updateButton(gamepad1.circle);
-            reverseButton.shortPress();
-
-            robotCentricDrive.setReverse(reverseButton.getShortToggle());
-            if(!autoAimEnabled || tag24==null) {
-                if (!driveModeButton.getLongToggle()) {
-                    robotCentricDrive.run();
-                    robotCentricDrive.telemetry(telemetry);
-                } else {
-                    fieldCentricDrive.run();
-                    fieldCentricDrive.telemetry(telemetry);
+                //if button is pressed for longer, increase increment
+                if (turretTimer.seconds() == 0) {
+                    turretTimer.reset();
                 }
-            } else
-                handleAutoAim();
+                double increment = 0.03;
 
-            // Webcam
-            aprilTagWebcam.update();
-            tag24 = aprilTagWebcam.getTagBySpecificId(24);
+                if (turretTimer.seconds() > 1) {
+                    increment = 0.07;
+                }
 
-            // Outtake velocity telemetry
-            leftVel = robot.leftOuttake.getVelocity();
-            rightVel = robot.rightOuttake.getVelocity();
+                if (turretTimer.seconds() > 1.5) {
+                    increment = 0.1;
+                }
+                robot.turret.angle += increment;
 
-            telemetryUpdates();
-            telemetry.update();
-        }
-    }
-
-    private void outake(){
-        //Outtake Servo
-
-        if(gamepad1.left_trigger > 0.5) {
-            if(!LOADER_SERVO_REVERSED)
-                robot.loaderServo.setPosition(0);
-            else
-                robot.loaderServo.setPosition(1);
-        } else {
-            double val = gamepad1.right_trigger;
-            if(!LOADER_SERVO_REVERSED)
-                val = val / 2 + 0.5;
-            else
-                val = 1 - (val / 2 + 0.5);
-
-            robot.loaderServo.setPosition(val);
-        }
-
-        //Outtake Wheels
-
-        if (gamepad1.right_bumper && buttonRebounceTimer.getElapsedTimeSeconds()>=0.3) {
-            isLaunching = !isLaunching;
-
-            if (isLaunching) {
-                currentVelocity = minVelocity;
-            }
-            buttonRebounceTimer.resetTimer();
-        }
-
-
-        //Outtake velocity control
-        if (isLaunching) {
-
-            if (gamepad1.dpad_up) {
-                currentVelocity = maxVelocity;
-            } else if (gamepad1.dpad_down) {
-                currentVelocity = minVelocity;
             }
 
-            robot.leftOuttake.setVelocity(currentVelocity);
-            robot.rightOuttake.setVelocity(currentVelocity);
+            else if(drivingGP.dpadRight.pressed()) {
 
-        } else {
-            robot.leftOuttake.setPower(0);
-            robot.rightOuttake.setPower(0);
+                double decrement = 0.03;
+
+                if (turretTimer.seconds() == 0) {
+                    turretTimer.reset();
+                }
+
+                if (turretTimer.seconds() > 1) {
+                    decrement = 0.07;
+                }
+
+                if (turretTimer.seconds() > 1.5) {
+                    decrement = 0.1;
+                }
+
+                robot.turret.angle -= decrement;
+            } else {
+                turretTimer.reset();
+            }
+
+            //Angle aiming
+            if(drivingGP.dpadUp.pressed())
+                robot.outtake.angle += 0.01;
+            else if(drivingGP.dpadDown.pressed())
+                robot.outtake.angle -= 0.01;
         }
-        
-    }
 
-    private void handleAutoAim(){
-        if (autoAimEnabled && tag24 != null) {
-            double rotationPower = autoAim.calculateAimRotation(tag24);
+        //Shoot Close/Far
+        if (drivingGP.triangle.justPressed()) {
+            robot.shoot.activateRange(1, gamepad1);
+            targetVel = RANGE_1_VELOCITY;
+        }
+        if(drivingGP.square.justPressed()) {
+            robot.shoot.activateRange(2, gamepad1);
+            targetVel = RANGE_2_VELOCITY;
+        }
+        if (drivingGP.cross.justPressed()) {
+            robot.shoot.activateRange(3, gamepad1);
+            targetVel = RANGE_3_VELOCITY;
+        }
+        if(drivingGP.circle.justPressed()) {
+            robot.shoot.activateRange(4, gamepad1);
+            targetVel = RANGE_4_VELOCITY;
+        }
 
-            // manual drive cuz rotation is controlled by autoaim
-            double x = drivingGamepad.left_stick_x;
-            double y = -drivingGamepad.left_stick_y;
+        if(targetVel > 0 && robot.shooterMotor.getVelocity() >= targetVel - 50)
+        {
+            gamepad1.rumble(1, 0, 250);
+            rumbled = true;
+        }
 
-            if (Math.abs(x) < 0.1) x = 0;
-            if (Math.abs(y) < 0.1) y = 0;
-
-            autoAim.applyAimToDrive(x, y, rotationPower);
-
-            autoAim.telemetry(telemetry, tag24);
-
-        } else {
-            autoAim.reset();
-
-            if (autoAimEnabled && tag24 == null) {
-                telemetry.addLine("AUTO-AIM: Waiting for tag...");
+        if(!autoAimEnabled && drivingGP.leftBumper.justPressed()) {
+            if(robot.outtake.on) {
+                robot.shoot.deactivate();
+                gamepad1.rumble(1, 1, 100);
+                targetVel = -1;
+                rumbled = false;
             }
         }
+
+        //Update robot systems status
+        movement();
+        robot.updateAllSystems();
+        _telemetry();
+        //robot.webcam.update();
     }
 
-    private void telemetryUpdates(){
-        //Webcam telemetry
-//        if (tag24 != null && !autoAimEnabled) {
-//            telemetry.addLine("=== TAG 24 DETECTED ===");
-//            telemetry.addData("Distance (cm)", tag24.ftcPose.range);
-//            telemetry.addData("X (cm)", tag24.ftcPose.x);
-//            telemetry.addData("Y (cm)", tag24.ftcPose.y);
-//            telemetry.addData("Z (cm)", tag24.ftcPose.z);
-//            aprilTagWebcam.displayDetectionTelemetry(tag24);
-//        }
+    private boolean reverseMovement=false, drivingMode=false;//False for robot centric, true for field centric
+    private void movement(){
+        if(drivingGP.rightStick.button.shortPressed())
+            reverseMovement = !reverseMovement;
 
-        if(tag24==null){
-            telemetry.addLine("=== TAG 24 NOT FOUND ===");
+//        if(drivingGP.circle.longPressed())
+//            drivingMode = !drivingMode;
+
+        robotCentricDrive.setReverse(reverseMovement);
+        if (!drivingMode) {
+            robotCentricDrive.run();
+            robotCentricDrive.telemetry(telemetry);
+        } else {
+            fieldCentricDrive.run();
+            fieldCentricDrive.telemetry(telemetry);
         }
 
-        //Outtake Telemetry
-        telemetry.addLine("");
-        telemetry.addData("Left Shooter Vel", robot.leftOuttake.getVelocity());
-        telemetry.addData("Right Shooter Vel", robot.rightOuttake.getVelocity());
-        telemetry.addData("leftVel is: ", leftVel);
-        telemetry.addData("rightVel is: ", rightVel);
+    }
+
+    @Override
+    public void stop(){
+        robot.webcam.stop();
+    }
+
+    public void _telemetry(){
+        telemetry.addData("shooter motor vel:", robot.shooterMotor.getVelocity());
+        telemetry.addData("angle servo pos:", robot.turretServo.getPosition());
+
+        robot.intake.telemetry(telemetry);
+        robot.loader.telemetry(telemetry);
+        robot.outtake.telemetry(telemetry);
+        robot.turret.telemetry(telemetry);
+        drivingGP.telemetry(telemetry);
+        telemetry.update();
     }
 }

@@ -10,39 +10,85 @@ import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.AIM_KP;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.AIM_KI;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.AIM_KD;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_TOLERANCE;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.MAX_ROTATION_POWER;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.TURRET_SERVO_MIN;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.TURRET_SERVO_MAX;
 
 public class AutoAim {
     private KronBot robot;
     private ControllerPID aimPID;
 
     private boolean isAiming = false;
-    private double rotationPower = 0.0;
+    private double servoPosition = 0.5;
+    private double servoOffset = 0.0; // Offset in servo position units (0.0-1.0) to account for servo home position
+    private double gearRatio = 1.0; // Ratio between driver gear and turret ring (turretRotation = servoRotation * gearRatio)
 
     public AutoAim(KronBot robot) {
         this.robot = robot;
         this.aimPID = new ControllerPID(AIM_KP, AIM_KI, AIM_KD);
+        this.servoOffset = (TURRET_SERVO_MIN + TURRET_SERVO_MAX) / 2.0; // Default to center
     }
 
-    public double calculateAimRotation(AprilTagDetection tag) {
+    public AutoAim(KronBot robot, double servoOffset) {
+        this.robot = robot;
+        this.aimPID = new ControllerPID(AIM_KP, AIM_KI, AIM_KD);
+        this.servoOffset = servoOffset;
+    }
+
+    public AutoAim(KronBot robot, double servoOffset, double gearRatio) {
+        this.robot = robot;
+        this.aimPID = new ControllerPID(AIM_KP, AIM_KI, AIM_KD);
+        this.servoOffset = servoOffset;
+        this.gearRatio = gearRatio;
+    }
+
+    public void setServoOffset(double offset) {
+        this.servoOffset = offset;
+    }
+
+    public double getServoOffset() {
+        return this.servoOffset;
+    }
+
+    public void setGearRatio(double ratio) {
+        this.gearRatio = ratio;
+    }
+
+    public double getGearRatio() {
+        return this.gearRatio;
+    }
+
+    public double calculateServoPosition(AprilTagDetection tag) {
         if (tag == null) {
             isAiming = false;
             aimPID.reset();
-            return 0.0;
+            return servoOffset; // Return to offset position when no target
         }
 
         isAiming = true;
 
-        // - = left ; + = right
-        double targetAngle = tag.ftcPose.bearing;
+        // Get target bearing in degrees (- = left ; + = right)
+        double targetBearing = tag.ftcPose.bearing;
 
-        rotationPower = aimPID.calculate(0, targetAngle);
+        // Use PID to calculate correction based on bearing error
+        // Target is 0 degrees (centered on target), current is the bearing angle
+        double pidCorrection = aimPID.calculate(0, targetBearing);
 
-        //clamps pid engine power
-        rotationPower = Math.max(-MAX_ROTATION_POWER,
-                Math.min(MAX_ROTATION_POWER, rotationPower));
+        // Convert PID output to servo position change
+        // Scale the PID output to servo range, accounting for gear ratio
+        double servoRange = TURRET_SERVO_MAX - TURRET_SERVO_MIN;
+        double servoMovement = pidCorrection * servoRange / gearRatio;
 
-        return rotationPower;
+        // Calculate final servo position: offset + PID-controlled movement
+        servoPosition = servoOffset + servoMovement;
+
+        // Clamp servo position to valid range
+        servoPosition = Math.clamp(servoPosition, TURRET_SERVO_MIN, TURRET_SERVO_MAX);
+
+        return servoPosition;
+    }
+
+    public double getServoPosition() {
+        return servoPosition;
     }
 
     public boolean isOnTarget(AprilTagDetection tag) {
@@ -51,25 +97,10 @@ public class AutoAim {
         return Math.abs(tag.ftcPose.bearing) < ANGLE_TOLERANCE;
     }
 
-    public void applyAimToDrive(double x, double y, double rotation) {
-        double normalizer = Math.max(Math.abs(x) + Math.abs(y) + Math.abs(rotation), 1.0); // this normalizes (kind of like a clamp) the values as to not be greater than 1
-
-        double leftFrontPower = (y + x + rotation) / normalizer; // all wheels must rotate forward (y) but whe subtract strafing (x) to create rotation and side to side movement
-        double leftRearPower = (y - x + rotation) / normalizer;
-        double rightRearPower = (y + x - rotation) / normalizer;
-        double rightFrontPower = (y - x - rotation) / normalizer;
-
-        //i think u know what this does.
-        robot.motors.leftFront.setPower(leftFrontPower);
-        robot.motors.leftRear.setPower(leftRearPower);
-        robot.motors.rightRear.setPower(rightRearPower);
-        robot.motors.rightFront.setPower(rightFrontPower);
-    }
-
     public void reset() {
         aimPID.reset();
         isAiming = false;
-        rotationPower = 0.0;
+        servoPosition = servoOffset;
     }
 
 //    public boolean isAiming() {
@@ -79,12 +110,14 @@ public class AutoAim {
     public void telemetry(Telemetry telemetry, AprilTagDetection tag) {
         telemetry.addLine("=== AUTO-AIM STATUS ===");
         telemetry.addData("Auto-Aim Active", isAiming);
+        telemetry.addData("Servo Offset", "%.3f", servoOffset);
+        telemetry.addData("Gear Ratio", "%.2f:1", gearRatio);
 
         if (tag != null) {
-            telemetry.addData("Target Bearing", "", tag.ftcPose.bearing);
+            telemetry.addData("Target Bearing", "%.1f°", tag.ftcPose.bearing);
             telemetry.addData("On Target", isOnTarget(tag));
-            telemetry.addData("Rotation Power", "", rotationPower);
-            telemetry.addData("Distance to Target", " cm", tag.ftcPose.range);
+            telemetry.addData("Servo Position", "%.3f", servoPosition);
+            telemetry.addData("Distance to Target", "%.1f cm", tag.ftcPose.y);
         } else {
             telemetry.addData("Target", "NOT DETECTED");
         }

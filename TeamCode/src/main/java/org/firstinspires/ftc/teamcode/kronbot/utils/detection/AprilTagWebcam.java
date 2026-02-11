@@ -126,6 +126,16 @@ public class AprilTagWebcam {
         return null;
     }
 
+    public AprilTagDetection getTowerTags() {
+        for(AprilTagDetection detection : detectedTags) {
+            if(detection.id == 20 || detection.id == 24)
+            {
+                return detection;
+            }
+        }
+        return null;
+    }
+
     public void stop(){
         if (dashboard != null) {
             dashboard.stopCameraStream();

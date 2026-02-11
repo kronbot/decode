@@ -1,28 +1,35 @@
 package org.firstinspires.ftc.teamcode.kronbot;
 
 
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KD;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KF;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KI;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KP;
 
-import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
-
-import com.qualcomm.hardware.bosch.BHI260IMU;
 import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.kronbot.utils.drivers.MotorDriver;
 import org.firstinspires.ftc.teamcode.kronbot.utils.wrappers.ControlHubGyroscope;
 import org.firstinspires.ftc.teamcode.kronbot.utils.wrappers.Servo;
+import com.qualcomm.robotcore.hardware.ColorSensor;
+
 
 public class KronBot {
     public MotorDriver motors;
     public ControlHubGyroscope gyroscope;
+    public ModernRoboticsI2cRangeSensor rangeSensor;
 
-    public DcMotorEx leftOuttake;
-    public DcMotorEx rightOuttake;
-
+    public DcMotorEx intakeMotor, leftOuttake, rightOuttake, shooterMotor;
     public Servo loaderServo;
+
+    public Servo turretServo, angleServo;
+    public ColorSensor outtakeColor;
+
 
     public void initMotors(HardwareMap hardwareMap) {
         DcMotorEx leftRear = hardwareMap.get(DcMotorEx.class, "leftRear");
@@ -31,26 +38,51 @@ public class KronBot {
         DcMotorEx rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
         rightRear.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        leftOuttake = hardwareMap.get(DcMotorEx.class, "leftOuttake");
-        rightOuttake = hardwareMap.get(DcMotorEx.class, "rightOuttake");
-        leftOuttake.setDirection(DcMotorSimple.Direction.REVERSE);
-
-
+        intakeMotor = hardwareMap.get(DcMotorEx.class, "intakeMotor");
+        shooterMotor = hardwareMap.get(DcMotorEx.class, "ShooterMotor");
+        shooterMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        shooterMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        shooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        shooterMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        shooterMotor.setVelocityPIDFCoefficients(
+                9,   // P - main stabilizer
+                0.2,   // I - usually 0
+                4,   // D - reduces overshoot
+                10    // F - feedforward (VERY important)
+        );
         motors = new MotorDriver();
         motors.init(leftRear, leftFront, rightRear, rightFront);
     }
 
     public void initAutoMotors(HardwareMap hardwareMap) {
-        leftOuttake = hardwareMap.get(DcMotorEx.class, "leftOuttake");
-        rightOuttake = hardwareMap.get(DcMotorEx.class, "rightOuttake");
-        leftOuttake.setDirection(DcMotorSimple.Direction.REVERSE);
-
+        intakeMotor = hardwareMap.get(DcMotorEx.class, "intakeMotor");
+        shooterMotor = hardwareMap.get(DcMotorEx.class, "ShooterMotor");
+        shooterMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        shooterMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        shooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        shooterMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        shooterMotor.setVelocityPIDFCoefficients(
+                7.0,  // P - main stabilizer
+                0.1,   // I - usually 0
+                0.8,   // D - reduces overshoot
+                12.0   // F - feedforward (VERY important)
+        );
     }
 
     public void initServos(HardwareMap hardwareMap) {
         loaderServo = new Servo(hardwareMap);
-        loaderServo.init("loaderServo", true, false, 0, 0, 0);
+        loaderServo.init("loader", true, false, 0, 0, 0);
         loaderServo.runContinuous(false, false);
+        turretServo = new Servo(hardwareMap);
+        turretServo.init("turretPivot", false, false, 0, 1, 0.5);
+
+        angleServo = new Servo(hardwareMap);
+        angleServo.init("anglePivot", false, false, 0, 1, 0);
+    }
+
+    public void initSensors(HardwareMap hardwareMap) {
+        //outtakeColor = hardwareMap.get(ColorSensor.class, "outtakeColor");
+        rangeSensor = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "rangeSensor");
     }
 
 //    public void initIMU(HardwareMap hardwareMap) {
@@ -69,16 +101,25 @@ public class KronBot {
     public void initAutonomy(HardwareMap hardwareMap) {
         initAutoMotors(hardwareMap);
         initServos(hardwareMap);
+        initSensors(hardwareMap);
     }
 
     public void initTeleop(HardwareMap hardwareMap) {
         initMotors(hardwareMap);
-        initIMU2(hardwareMap);
+        //initIMU2(hardwareMap);
         initServos(hardwareMap);
+        initSensors(hardwareMap);
     }
 
     public void initSimpleDriving(HardwareMap hardwareMap) {
-        initIMU2(hardwareMap);
+        //initIMU2(hardwareMap);
         initMotors(hardwareMap);
+    }
+
+    public void init(HardwareMap hardwareMap){
+        initMotors(hardwareMap);
+        //initIMU2(hardwareMap);
+        initServos(hardwareMap);
+        initSensors(hardwareMap);
     }
 }

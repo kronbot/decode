@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode.kronbot.utils.tests;
-import static org.firstinspires.ftc.teamcode.kronbot.autonomous.AutonomousConstants.LaunchZone;
-import static org.firstinspires.ftc.teamcode.kronbot.autonomous.AutonomousConstants.StartingPose;
+import static org.firstinspires.ftc.teamcode.kronbot.autonomous.AutonomousConstants.LaunchZoneClose;
+import static org.firstinspires.ftc.teamcode.kronbot.autonomous.AutonomousConstants.StartingPoseCloseRed;
 import static org.firstinspires.ftc.teamcode.kronbot.autonomous.AutonomousConstants.coordinates;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
@@ -33,8 +33,8 @@ public class TestAuto extends LinearOpMode {
         FtcDashboard dashboard = FtcDashboard.getInstance();
         telemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());
 
-        Pose startingPose = coordinates(StartingPose);
-        Pose launchZone = coordinates(LaunchZone);
+        Pose startingPose = coordinates(StartingPoseCloseRed);
+        Pose launchZone = coordinates(LaunchZoneClose);
 
         follower.setStartingPose(startingPose);
 
