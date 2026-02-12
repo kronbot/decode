@@ -127,7 +127,7 @@ public class TurretDataOp extends LinearOpMode {
                     // Map from [-1, 1] to [minVelocity, maxVelocity]
                     currentVelocity = minVelocity + ((leftStickY + 1) / 2.0) * (maxVelocity - minVelocity);
                 }
-                robot.shooterMotor.setVelocity(currentVelocity);
+                robot.leftOuttake.setVelocity(currentVelocity);
 
                 // JOYSTICK 2 (Right stick Y-axis): Control angle servo position
                 // Map joystick range [-1, 1] to servo range [ANGLE_SERVO_MIN, 1.0] (full servo range)
@@ -154,7 +154,7 @@ public class TurretDataOp extends LinearOpMode {
 
                 telemetry.addData("Shooter Velocity", "%.2f", currentVelocity);
                 telemetry.addData("Angle Servo Position", "%.4f", currentAngleServoPosition);
-                telemetry.addData("Actual Shooter Velocity", "%.2f", robot.shooterMotor.getVelocity());
+                telemetry.addData("Actual Shooter Velocity", "%.2f", robot.leftOuttake.getVelocity());
                 telemetry.addData("Records Captured", recordCount);
                 telemetry.addLine("---");
                 telemetry.addLine("Left Stick Y: Adjust Velocity");
@@ -184,7 +184,7 @@ public class TurretDataOp extends LinearOpMode {
             aprilTagDistance = tag.ftcPose.y; // Distance to AprilTag
         }
 
-        double shooterVelocity = robot.shooterMotor.getVelocity();
+        double shooterVelocity = robot.leftOuttake.getVelocity();
         double angleServoPosition = robot.angleServo.getPosition();
 
         recordCount++;

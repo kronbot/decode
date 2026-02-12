@@ -1,10 +1,13 @@
 package org.firstinspires.ftc.teamcode.kronbot;
 
+import com.pedropathing.follower.Follower;
+import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.teamcode.kronbot.utils.PoseStorage;
 import org.firstinspires.ftc.teamcode.kronbot.utils.detection.AprilTagWebcam;
 
 import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.gamepad1;
@@ -12,6 +15,8 @@ import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_FAR;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_MAX;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_MIN;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.FLAP_CLOSED;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.FLAP_OPEN;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.LOADER_SERVO_REVERSED;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_1_ANGLE;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_1_VELOCITY;
@@ -37,7 +42,10 @@ public class Robot extends KronBot {
     public final Intake intake;
     public final Loader loader;
     public final Turret turret;
+    public final Flap flap;
     public final Shoot shoot;
+    public Follower follower;
+
     
     // Private constructor
     public Robot() {
@@ -46,6 +54,7 @@ public class Robot extends KronBot {
         this.loader = new Loader();
         this.turret = new Turret();
         this.shoot = new Shoot();
+        this.flap = new Flap();
     }
     
     // Get the singleton instance
@@ -59,17 +68,20 @@ public class Robot extends KronBot {
     // Initialize robot and all systems
     public void init(HardwareMap hardwareMap) {
         super.init(hardwareMap);
-        initSystems();
+        initSystems(hardwareMap);
     }
     
-    public void initSystems() {
+    public void initSystems(HardwareMap hardwareMap) {
         outtake.init();
         intake.init();
         loader.init();
         turret.init();
+        flap.init();
 
         //Add other intis here
-
+        Pose startingPose = PoseStorage.loadPose();
+        follower = org.firstinspires.ftc.teamcode.pedroPathing.Constants.createFollower(hardwareMap);
+        follower.setStartingPose(startingPose);
     }
     
     // Updates all systems
@@ -78,11 +90,14 @@ public class Robot extends KronBot {
         intake.update();
         loader.update();
         turret.update();
+        flap.update();
 
-        gyroscope.updateOrientation();
+
+//        gyroscope.updateOrientation();
 
         //Add other updates here
 //        webcam.update();
+        follower.update();
     }
 
     public class Outtake {
@@ -131,23 +146,40 @@ public class Robot extends KronBot {
 
         public void update(){
             if(on){
-                shooterMotor.setPower(1);
-                shooterMotor.setVelocity(velocity);
+                leftOuttake.setPower(1);
+                leftOuttake.setVelocity(velocity);
+                rightOuttake.setPower(1);
+                rightOuttake.setVelocity(velocity);
             } else {
-                if(shooterMotor.getVelocity() < 21) {
-                    shooterMotor.setPower(0);
+                if(leftOuttake.getVelocity() < 21) {
+                    leftOuttake.setPower(0);
                 }
-                else if(shooterMotor.getVelocity() < 200) {
-                    shooterMotor.setPower(-0.15);
+                else if(leftOuttake.getVelocity() < 200) {
+                    leftOuttake.setPower(-0.15);
                 }
-                else if(shooterMotor.getVelocity() < 300) {
-                    shooterMotor.setPower(-0.1);
+                else if(leftOuttake.getVelocity() < 300) {
+                    leftOuttake.setPower(-0.1);
                 }
-                else if(shooterMotor.getVelocity() < 500) {
-                    shooterMotor.setPower(0.05);
+                else if(leftOuttake.getVelocity() < 500) {
+                    leftOuttake.setPower(0.05);
                 }
                 else
-                    shooterMotor.setPower(0);
+                    leftOuttake.setPower(0);
+
+                if(rightOuttake.getVelocity() < 21) {
+                    rightOuttake.setPower(0);
+                }
+                else if(rightOuttake.getVelocity() < 200) {
+                    rightOuttake.setPower(-0.15);
+                }
+                else if(rightOuttake.getVelocity() < 300) {
+                    rightOuttake.setPower(-0.1);
+                }
+                else if(rightOuttake.getVelocity() < 500) {
+                    rightOuttake.setPower(0.05);
+                }
+                else
+                    rightOuttake.setPower(0);
             }
 
             angleServo.setPosition(Math.min(Math.max(angle, ANGLE_SERVO_MIN), ANGLE_SERVO_MAX));
@@ -158,8 +190,8 @@ public class Robot extends KronBot {
             telemetry.addData("On", on);
             telemetry.addData("Reversed", reversed);
             telemetry.addData("Target Velocity", "%.0f", velocity);
-            telemetry.addData("Actual Velocity", "%.0f", shooterMotor.getVelocity());
-            telemetry.addData("Motor Power", "%.3f", shooterMotor.getPower());
+            telemetry.addData("Actual Velocity", "%.0f", leftOuttake.getVelocity());
+            telemetry.addData("Motor Power", "%.3f", leftOuttake.getPower());
             telemetry.addData("Angle", "%.3f", angle);
             telemetry.addData("Angle Servo Pos", "%.3f", angleServo.getPosition());
             telemetry.addData("Distance", "%.3f", rangeSensor.cmUltrasonic() * 1.08644 + 17.20917); // magic numbers from desmos
@@ -236,7 +268,7 @@ public class Robot extends KronBot {
                 if(angle < -Math.PI)
                     angle = 2 * Math.PI + angle;
 
-                double robotRelativeAngle = angle - (gyroscope.getHeading() * 0.01745329); // deg to radian
+                double robotRelativeAngle = angle - (follower.getHeading() * 0.01745329); // deg to radian
                 servoPosition = robotRelativeAngle * TURRET_SERVO_UNITS_PER_RAD + 0.5;
 
 
@@ -247,9 +279,24 @@ public class Robot extends KronBot {
         public void telemetry(Telemetry telemetry) {
             telemetry.addLine("=== TURRET STATUS ===");
             telemetry.addData("Target Angle", "%.3f", angle);
-            telemetry.addData("Robot Heading", "%.4f", gyroscope.getHeading());
+            telemetry.addData("Robot Heading", "%.4f", follower.getHeading());
             telemetry.addData("Servo Position", "%.3f", turretServo.getPosition());
             telemetry.addData("Servo Range", "%.3f - %.3f", TURRET_SERVO_MIN, TURRET_SERVO_MAX);
+        }
+    }
+
+    public class Flap {
+        public boolean open = false;
+
+        public void init(){
+            flapsServo.setPosition(FLAP_CLOSED);
+        }
+
+        public void update(){
+            if(open)
+                flapsServo.setPosition(FLAP_OPEN);
+            else
+                flapsServo.setPosition(FLAP_CLOSED);
         }
     }
 

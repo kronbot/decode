@@ -85,9 +85,11 @@ public class MainDrivingOp extends OpMode {
         //Loader
         if(!drivingGP.rightBumper.pressed()) {
             robot.loader.speed = utilityGP.leftStick.y;
+            robot.flap.open = false;
         }
         else {
             robot.loader.speed = drivingGP.rightTrigger - drivingGP.leftTrigger;
+            robot.flap.open = true;
             if(robot.loader.speed > 0.1)
                 robot.intake.speed = 0.2;
             else if(robot.loader.speed < -0.2)
@@ -173,7 +175,7 @@ public class MainDrivingOp extends OpMode {
             targetVel = RANGE_4_VELOCITY;
         }
 
-        if(targetVel > 0 && robot.shooterMotor.getVelocity() >= targetVel - 50)
+        if(targetVel > 0 && robot.leftOuttake.getVelocity() >= targetVel - 50)
         {
             gamepad1.rumble(1, 0, 250);
             rumbled = true;
@@ -220,13 +222,13 @@ public class MainDrivingOp extends OpMode {
     }
 
     public void _telemetry(){
-        telemetry.addData("shooter motor vel:", robot.shooterMotor.getVelocity());
+        telemetry.addData("shooter motor vel:", robot.leftOuttake.getVelocity());
         telemetry.addData("angle servo pos:", robot.turretServo.getPosition());
 
         robot.intake.telemetry(telemetry);
         robot.loader.telemetry(telemetry);
         robot.outtake.telemetry(telemetry);
-        robot.turret.telemetry(telemetry);
+//        robot.turret.telemetry(telemetry);
         drivingGP.telemetry(telemetry);
         telemetry.update();
     }

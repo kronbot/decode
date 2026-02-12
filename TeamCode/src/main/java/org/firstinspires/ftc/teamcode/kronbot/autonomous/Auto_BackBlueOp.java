@@ -93,7 +93,7 @@ public class Auto_BackBlueOp extends OpMode {
     public void loop() {
         follower.update();
 
-        motorVel = robot.shooterMotor.getVelocity();
+        motorVel = robot.leftOuttake.getVelocity();
 
         autonomousPathUpdate();
 
@@ -102,7 +102,7 @@ public class Auto_BackBlueOp extends OpMode {
         telemetry.addData("X", currentPose.getX());
         telemetry.addData("Y", currentPose.getY());
         telemetry.addData("Heading (rad)", currentPose.getHeading());
-        telemetry.addData("Shooter Motor vel", robot.shooterMotor.getVelocity());
+        telemetry.addData("Shooter Motor vel", robot.leftOuttake.getVelocity());
 
         telemetry.update();
     }
@@ -120,7 +120,7 @@ public class Auto_BackBlueOp extends OpMode {
                     switch (launchState) {
                         case 0:
                             // Start outtake motors
-                            robot.shooterMotor.setVelocity(launchSpeedBack);
+                            robot.leftOuttake.setVelocity(launchSpeedBack);
                             launchState++;
                             pathTimer.resetTimer();
                             break;
@@ -174,7 +174,7 @@ public class Auto_BackBlueOp extends OpMode {
                         case 6:
                             // Empty, stop motors
                             if (pathTimer.getElapsedTimeSeconds() > 3.0) {
-                                robot.shooterMotor.setPower(0);
+                                robot.leftOuttake.setPower(0);
                                 robot.intakeMotor.setPower(0);
                                 robot.loaderServo.runContinuous(false, false);
                                 launchState++;

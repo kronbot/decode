@@ -60,7 +60,7 @@ public class OuttakeShootingTesting extends OpMode {
         drivingGP.update();
         utilityGP.update();
 
-        robot.shooterMotor.setVelocityPIDFCoefficients(
+        robot.leftOuttake.setVelocityPIDFCoefficients(
                 OUT_MOTOR_KP,   // P - main stabilizer
                 OUT_MOTOR_KI,   // I - usually 0
                 OUT_MOTOR_KD,   // D - reduces overshoot
@@ -105,7 +105,7 @@ public class OuttakeShootingTesting extends OpMode {
 
 
     public void _telemetry(){
-        telemetry.addData("shooter motor vel:", robot.shooterMotor.getVelocity());
+        telemetry.addData("shooter motor vel:", robot.leftOuttake.getVelocity());
         telemetry.addData("angle servo pos:", robot.turretServo.getPosition());
 
         robot.intake.telemetry(telemetry);
