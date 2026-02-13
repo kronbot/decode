@@ -268,7 +268,7 @@ public class Robot extends KronBot {
                 if(angle < -Math.PI)
                     angle = 2 * Math.PI + angle;
 
-                double robotRelativeAngle = angle - (follower.getHeading() * 0.01745329); // deg to radian
+                double robotRelativeAngle = angle - (follower.getHeading()/* * 0.01745329*/); // deg to radian
                 servoPosition = robotRelativeAngle * TURRET_SERVO_UNITS_PER_RAD + 0.5;
 
 

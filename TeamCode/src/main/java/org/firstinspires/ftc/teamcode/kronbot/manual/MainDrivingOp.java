@@ -4,6 +4,7 @@ import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_1_VEL
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_2_VELOCITY;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_3_VELOCITY;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_4_VELOCITY;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RedTowerCoords;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 
@@ -17,6 +18,7 @@ import org.firstinspires.ftc.teamcode.kronbot.utils.components.AutoAim;
 import org.firstinspires.ftc.teamcode.kronbot.utils.components.FieldCentricDrive;
 import org.firstinspires.ftc.teamcode.kronbot.utils.components.RobotCentricDrive;
 import org.firstinspires.ftc.teamcode.kronbot.utils.Constants;
+import org.firstinspires.ftc.teamcode.kronbot.utils.components.TurretAligner;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
 /**
@@ -29,7 +31,8 @@ public class MainDrivingOp extends OpMode {
     private final Robot robot = Robot.getInstance();
     private  Controls drivingGP;
     private  Controls utilityGP;
-    private AutoAim autoAim;
+
+    private TurretAligner turretAligner;
 
     private RobotCentricDrive robotCentricDrive;
     private FieldCentricDrive fieldCentricDrive;
@@ -48,13 +51,15 @@ public class MainDrivingOp extends OpMode {
         robot.loader.reversed = true;
 
         dashboard = FtcDashboard.getInstance();
-
         robot.webcam.init(hardwareMap, telemetry);
+
         if (robot.webcam.getVisionPortal() != null) {
             dashboard.startCameraStream(robot.webcam.getVisionPortal(), 30);
         }
 
-        autoAim = new AutoAim(robot, 0.5, 1);
+        // Initialize the new coordinate aligner
+        turretAligner = new TurretAligner(robot);
+        turretAligner.setTarget(RedTowerCoords.x, RedTowerCoords.y);
 
         drivingGP = new Controls(gamepad1);
         utilityGP = new Controls(gamepad2);
@@ -81,6 +86,8 @@ public class MainDrivingOp extends OpMode {
         //Intake
         robot.intake.speed = utilityGP.rightStick.y;
 
+        //Aliniere
+        turretAligner.update();
 
         //Loader
         if(!drivingGP.rightBumper.pressed()) {
@@ -224,7 +231,7 @@ public class MainDrivingOp extends OpMode {
     public void _telemetry(){
         telemetry.addData("shooter motor vel:", robot.leftOuttake.getVelocity());
         telemetry.addData("angle servo pos:", robot.turretServo.getPosition());
-
+        telemetry.addData("turret angle:", robot.turret.angle);
         robot.intake.telemetry(telemetry);
         robot.loader.telemetry(telemetry);
         robot.outtake.telemetry(telemetry);

@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode.kronbot.utils;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.pedropathing.ftc.localization.constants.TwoWheelConstants;
+import com.pedropathing.geometry.CoordinateSystem;
+import com.pedropathing.geometry.Pose;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot.LogoFacingDirection;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot.UsbFacingDirection;
@@ -87,4 +89,9 @@ public class Constants {
     public static double AIM_KD = 0.003;
     public static double ANGLE_TOLERANCE = 2.0;
     public static double MAX_ROTATION_POWER = 0.5;
+
+
+    public static AutonomousConstants.Coordinates RedTowerCoords = new AutonomousConstants.Coordinates(130, 130, 0);
+    public static AutonomousConstants.Coordinates BlueTowerCoords = new AutonomousConstants.Coordinates(10, 135, 0);
+
 }
