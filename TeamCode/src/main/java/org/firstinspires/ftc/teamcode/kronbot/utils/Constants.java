@@ -77,10 +77,14 @@ public class Constants {
     public static double TEST_TURRET_PIVOT_DELTA = 0.05;
 
     // Outtake motor PID
+    public static boolean OUT_USE_PIDF = true;
     public static double OUT_MOTOR_KP = 9;
     public static double OUT_MOTOR_KI = 0.2;
     public static double OUT_MOTOR_KD = 4;
     public static double OUT_MOTOR_KF = 10;
+    public static double OUT_MOTOR_P = 0;
+    public static double OUT_MOTOR_V = 0;
+    public static double OUT_MOTOR_S = 0;
 
 
     //AIM PID - to be tuned

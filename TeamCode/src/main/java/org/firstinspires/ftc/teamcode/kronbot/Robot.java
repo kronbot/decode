@@ -22,6 +22,10 @@ import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_K
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KF;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KI;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KP;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_P;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_S;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_V;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_USE_PIDF;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_1_ANGLE;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_1_VELOCITY;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_2_ANGLE;
@@ -150,56 +154,54 @@ public class Robot extends KronBot {
 
         public void update(){
 
-            leftOuttake.setVelocityPIDFCoefficients(
-                    OUT_MOTOR_KP,   // P - main stabilizer
-                    OUT_MOTOR_KI,   // I - usually 0
-                    OUT_MOTOR_KD,   // D - reduces overshoot
-                    OUT_MOTOR_KF    // F - feedforward (VERY important)
-            );
 
-            rightOuttake.setVelocityPIDFCoefficients(
-                    OUT_MOTOR_KP,   // P - main stabilizer
-                    OUT_MOTOR_KI,   // I - usually 0
-                    OUT_MOTOR_KD,   // D - reduces overshoot
-                    OUT_MOTOR_KF    // F - feedforward (VERY important)
-            );
+            if(OUT_USE_PIDF) {
+                leftOuttake.setVelocityPIDFCoefficients(
+                        OUT_MOTOR_KP,   // P - main stabilizer
+                        OUT_MOTOR_KI,   // I - usually 0
+                        OUT_MOTOR_KD,   // D - reduces overshoot
+                        OUT_MOTOR_KF    // F - feedforward (VERY important)
+                );
+                rightOuttake.setVelocityPIDFCoefficients(
+                        OUT_MOTOR_KP,   // P - main stabilizer
+                        OUT_MOTOR_KI,   // I - usually 0
+                        OUT_MOTOR_KD,   // D - reduces overshoot
+                        OUT_MOTOR_KF    // F - feedforward (VERY important)
+                );
 
-
-            if(on){
-                leftOuttake.setPower(1);
                 leftOuttake.setVelocity(velocity);
-                rightOuttake.setPower(1);
                 rightOuttake.setVelocity(velocity);
-            } else {
+            }
+            else { // Preferably not used
+                double feedback = OUT_MOTOR_P * (velocity - leftOuttake.getVelocity()) / 1000;
+                double feedforward = OUT_MOTOR_V * velocity + OUT_MOTOR_S;
+                leftOuttake.setPower(feedback + feedforward);
+                rightOuttake.setPower(feedback + feedforward);
+            }
+
+
+            if(!on) {
                 if(leftOuttake.getVelocity() < 21) {
                     leftOuttake.setPower(0);
+                    rightOuttake.setPower(0);
                 }
                 else if(leftOuttake.getVelocity() < 200) {
                     leftOuttake.setPower(-0.15);
+                    rightOuttake.setPower(-0.15);
                 }
                 else if(leftOuttake.getVelocity() < 300) {
                     leftOuttake.setPower(-0.1);
+                    rightOuttake.setPower(-0.1);
                 }
                 else if(leftOuttake.getVelocity() < 500) {
                     leftOuttake.setPower(0.05);
-                }
-                else
-                    leftOuttake.setPower(0);
-
-                if(rightOuttake.getVelocity() < 21) {
-                    rightOuttake.setPower(0);
-                }
-                else if(rightOuttake.getVelocity() < 200) {
-                    rightOuttake.setPower(-0.15);
-                }
-                else if(rightOuttake.getVelocity() < 300) {
-                    rightOuttake.setPower(-0.1);
-                }
-                else if(rightOuttake.getVelocity() < 500) {
                     rightOuttake.setPower(0.05);
                 }
-                else
+                else {
+                    leftOuttake.setPower(0);
                     rightOuttake.setPower(0);
+                }
+
             }
 
             angleServo.setPosition(Math.min(Math.max(angle, ANGLE_SERVO_MIN), ANGLE_SERVO_MAX));
