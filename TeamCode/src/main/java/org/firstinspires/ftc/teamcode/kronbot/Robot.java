@@ -18,6 +18,10 @@ import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.FLAP_CLOSED;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.FLAP_OPEN;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.LOADER_SERVO_REVERSED;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KD;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KF;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KI;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KP;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_1_ANGLE;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_1_VELOCITY;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_2_ANGLE;
@@ -145,6 +149,22 @@ public class Robot extends KronBot {
         }
 
         public void update(){
+
+            leftOuttake.setVelocityPIDFCoefficients(
+                    OUT_MOTOR_KP,   // P - main stabilizer
+                    OUT_MOTOR_KI,   // I - usually 0
+                    OUT_MOTOR_KD,   // D - reduces overshoot
+                    OUT_MOTOR_KF    // F - feedforward (VERY important)
+            );
+
+            rightOuttake.setVelocityPIDFCoefficients(
+                    OUT_MOTOR_KP,   // P - main stabilizer
+                    OUT_MOTOR_KI,   // I - usually 0
+                    OUT_MOTOR_KD,   // D - reduces overshoot
+                    OUT_MOTOR_KF    // F - feedforward (VERY important)
+            );
+
+
             if(on){
                 leftOuttake.setPower(1);
                 leftOuttake.setVelocity(velocity);

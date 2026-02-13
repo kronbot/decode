@@ -1,5 +1,9 @@
 package org.firstinspires.ftc.teamcode.kronbot.manual;
 
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KD;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KF;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KI;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KP;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_1_VELOCITY;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_2_VELOCITY;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_3_VELOCITY;
@@ -31,6 +35,7 @@ public class MainDrivingOp extends OpMode {
     private final Robot robot = Robot.getInstance();
     private  Controls drivingGP;
     private  Controls utilityGP;
+
 
     private TurretAligner turretAligner;
 
@@ -82,6 +87,8 @@ public class MainDrivingOp extends OpMode {
         //Update controller inputs
         drivingGP.update();
         utilityGP.update();
+
+
 
         //Intake
         robot.intake.speed = utilityGP.rightStick.y;
