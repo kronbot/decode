@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.kronbot.autonomous;
 
 import static org.firstinspires.ftc.teamcode.kronbot.autonomous.AutonomousConstants.*;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_CLOSE;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.FLAP_OPEN;
 
 import static java.lang.Thread.sleep;
 
@@ -16,13 +17,14 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.teamcode.kronbot.KronBot;
+import org.firstinspires.ftc.teamcode.kronbot.Robot;
 import org.firstinspires.ftc.teamcode.kronbot.utils.PoseStorage;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @Autonomous(name = "RED Auto_Back", group = org.firstinspires.ftc.teamcode.kronbot.utils.Constants.TEST_GROUP)
 public class Auto_BackRedOp extends OpMode {
 
-    private KronBot robot;
+    private Robot robot;
     private Follower follower;
     private Timer pathTimer, opmodeTimer;
     private int pathState, launchState;
@@ -40,7 +42,7 @@ public class Auto_BackRedOp extends OpMode {
 
     @Override
     public void init() {
-        robot = new KronBot();
+        robot = Robot.getInstance();
         robot.initAutonomy(hardwareMap);
 
         pathTimer = new Timer();
@@ -120,9 +122,13 @@ public class Auto_BackRedOp extends OpMode {
                     switch (launchState) {
                         case 0:
                             // Start outtake motors
-                            if(pathTimer.getElapsedTimeSeconds() >= 16.0) {
-                                robot.leftOuttake.setVelocity(launchSpeedBack);
+                            if(pathTimer.getElapsedTimeSeconds() >= 0.5) {
+                                robot.outtake.on = true;
+                                robot.outtake.velocity = launchSpeedBack;
+                                robot.outtake.kS = 0.5; // magic number from constants
+                                robot.flap.open = true;
                                 launchState++;
+                                robot.updateAllSystems();
                                 pathTimer.resetTimer();
                             }
 
@@ -130,27 +136,31 @@ public class Auto_BackRedOp extends OpMode {
 
                         case 1:
                             // Wait for motors to reach speed and launch 1
-                            if (motorVel+100 >= launchSpeedBack && motorVel+100 >= launchSpeedBack) {
+                            if (motorVel+40 >= launchSpeedBack) {
                                 robot.loaderServo.runContinuous(false, true);
+                                robot.outtake.angle = 1;
                                 launchState++;
+                                robot.updateAllSystems();
                                 pathTimer.resetTimer();
                             }
                             break;
 
                         case 2:
                             // Use color sensor to detect when ball is launched and stop servo (+timer for fallback safety)
-                            if (pathTimer.getElapsedTimeSeconds() > 1.0) {
+                            if (pathTimer.getElapsedTimeSeconds() > 3.0) {
                                 robot.loaderServo.runContinuous(false, false);
                                 launchState++;
+                                robot.updateAllSystems();
                                 pathTimer.resetTimer();
                             }
                             break;
 
                         case 3:
                             // Launch 2
-                            if (motorVel+100 >= launchSpeedBack && motorVel+100 >= launchSpeedBack) {
+                            if (motorVel+40 >= launchSpeedBack) {
                                 robot.loaderServo.runContinuous(false, true);
                                 launchState++;
+                                robot.updateAllSystems();
                                 pathTimer.resetTimer();
                             }
                             break;
@@ -159,17 +169,20 @@ public class Auto_BackRedOp extends OpMode {
                             // Stop servo between shots
                             if (pathTimer.getElapsedTimeSeconds() > 1.5) {
                                 robot.loaderServo.runContinuous(false, false);
-                                robot.intakeMotor.setPower(1);
+                                robot.intake.reversed = true;
+                                robot.intake.speed = 1;
                                 launchState++;
+                                robot.updateAllSystems();
                                 pathTimer.resetTimer();
                             }
                             break;
 
                         case 5:
                             // Launch 3
-                            if (motorVel+100 >= launchSpeedBack && motorVel+100 >= launchSpeedBack) {
+                            if (motorVel+40 >= launchSpeedBack) {
                                 robot.loaderServo.runContinuous(false, true);
                                 launchState++;
+                                robot.updateAllSystems();
                                 pathTimer.resetTimer();
                             }
                             break;
@@ -177,10 +190,11 @@ public class Auto_BackRedOp extends OpMode {
                         case 6:
                             // Empty, stop motors
                             if (pathTimer.getElapsedTimeSeconds() > 1.0) {
-                                robot.leftOuttake.setPower(0);
-                                robot.intakeMotor.setPower(0);
+                                robot.outtake.on = false;
+                                robot.intake.speed = 0;
                                 robot.loaderServo.runContinuous(false, false);
                                 launchState++;
+                                robot.updateAllSystems();
                                 pathTimer.resetTimer();
                             }
                             break;

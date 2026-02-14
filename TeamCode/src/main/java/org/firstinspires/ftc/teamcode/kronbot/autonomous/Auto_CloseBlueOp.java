@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.kronbot.autonomous;
 
 import static org.firstinspires.ftc.teamcode.kronbot.autonomous.AutonomousConstants.*;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_CLOSE;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.FLAP_OPEN;
 
 
 import com.acmerobotics.dashboard.FtcDashboard;
@@ -126,6 +127,7 @@ public class Auto_CloseBlueOp extends OpMode {
                             // Start outtake motors
                             robot.leftOuttake.setVelocity(launchSpeedClose);
                             robot.rightOuttake.setVelocity(launchSpeedClose);
+                            robot.flapsServo.setPosition(FLAP_OPEN);
                             launchState++;
                             pathTimer.resetTimer();
                             break;
@@ -161,7 +163,7 @@ public class Auto_CloseBlueOp extends OpMode {
                             // Stop servo between shots
                             if (pathTimer.getElapsedTimeSeconds() > 2.0) {
                                 robot.loaderServo.runContinuous(false, false);
-                                robot.intakeMotor.setPower(1);
+                                robot.intakeMotor.setPower(-1);
                                 launchState++;
                                 pathTimer.resetTimer();
                             }

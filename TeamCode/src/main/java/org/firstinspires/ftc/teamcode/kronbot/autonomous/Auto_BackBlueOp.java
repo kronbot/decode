@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.kronbot.autonomous;
 
 import static org.firstinspires.ftc.teamcode.kronbot.autonomous.AutonomousConstants.*;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_CLOSE;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.FLAP_OPEN;
 
 import static java.lang.Thread.sleep;
 
@@ -97,6 +98,8 @@ public class Auto_BackBlueOp extends OpMode {
 
         autonomousPathUpdate();
 
+
+
         Pose currentPose = follower.getPose();
         telemetry.addData("Path State", pathState);
         telemetry.addData("X", currentPose.getX());
@@ -121,6 +124,8 @@ public class Auto_BackBlueOp extends OpMode {
                         case 0:
                             // Start outtake motors
                             robot.leftOuttake.setVelocity(launchSpeedBack);
+                            robot.rightOuttake.setVelocity(launchSpeedBack);
+                            robot.flapsServo.setPosition(FLAP_OPEN);
                             launchState++;
                             pathTimer.resetTimer();
                             break;
@@ -156,7 +161,7 @@ public class Auto_BackBlueOp extends OpMode {
                             // Stop servo between shots
                             if (pathTimer.getElapsedTimeSeconds() > 1.0) {
                                 robot.loaderServo.runContinuous(false, false);
-                                robot.intakeMotor.setPower(1);
+                                robot.intakeMotor.setPower(-1);
                                 launchState++;
                                 pathTimer.resetTimer();
                             }
@@ -175,6 +180,7 @@ public class Auto_BackBlueOp extends OpMode {
                             // Empty, stop motors
                             if (pathTimer.getElapsedTimeSeconds() > 3.0) {
                                 robot.leftOuttake.setPower(0);
+                                robot.rightOuttake.setPower(0);
                                 robot.intakeMotor.setPower(0);
                                 robot.loaderServo.runContinuous(false, false);
                                 launchState++;

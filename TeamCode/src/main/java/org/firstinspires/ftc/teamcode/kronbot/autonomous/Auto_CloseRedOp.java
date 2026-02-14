@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.kronbot.autonomous;
 
 import static org.firstinspires.ftc.teamcode.kronbot.autonomous.AutonomousConstants.*;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_CLOSE;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.FLAP_OPEN;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.minVelocity;
 
 
@@ -71,8 +72,8 @@ public class Auto_CloseRedOp extends OpMode {
                 .build();
 
         goToPark = follower.pathBuilder()
-                .addPath(new BezierLine(launchZone2, parkZone))
-                .setLinearHeadingInterpolation(launchZone2.getHeading(), parkZone.getHeading())
+                .addPath(new BezierLine(startingPose, parkZone))
+                .setLinearHeadingInterpolation(startingPose.getHeading(), parkZone.getHeading())
                 .build();
     }
 
@@ -115,16 +116,18 @@ public class Auto_CloseRedOp extends OpMode {
 
         switch (pathState) {
             case 0:
-                follower.followPath(goToLaunch);
-                setPathState(1);
+                follower.followPath(goToPark);
+                setPathState(-1);
                 break;
 
             case 1:
+                /*
                 if (!follower.isBusy()) {
                     switch (launchState) {
                         case 0:
                             // Start outtake motors
                             robot.leftOuttake.setVelocity(launchSpeedClose);
+                            robot.flapsServo.setPosition(FLAP_OPEN);
                             launchState++;
                             pathTimer.resetTimer();
                             break;
@@ -160,7 +163,7 @@ public class Auto_CloseRedOp extends OpMode {
                             // Stop servo between shots
                             if (pathTimer.getElapsedTimeSeconds() > 1.0) {
                                 robot.loaderServo.runContinuous(false, false);
-                                robot.intakeMotor.setPower(1);
+                                robot.intakeMotor.setPower(-1);
                                 launchState++;
                                 pathTimer.resetTimer();
                             }
@@ -196,7 +199,7 @@ public class Auto_CloseRedOp extends OpMode {
                     }
                 }
                 break;
-
+                */
             case 2:
 
                 if (!follower.isBusy()) {

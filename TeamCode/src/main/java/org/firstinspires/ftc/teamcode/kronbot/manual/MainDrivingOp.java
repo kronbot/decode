@@ -1,5 +1,8 @@
 package org.firstinspires.ftc.teamcode.kronbot.manual;
 
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.INTAKE_DRIVER_POWER;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.INTAKE_DRIVER_REVERSE;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.INTAKE_REVERSE;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KD;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KF;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KI;
@@ -48,11 +51,11 @@ public class MainDrivingOp extends OpMode {
     ElapsedTime turretTimer = new ElapsedTime();
 
     boolean rumbled = false;
-    double targetVel = -1;
 
     @Override
     public void init(){
         robot.init(hardwareMap);
+        robot.initTeleop(hardwareMap);
         robot.loader.reversed = true;
 
         dashboard = FtcDashboard.getInstance();
@@ -92,6 +95,7 @@ public class MainDrivingOp extends OpMode {
 
         //Intake
         robot.intake.speed = utilityGP.rightStick.y;
+        robot.intake.reversed = INTAKE_REVERSE;
 
         //Aliniere
         turretAligner.update();
@@ -105,9 +109,9 @@ public class MainDrivingOp extends OpMode {
             robot.loader.speed = drivingGP.rightTrigger - drivingGP.leftTrigger;
             robot.flap.open = true;
             if(robot.loader.speed > 0.1)
-                robot.intake.speed = 0.2;
+                robot.intake.speed = INTAKE_DRIVER_POWER;
             else if(robot.loader.speed < -0.2)
-                robot.intake.speed = -0.1;
+                robot.intake.speed = INTAKE_DRIVER_REVERSE;
             else
                 robot.intake.speed = 0;
         }
@@ -139,7 +143,7 @@ public class MainDrivingOp extends OpMode {
                 if (turretTimer.seconds() > 1.5) {
                     increment = 0.1;
                 }
-                robot.turret.angle += increment;
+                robot.turret.driverOffset += increment;
 
             }
 
@@ -159,7 +163,7 @@ public class MainDrivingOp extends OpMode {
                     decrement = 0.1;
                 }
 
-                robot.turret.angle -= decrement;
+                robot.turret.driverOffset -= decrement;
             } else {
                 turretTimer.reset();
             }
@@ -174,24 +178,22 @@ public class MainDrivingOp extends OpMode {
         //Shoot Close/Far
         if (drivingGP.triangle.justPressed()) {
             robot.shoot.activateRange(1, gamepad1);
-            targetVel = RANGE_1_VELOCITY;
         }
         if(drivingGP.square.justPressed()) {
             robot.shoot.activateRange(2, gamepad1);
-            targetVel = RANGE_2_VELOCITY;
         }
         if (drivingGP.cross.justPressed()) {
             robot.shoot.activateRange(3, gamepad1);
-            targetVel = RANGE_3_VELOCITY;
         }
         if(drivingGP.circle.justPressed()) {
             robot.shoot.activateRange(4, gamepad1);
-            targetVel = RANGE_4_VELOCITY;
         }
 
-        if(targetVel > 0 && robot.leftOuttake.getVelocity() >= targetVel - 50)
+        if( robot.outtake.on &&
+            robot.leftOuttake.getVelocity() >= robot.outtake.velocity - 30 &&
+            robot.leftOuttake.getVelocity() <= robot.outtake.velocity + 90 )
         {
-            gamepad1.rumble(1, 0, 250);
+            gamepad1.rumble(1, 0, 150);
             rumbled = true;
         }
 
@@ -199,7 +201,6 @@ public class MainDrivingOp extends OpMode {
             if(robot.outtake.on) {
                 robot.shoot.deactivate();
                 gamepad1.rumble(1, 1, 100);
-                targetVel = -1;
                 rumbled = false;
             }
         }
@@ -236,6 +237,7 @@ public class MainDrivingOp extends OpMode {
     }
 
     public void _telemetry(){
+        telemetry.addData("Heading", robot.follower.getHeading());
         telemetry.addData("shooter motor vel:", robot.leftOuttake.getVelocity());
         telemetry.addData("angle servo pos:", robot.turretServo.getPosition());
         telemetry.addData("turret angle:", robot.turret.angle);
