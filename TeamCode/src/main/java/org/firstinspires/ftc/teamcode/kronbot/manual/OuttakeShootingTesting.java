@@ -75,8 +75,6 @@ public class OuttakeShootingTesting extends OpMode {
         else
             robot.intake.reversed = false;
 
-        telemetry.addData("Ultrasonic Distance", "%.0f", robot.rangeSensor.cmUltrasonic());
-
         anglePos += -drivingGP.rightStick.y * 0.01;
         anglePos = Math.max(Math.min(anglePos, ANGLE_SERVO_MAX), ANGLE_SERVO_MIN);
         shooterVel += drivingGP.leftStick.y * 5;

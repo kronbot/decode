@@ -24,14 +24,8 @@ import com.qualcomm.robotcore.hardware.ColorSensor;
 public class KronBot {
     public MotorDriver motors;
     public ControlHubGyroscope gyroscope;
-    public ModernRoboticsI2cRangeSensor rangeSensor;
-
     public DcMotorEx intakeMotor, leftOuttake, rightOuttake;
-    public Servo loaderServo;
-
-    public Servo turretServo, angleServo, flapsServo;
-    public ColorSensor outtakeColor;
-
+    public Servo loaderServo, turretServo, angleServo, flapsServo;
 
 
     public void initDrivetrain(HardwareMap hardwareMap) {
@@ -75,7 +69,7 @@ public class KronBot {
 
     public void initServos(HardwareMap hardwareMap) {
         loaderServo = new Servo(hardwareMap);
-        loaderServo.init("loader", true, false, 0, 0, 0);
+        loaderServo.init("loader", true, true, 0, 0, 0);
         loaderServo.runContinuous(false, false);
         turretServo = new Servo(hardwareMap);
         turretServo.init("turretPivot", false, false, 0, 1, 0.5);
@@ -87,10 +81,7 @@ public class KronBot {
 
     public void initSensors(HardwareMap hardwareMap) {
         //outtakeColor = hardwareMap.get(ColorSensor.class, "outtakeColor");
-        rangeSensor = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "rangeSensor");
     }
-
-
 
 
     public void initAutonomy(HardwareMap hardwareMap) {
@@ -101,22 +92,11 @@ public class KronBot {
 
     public void initTeleop(HardwareMap hardwareMap) {
         initMotors(hardwareMap);
-        initDrivetrain(hardwareMap);
-
-        //initIMU2(hardwareMap);
         initServos(hardwareMap);
         initSensors(hardwareMap);
     }
 
     public void initSimpleDriving(HardwareMap hardwareMap) {
-        //initIMU2(hardwareMap);
         initMotors(hardwareMap);
-    }
-
-    public void init(HardwareMap hardwareMap){
-        initMotors(hardwareMap);
-        //initIMU2(hardwareMap);
-        initServos(hardwareMap);
-        initSensors(hardwareMap);
     }
 }

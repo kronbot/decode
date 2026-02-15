@@ -56,7 +56,6 @@ public class MainDrivingOp extends OpMode {
     public void init(){
         robot.init(hardwareMap);
         robot.initTeleop(hardwareMap);
-        robot.loader.reversed = true;
 
         dashboard = FtcDashboard.getInstance();
         robot.webcam.init(hardwareMap, telemetry);
@@ -90,6 +89,8 @@ public class MainDrivingOp extends OpMode {
         //Update controller inputs
         drivingGP.update();
         utilityGP.update();
+
+        robot.follower.isLocalizationNAN()
 
 
 

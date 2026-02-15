@@ -52,12 +52,14 @@ public class Robot extends KronBot {
     
     // Systems used in all opModes
     public AprilTagWebcam webcam = new AprilTagWebcam();
+
     public final Outtake outtake;
     public final Intake intake;
     public final Loader loader;
     public final Turret turret;
     public final Flap flap;
     public final Shoot shoot;
+
     public Follower follower;
 
     
@@ -81,7 +83,7 @@ public class Robot extends KronBot {
     
     // Initialize robot and all systems
     public void init(HardwareMap hardwareMap) {
-        super.init(hardwareMap);
+        super.initTeleop(hardwareMap);
         initSystems(hardwareMap);
     }
     
@@ -92,8 +94,36 @@ public class Robot extends KronBot {
         turret.init();
         flap.init();
 
-        //Add other intis here
-        Pose startingPose = PoseStorage.loadPose();
+        //Add other inits here
+
+    }
+
+    /**
+     * Initialize PedroPathing follower
+     * @param hardwareMap Used to initialize drivetrain and localizers
+     * @param loadPose If true, will try to load a pose from the file system (if it fails, it loads a 0 pose)
+     */
+    public void initFollower(HardwareMap hardwareMap, boolean loadPose) {
+        follower = org.firstinspires.ftc.teamcode.pedroPathing.Constants.createFollower(hardwareMap);
+        if(loadPose) {
+            Pose startingPose = PoseStorage.loadPose();
+            follower.setStartingPose(startingPose);
+        }
+        else
+            follower.setStartingPose(new Pose());
+    }
+    /**
+     * Initialize PedroPathing follower with a 0 starting pose
+     * @param hardwareMap Used to initialize drivetrain and localizers
+     */
+    public void initFollower(HardwareMap hardwareMap) { initFollower(hardwareMap, false); }
+
+    /**
+     * Initialize PedroPathing follower with a starting pose
+     * @param hardwareMap Used to initialize drivetrain and localizers
+     * @param startingPose The starting pose
+     */
+    public void initFollower(HardwareMap hardwareMap, Pose startingPose) {
         follower = org.firstinspires.ftc.teamcode.pedroPathing.Constants.createFollower(hardwareMap);
         follower.setStartingPose(startingPose);
     }
@@ -118,6 +148,7 @@ public class Robot extends KronBot {
     public class Outtake {
         public boolean on = false;
         public double angle = 0;
+        public double autoAimAngle = 0;
         public double velocity;
         public double kS = 0;
         public boolean reversed = false;
@@ -288,7 +319,6 @@ public class Robot extends KronBot {
             telemetry.addData("Right Power", "%.3f", rightOuttake.getPower());
             telemetry.addData("Angle", "%.3f", angle);
             telemetry.addData("Angle Servo Pos", "%.3f", angleServo.getPosition());
-            telemetry.addData("Distance", "%.3f", rangeSensor.cmUltrasonic() * 1.08644 + 17.20917); // magic numbers from desmos
         }
 
     }
