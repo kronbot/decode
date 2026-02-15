@@ -90,7 +90,7 @@ public class MainDrivingOp extends OpMode {
         drivingGP.update();
         utilityGP.update();
 
-        robot.follower.isLocalizationNAN()
+
 
 
 
