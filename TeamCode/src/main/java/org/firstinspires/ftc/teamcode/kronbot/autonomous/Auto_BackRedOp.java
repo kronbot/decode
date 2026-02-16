@@ -1,8 +1,6 @@
 package org.firstinspires.ftc.teamcode.kronbot.autonomous;
 
 import static org.firstinspires.ftc.teamcode.kronbot.autonomous.AutonomousConstants.*;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_CLOSE;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.FLAP_OPEN;
 
 import static java.lang.Thread.sleep;
 
@@ -16,7 +14,6 @@ import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
-import org.firstinspires.ftc.teamcode.kronbot.KronBot;
 import org.firstinspires.ftc.teamcode.kronbot.Robot;
 import org.firstinspires.ftc.teamcode.kronbot.utils.PoseStorage;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
@@ -43,7 +40,7 @@ public class Auto_BackRedOp extends OpMode {
     @Override
     public void init() {
         robot = Robot.getInstance();
-        robot.initAutonomy(hardwareMap);
+        robot.initHardware(hardwareMap);
 
         pathTimer = new Timer();
         opmodeTimer = new Timer();

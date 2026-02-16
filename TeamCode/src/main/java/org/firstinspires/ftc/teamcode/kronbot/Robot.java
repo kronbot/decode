@@ -1,33 +1,21 @@
 package org.firstinspires.ftc.teamcode.kronbot;
 
-import com.pedropathing.follower.Follower;
-import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.teamcode.kronbot.utils.PoseStorage;
 import org.firstinspires.ftc.teamcode.kronbot.utils.detection.AprilTagWebcam;
 
-import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.gamepad1;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_CLOSE;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_FAR;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_MAX;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_MIN;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.FLAP_CLOSED;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.FLAP_OPEN;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.LOADER_SERVO_REVERSED;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KD;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KF;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KI;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KP;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_P;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_S;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_V;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_USE_PID;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_1_ANGLE;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_1_KS;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_1_VELOCITY;
@@ -60,7 +48,6 @@ public class Robot extends KronBot {
     public final Flap flap;
     public final Shoot shoot;
 
-    public Follower follower;
 
     
     // Private constructor
@@ -83,7 +70,7 @@ public class Robot extends KronBot {
     
     // Initialize robot and all systems
     public void init(HardwareMap hardwareMap) {
-        super.initTeleop(hardwareMap);
+        super.initHardware(hardwareMap);
         initSystems(hardwareMap);
     }
     
@@ -98,35 +85,7 @@ public class Robot extends KronBot {
 
     }
 
-    /**
-     * Initialize PedroPathing follower
-     * @param hardwareMap Used to initialize drivetrain and localizers
-     * @param loadPose If true, will try to load a pose from the file system (if it fails, it loads a 0 pose)
-     */
-    public void initFollower(HardwareMap hardwareMap, boolean loadPose) {
-        follower = org.firstinspires.ftc.teamcode.pedroPathing.Constants.createFollower(hardwareMap);
-        if(loadPose) {
-            Pose startingPose = PoseStorage.loadPose();
-            follower.setStartingPose(startingPose);
-        }
-        else
-            follower.setStartingPose(new Pose());
-    }
-    /**
-     * Initialize PedroPathing follower with a 0 starting pose
-     * @param hardwareMap Used to initialize drivetrain and localizers
-     */
-    public void initFollower(HardwareMap hardwareMap) { initFollower(hardwareMap, false); }
 
-    /**
-     * Initialize PedroPathing follower with a starting pose
-     * @param hardwareMap Used to initialize drivetrain and localizers
-     * @param startingPose The starting pose
-     */
-    public void initFollower(HardwareMap hardwareMap, Pose startingPose) {
-        follower = org.firstinspires.ftc.teamcode.pedroPathing.Constants.createFollower(hardwareMap);
-        follower.setStartingPose(startingPose);
-    }
     
     // Updates all systems
     public void updateAllSystems() {
@@ -194,65 +153,30 @@ public class Robot extends KronBot {
             return true;
         }
 
-        double p, i, d, f;
 
         public void update(){
 
-            if(p != OUT_MOTOR_KP || i != OUT_MOTOR_KI || d != OUT_MOTOR_KD || f != OUT_MOTOR_KF) {
-                p = OUT_MOTOR_KP;
-                d = OUT_MOTOR_KD;
-                i = OUT_MOTOR_KI;
-                f = OUT_MOTOR_KF;
-
-                leftOuttake.setVelocityPIDFCoefficients(
-                        OUT_MOTOR_KP,   // P - main stabilizer
-                        OUT_MOTOR_KI,   // I - usually 0
-                        OUT_MOTOR_KD,   // D - reduces overshoot
-                        OUT_MOTOR_KF    // F - feedforward (VERY important)
-                );
-                rightOuttake.setVelocityPIDFCoefficients(
-                        OUT_MOTOR_KP,   // P - main stabilizer
-                        OUT_MOTOR_KI,   // I - usually 0
-                        OUT_MOTOR_KD,   // D - reduces overshoot
-                        OUT_MOTOR_KF    // F - feedforward (VERY important)
-                );
-
-            }
-
-            if(lastVelocity > velocity) {
-                braking = true;
-            }
-            lastVelocity = velocity;
-
-
             if(on){
-                if(OUT_USE_PID) {
+                leftOuttake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                rightOuttake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                if(leftOuttake.getVelocity() < velocity * 1) {
                     leftOuttake.setPower(1);
-                    leftOuttake.setVelocity(velocity);
                     rightOuttake.setPower(1);
-                    rightOuttake.setVelocity(velocity);
-                } else {
-                    leftOuttake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-                    rightOuttake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-                    if(leftOuttake.getVelocity() < velocity * 1) {
-                        leftOuttake.setPower(1);
-                        rightOuttake.setPower(1);
-                    }
-                    else if(leftOuttake.getVelocity() > velocity * 1.1) {
-                        if(braking) {
-                            leftOuttake.setPower(0);
-                            rightOuttake.setPower(0);
-                        }
-                        leftOuttake.setPower(kS * 0.8);
-                        rightOuttake.setPower(kS * 0.8);
-                    }
-                    else {
-                        braking = false;
-                        leftOuttake.setPower(kS);
-                        rightOuttake.setPower(kS);
-                    }
-
                 }
+                else if(leftOuttake.getVelocity() > velocity * 1.1) {
+                    if(braking) {
+                        leftOuttake.setPower(0);
+                        rightOuttake.setPower(0);
+                    }
+                    leftOuttake.setPower(kS * 0.8);
+                    rightOuttake.setPower(kS * 0.8);
+                }
+                else {
+                    braking = false;
+                    leftOuttake.setPower(kS);
+                    rightOuttake.setPower(kS);
+                }
+
             } else {
                 if(leftOuttake.getVelocity() < 21) {
                     leftOuttake.setPower(0);

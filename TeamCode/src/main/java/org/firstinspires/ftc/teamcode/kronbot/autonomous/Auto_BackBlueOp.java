@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.kronbot.autonomous;
 
 import static org.firstinspires.ftc.teamcode.kronbot.autonomous.AutonomousConstants.*;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_CLOSE;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.FLAP_OPEN;
 
 import static java.lang.Thread.sleep;
@@ -42,7 +41,7 @@ public class Auto_BackBlueOp extends OpMode {
     @Override
     public void init() {
         robot = new KronBot();
-        robot.initAutonomy(hardwareMap);
+        robot.initHardware(hardwareMap);
 
         pathTimer = new Timer();
         opmodeTimer = new Timer();

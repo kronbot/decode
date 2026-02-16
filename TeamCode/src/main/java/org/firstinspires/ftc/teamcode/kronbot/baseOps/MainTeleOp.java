@@ -34,7 +34,7 @@ public class MainTeleOp extends OpMode {
 
     public void init()
     {
-        robot.initTeleop(hardwareMap);
+        robot.initHardware(hardwareMap);
         dashboard = FtcDashboard.getInstance();
         telemetry.update();
 

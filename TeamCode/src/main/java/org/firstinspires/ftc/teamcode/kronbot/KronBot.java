@@ -2,32 +2,33 @@ package org.firstinspires.ftc.teamcode.kronbot;
 
 
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.FLAP_CLOSED;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.FLAP_OPEN;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KD;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KF;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KI;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KP;
 
-import com.qualcomm.hardware.bosch.BNO055IMU;
-import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
+import com.pedropathing.follower.Follower;
+import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.teamcode.kronbot.utils.PoseStorage;
 import org.firstinspires.ftc.teamcode.kronbot.utils.drivers.MotorDriver;
 import org.firstinspires.ftc.teamcode.kronbot.utils.wrappers.ControlHubGyroscope;
 import org.firstinspires.ftc.teamcode.kronbot.utils.wrappers.Servo;
-import com.qualcomm.robotcore.hardware.ColorSensor;
 
-
+/**
+ * Container class that holds references for all electronic hardware on the robot
+ */
 public class KronBot {
+    /** Deprecated, is always null. Use PedroPathing follower instead. */
     public MotorDriver motors;
+    // Use this instead
+    public Follower follower = null;
     public ControlHubGyroscope gyroscope;
     public DcMotorEx intakeMotor, leftOuttake, rightOuttake;
     public Servo loaderServo, turretServo, angleServo, flapsServo;
 
 
+    /*
     public void initDrivetrain(HardwareMap hardwareMap) {
         DcMotorEx leftRear = hardwareMap.get(DcMotorEx.class, "leftRear");
         DcMotorEx leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
@@ -38,32 +39,20 @@ public class KronBot {
         motors = new MotorDriver();
         motors.init(leftRear, leftFront, rightRear, rightFront);
     }
-    public void initMotors(HardwareMap hardwareMap) {
+    */
 
+    public void initMotors(HardwareMap hardwareMap) {
         intakeMotor = hardwareMap.get(DcMotorEx.class, "intakeMotor");
+
         leftOuttake = hardwareMap.get(DcMotorEx.class, "shooter0");
         leftOuttake.setDirection(DcMotorSimple.Direction.REVERSE);
-        leftOuttake.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        leftOuttake.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftOuttake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         leftOuttake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        leftOuttake.setVelocityPIDFCoefficients(
-                OUT_MOTOR_KP,   // P - main stabilizer
-                OUT_MOTOR_KI,   // I - usually 0
-                OUT_MOTOR_KD,   // D - reduces overshoot
-                OUT_MOTOR_KF    // F - feedforward (VERY important)
-        );
+
         rightOuttake = hardwareMap.get(DcMotorEx.class, "shooter1");
         rightOuttake.setDirection(DcMotorSimple.Direction.REVERSE);
-        rightOuttake.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rightOuttake.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightOuttake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rightOuttake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        rightOuttake.setVelocityPIDFCoefficients(
-                OUT_MOTOR_KP,   // P - main stabilizer
-                OUT_MOTOR_KI,   // I - usually 0
-                OUT_MOTOR_KD,   // D - reduces overshoot
-                OUT_MOTOR_KF    // F - feedforward (VERY important)
-        );
-
     }
 
 
@@ -83,20 +72,42 @@ public class KronBot {
         //outtakeColor = hardwareMap.get(ColorSensor.class, "outtakeColor");
     }
 
+    /**
+     * Initialize PedroPathing follower
+     * @param hardwareMap Used to initialize drivetrain and localizers
+     * @param loadPose If true, will try to load a pose from the file system (if it fails, it loads a 0 pose)
+     */
+    public void initFollower(HardwareMap hardwareMap, boolean loadPose) {
+        follower = org.firstinspires.ftc.teamcode.pedroPathing.Constants.createFollower(hardwareMap);
+        if(loadPose) {
+            Pose startingPose = PoseStorage.loadPose();
+            follower.setStartingPose(startingPose);
+        }
+        else
+            follower.setStartingPose(new Pose());
+    }
+    /**
+     * Initialize PedroPathing follower with a 0 starting pose
+     * @param hardwareMap Used to initialize drivetrain and localizers
+     */
+    public void initFollower(HardwareMap hardwareMap) { initFollower(hardwareMap, false); }
 
-    public void initAutonomy(HardwareMap hardwareMap) {
+    /**
+     * Initialize PedroPathing follower with a starting pose
+     * @param hardwareMap Used to initialize drivetrain and localizers
+     * @param startingPose The starting pose
+     */
+    public void initFollower(HardwareMap hardwareMap, Pose startingPose) {
+        follower = org.firstinspires.ftc.teamcode.pedroPathing.Constants.createFollower(hardwareMap);
+        follower.setStartingPose(startingPose);
+    }
+
+
+    public void initHardware(HardwareMap hardwareMap) {
+        if(follower != null)
+            initFollower(hardwareMap);
         initMotors(hardwareMap);
         initServos(hardwareMap);
         initSensors(hardwareMap);
-    }
-
-    public void initTeleop(HardwareMap hardwareMap) {
-        initMotors(hardwareMap);
-        initServos(hardwareMap);
-        initSensors(hardwareMap);
-    }
-
-    public void initSimpleDriving(HardwareMap hardwareMap) {
-        initMotors(hardwareMap);
     }
 }

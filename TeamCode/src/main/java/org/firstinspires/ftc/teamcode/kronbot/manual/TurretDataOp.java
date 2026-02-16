@@ -42,7 +42,7 @@ public class TurretDataOp extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         try {
-            robot.initTeleop(hardwareMap);
+            robot.initHardware(hardwareMap);
             dashboard = FtcDashboard.getInstance();
             telemetry.update();
 

@@ -47,7 +47,7 @@ public class MainDrivingNewOp extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
 
         // INIT objects
-        robot.initTeleop(hardwareMap);
+        robot.initHardware(hardwareMap);
         dashboard = FtcDashboard.getInstance();
 
         drivingGamepad = gamepad1;

@@ -55,7 +55,7 @@ public class MainDrivingOp extends OpMode {
     @Override
     public void init(){
         robot.init(hardwareMap);
-        robot.initTeleop(hardwareMap);
+        robot.initHardware(hardwareMap);
 
         dashboard = FtcDashboard.getInstance();
         robot.webcam.init(hardwareMap, telemetry);
