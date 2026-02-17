@@ -25,7 +25,7 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
  * The main TeleOP program for the driving period of the game.
  * @version 1.0
  */
-@TeleOp(name = "New Main Driving", group = Constants.MAIN_GROUP)
+//@TeleOp(name = "New Main Driving", group = Constants.MAIN_GROUP)
 public class MainDrivingNewOp extends LinearOpMode {
     private final KronBot robot = new KronBot();
     private RobotCentricDrive robotCentricDrive;

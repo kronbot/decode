@@ -90,10 +90,6 @@ public class MainDrivingOp extends OpMode {
         drivingGP.update();
         utilityGP.update();
 
-
-
-
-
         //Intake
         robot.intake.speed = utilityGP.rightStick.y;
         robot.intake.reversed = INTAKE_REVERSE;
