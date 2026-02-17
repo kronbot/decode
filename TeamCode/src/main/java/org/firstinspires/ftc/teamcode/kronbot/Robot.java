@@ -37,7 +37,7 @@ import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.minVelocity
 public class Robot extends KronBot {
     // Singleton instance
     private static Robot instance = null;
-    
+
     // Systems used in all opModes
     public AprilTagWebcam webcam = new AprilTagWebcam();
 
@@ -47,9 +47,10 @@ public class Robot extends KronBot {
     public final Turret turret;
     public final Flap flap;
     public final Shoot shoot;
+    public final Heading heading;
 
 
-    
+
     // Private constructor
     public Robot() {
         this.outtake = new Outtake();
@@ -58,8 +59,9 @@ public class Robot extends KronBot {
         this.turret = new Turret();
         this.shoot = new Shoot();
         this.flap = new Flap();
+        this.heading = new Heading();
     }
-    
+
     // Get the singleton instance
     public static Robot getInstance() {
         if (instance == null) {
@@ -67,13 +69,13 @@ public class Robot extends KronBot {
         }
         return instance;
     }
-    
+
     // Initialize robot and all systems
     public void init(HardwareMap hardwareMap) {
         super.initHardware(hardwareMap);
         initSystems(hardwareMap);
     }
-    
+
     public void initSystems(HardwareMap hardwareMap) {
         outtake.init();
         intake.init();
@@ -85,8 +87,6 @@ public class Robot extends KronBot {
 
     }
 
-
-    
     // Updates all systems
     public void updateAllSystems() {
         outtake.update();
@@ -94,6 +94,14 @@ public class Robot extends KronBot {
         loader.update();
         turret.update();
         flap.update();
+
+        double rawHeading = follower.getHeading();
+        heading.update(rawHeading);
+        double filtered = heading.get();
+        /**
+         eg usage for turret calculations:
+         double robotRelativeAngle = fieldRelativeAngle - filtered;
+         */
 
 
 //        gyroscope.updateOrientation();
@@ -120,6 +128,8 @@ public class Robot extends KronBot {
             reversed = false;
             velocity = minVelocity;
         }
+
+
 
         /** Configures the launch angle and launch motor speed for the given distance.<br>
          *  Returns true if a good configuration is possible (If the distance is in the correct range)
@@ -362,6 +372,60 @@ public class Robot extends KronBot {
         }
     }
 
+
+    public class Heading {
+
+        private double lastRawHeading = 0.0;       // last reading from PinPoint
+        private double lastFilteredRate = 0.0;     // filtered angular velocity
+        private double filteredHeading = 0.0;      // output heading
+        private final double lpAlpha = 0.1;        // smoothing factor, (0.05 - 0.2 for tuning?)
+        private final double loopDt = 0.02;        // control loop period (sec)
+
+        /** Prevents IMU from PinPoint from drifting
+         * Calculates the angular velocity (heading / time) from the PinPoint IMU
+         * Applies a low-pass filter to the velocity — tiny changes caused by vibration we believe?
+         * Integrates the filtered angular velocity back into a stable heading
+         */
+
+        public void update (double rawHeading) {
+            //the raw angular vel
+            double delta = rawHeading - lastRawHeading;
+
+            //delta for PI
+            delta = Math.atan2(Math.sin(delta), Math.cos(delta));
+
+            double rawRate = delta / loopDt;
+
+            //the low pass filter
+            double filteredRate = lpAlpha * rawRate + (1 - lpAlpha) * lastFilteredRate;
+
+            //integrate back to get filtered heading
+            filteredHeading += filteredRate * loopDt;
+
+            //wrap filtered heading -PI..PI
+            filteredHeading = Math.atan2(Math.sin(filteredHeading), Math.cos(filteredHeading));
+
+            //save for next iteration
+            lastRawHeading = rawHeading;
+            lastFilteredRate = filteredRate;
+        }
+        /**
+         *@return Returns the current filtered heading
+         */
+        public double get() {
+            return filteredHeading;
+        }
+
+        public void telemetry(Telemetry telemetry) {
+            telemetry.addLine("=== HEADING STATUS ===");
+            telemetry.addData("Raw Heading", "%.4f", lastRawHeading);
+            telemetry.addData("Filtered Heading", "%.4f", filteredHeading);
+            telemetry.addData("Filtered Rate", "%.4f rad/s", lastFilteredRate);
+        }
+    }
+
+
+
     public class ShootClose {
 
         public void activate() {
@@ -456,7 +520,6 @@ public class Robot extends KronBot {
             telemetry.addData("Left Front Power", "%.2f", motors.leftFront.getPower());
             telemetry.addData("Right Front Power", "%.2f", motors.rightFront.getPower());
             telemetry.addData("Left Rear Power", "%.2f", motors.leftRear.getPower());
-            telemetry.addData("Right Rear Power", "%.2f", motors.rightRear.getPower());
         }
     }
 }
