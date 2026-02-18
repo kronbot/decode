@@ -6,22 +6,22 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.kronbot.KronBot;
-import org.firstinspires.ftc.teamcode.kronbot.utils.detection.BlueSquareDetecion;
+import org.firstinspires.ftc.teamcode.kronbot.utils.detection.RedSquareDetection;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
-@TeleOp(name = "End Game Blue" , group = "Vision")
-public class EndGameBlueOp extends LinearOpMode {
+@TeleOp(name = "End Game Red" , group = "Vision")
+public class EndGameRedOp extends LinearOpMode {
 
     private OpenCvCamera camera;
-    private BlueSquareDetecion squarePipeline;
+    private RedSquareDetection squarePipeline;
     private  KronBot robot;
 
     @Override
     public void runOpMode() throws InterruptedException {
         robot = new KronBot();
         // Initialize the pipeline
-        squarePipeline = new BlueSquareDetecion();
+        squarePipeline = new RedSquareDetection();
         int cameraMonitorViewId = hardwareMap.appContext.getResources()
                 .getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         camera = OpenCvCameraFactory.getInstance()

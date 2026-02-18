@@ -6,72 +6,69 @@ import org.openftc.easyopencv.OpenCvPipeline;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-public class SquareEndGame extends OpenCvPipeline {
-
+public class RedSquareDetection extends OpenCvPipeline {
     private final Mat hsvMat = new Mat();
-    private final Mat colorMaskMat = new Mat();
-    private final Mat contourHierarchyMat = new Mat();
+    private final Mat redMatUpper = new Mat();
+    private final Mat redMatLower = new Mat();
+    private final Mat redMat = new Mat();
+    private final Scalar lowerRed1 = new Scalar(0, 100, 100);
+    private final Scalar upperRed1 = new Scalar(10, 255, 255);
+    private final Scalar lowerRed2 = new Scalar(160, 100, 100);
+    private final Scalar upperRed2 = new Scalar(179, 255, 255);
     private final List<MatOfPoint> contourList = new ArrayList<>();
 
-    private static final double MIN_QUADRILATERAL_AREA = 10000.0;
-
-    private static final Scalar HSV_LOWER_BLUE = new Scalar(90, 40, 100);
-    private static final Scalar HSV_UPPER_BLUE = new Scalar(135, 255, 255);
-
-    private volatile int detectedQuadCount = 0;
-    private volatile double detectedAngle = 0.0;
+    private double detectedAngle = 0.0;
+    private  int detectedQuadCount = 0;
+    private final double MIN_SQUARE_AREA = 5000.0;
 
     @Override
     public Mat processFrame(Mat frame) {
-        Imgproc.cvtColor(frame, hsvMat, Imgproc.COLOR_RGB2HSV);
-        Core.inRange(hsvMat, HSV_LOWER_BLUE, HSV_UPPER_BLUE, colorMaskMat);
-        contourList.clear();
-        Imgproc.findContours(colorMaskMat, contourList, contourHierarchyMat,
-                Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-
-        MatOfPoint largestQuadrilateral = null;
         double largestArea = 0.0;
-
+        MatOfPoint largestSquare = null;
+        contourList.clear();
+        Imgproc.cvtColor(frame, hsvMat, Imgproc.COLOR_RGB2HSV);
+        Core.inRange(hsvMat, lowerRed1, upperRed1, redMatUpper);
+        Core.inRange(hsvMat, lowerRed2, upperRed2, redMatLower);
+        Core.add(redMatUpper, redMatLower, redMat);
+        Imgproc.findContours(redMat, contourList, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
         for (MatOfPoint contour : contourList) {
+            double area = Imgproc.contourArea(contour);
+            if (area < 5000) {
+                continue;
+            }
             MatOfPoint2f contourFloat = new MatOfPoint2f(contour.toArray());
             double peri = Imgproc.arcLength(contourFloat, true);
             MatOfPoint2f approxCurve2f = new MatOfPoint2f();
             Imgproc.approxPolyDP(contourFloat, approxCurve2f, 0.02 * peri, true);
-
             int vertices = (int) approxCurve2f.total();
             if (vertices == 4) {
                 MatOfPoint approxPolygon = new MatOfPoint(approxCurve2f.toArray());
                 if (Imgproc.isContourConvex(approxPolygon)) {
-                    double area = Math.abs(Imgproc.contourArea(approxPolygon));
-                    if (area > MIN_QUADRILATERAL_AREA && area > largestArea) {
-                        largestArea = area;
-                        if (largestQuadrilateral != null) {
-                            largestQuadrilateral.release();
+                    double areaOfPolygon = Math.abs(Imgproc.contourArea(approxPolygon));
+                    if (areaOfPolygon > MIN_SQUARE_AREA && areaOfPolygon > largestArea) {
+                        largestArea = areaOfPolygon;
+                        if (largestSquare != null) {
+                            largestSquare.release();
                         }
-                        largestQuadrilateral = approxPolygon;
-                    } else {
-                        approxPolygon.release();
+                        largestSquare = new MatOfPoint(approxPolygon.toArray());
+                        largestArea = areaOfPolygon;
                     }
-                } else {
                     approxPolygon.release();
                 }
+                contourFloat.release();
+                approxCurve2f.release();
             }
 
-            contourFloat.release();
-            approxCurve2f.release();
         }
-
-        if (largestQuadrilateral != null) {
-            double angle = computeOrientation(largestQuadrilateral);
+        if (largestSquare != null) {
+            double angle = computeOrientation(largestSquare);
 
             Imgproc.drawContours(frame,
-                    Arrays.asList(largestQuadrilateral),
+                    Arrays.asList(largestSquare),
                     -1,
                     new Scalar(0, 255, 0),
                     3);
 
-            // overlay angle text for EOCV-Sim
             Imgproc.putText(
                     frame,
                     String.format("Angle: %.1f", angle),
@@ -84,16 +81,13 @@ public class SquareEndGame extends OpenCvPipeline {
 
             detectedQuadCount = 1;
             detectedAngle = angle;
-            largestQuadrilateral.release();
+            largestSquare.release();
         } else {
             detectedQuadCount = 0;
             detectedAngle = 0.0;
         }
-
-        /// morphKernel.release();
         return frame;
     }
-
     private double computeOrientation(MatOfPoint quad) {
         MatOfPoint2f pts = new MatOfPoint2f(quad.toArray());
         RotatedRect rr = Imgproc.minAreaRect(pts);
@@ -110,11 +104,9 @@ public class SquareEndGame extends OpenCvPipeline {
         pts.release();
         return angle;
     }
-
     public int getDetectedQuadCount() {
         return detectedQuadCount;
     }
-
     public double getDetectedAngle() {
         return detectedAngle;
     }
