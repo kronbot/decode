@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.kronbot.autonomous;
 
 import static org.firstinspires.ftc.teamcode.kronbot.autonomous.AutonomousConstants.*;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_CLOSE;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.FLAP_OPEN;
 
 
 import com.acmerobotics.dashboard.FtcDashboard;
@@ -96,7 +97,7 @@ public class Auto_CloseBlueOp extends OpMode {
     public void loop() {
         follower.update();
 
-        motorVel = robot.shooterMotor.getVelocity();
+        motorVel = robot.leftOuttake.getVelocity();
 
         autonomousPathUpdate();
 
@@ -106,7 +107,7 @@ public class Auto_CloseBlueOp extends OpMode {
         telemetry.addData("Y", currentPose.getY());
         telemetry.addData("Heading (rad)", currentPose.getHeading());
         //telemetry.addData("Outtake Alpha", robot.outtakeColor.alpha());
-        telemetry.addData("Shooter Motor vel", robot.shooterMotor.getVelocity());
+        telemetry.addData("Shooter Motor vel", robot.leftOuttake.getVelocity());
 
         telemetry.update();
     }
@@ -126,6 +127,7 @@ public class Auto_CloseBlueOp extends OpMode {
                             // Start outtake motors
                             robot.leftOuttake.setVelocity(launchSpeedClose);
                             robot.rightOuttake.setVelocity(launchSpeedClose);
+                            robot.flapsServo.setPosition(FLAP_OPEN);
                             launchState++;
                             pathTimer.resetTimer();
                             break;
@@ -161,7 +163,7 @@ public class Auto_CloseBlueOp extends OpMode {
                             // Stop servo between shots
                             if (pathTimer.getElapsedTimeSeconds() > 2.0) {
                                 robot.loaderServo.runContinuous(false, false);
-                                robot.intakeMotor.setPower(1);
+                                robot.intakeMotor.setPower(-1);
                                 launchState++;
                                 pathTimer.resetTimer();
                             }
@@ -179,7 +181,7 @@ public class Auto_CloseBlueOp extends OpMode {
                         case 6:
                             // Empty, stop motors
                             if (pathTimer.getElapsedTimeSeconds() > 1.0) {
-                                robot.shooterMotor.setPower(0);
+                                robot.leftOuttake.setPower(0);
                                 robot.intakeMotor.setPower(0);
                                 robot.loaderServo.runContinuous(false, false);
                                 launchState++;

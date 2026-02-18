@@ -31,8 +31,7 @@ public class PinpointOp extends OpMode {
 
     private boolean reverseMovement = false;
     private boolean drivingMode = false;
-    private Follower follower;
-    Pose startingPose = PoseStorage.loadPose();
+
     //set the pose that the robot got from the end of auto
 
     @Override
@@ -42,20 +41,14 @@ public class PinpointOp extends OpMode {
         utilityGP = new Controls(gamepad2);
 
         // create pedro follower with pinpoint localizer
-        follower = org.firstinspires.ftc.teamcode.pedroPathing.Constants.createFollower(hardwareMap);
         robot.initAutonomy(hardwareMap);
 
         FtcDashboard dashboard = FtcDashboard.getInstance();
         telemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());
-
-        follower.setStartingPose(startingPose);
     }
 
     @Override
     public void loop() {
-        //update follower for localization
-        follower.update();
-
         //update controls
         drivingGP.update();
         utilityGP.update();
@@ -84,7 +77,7 @@ public class PinpointOp extends OpMode {
     }
 
     private void updateTelemetry() {
-        Pose currentPose = follower.getPose();
+        Pose currentPose = robot.follower.getPose();
 
         telemetry.addLine("=== Pinpoint Localization ===");
         telemetry.addData("X (in)", "%.2f", currentPose.getX());

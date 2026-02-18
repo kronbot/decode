@@ -1,9 +1,17 @@
 package org.firstinspires.ftc.teamcode.kronbot.manual;
 
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.INTAKE_DRIVER_POWER;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.INTAKE_DRIVER_REVERSE;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.INTAKE_REVERSE;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KD;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KF;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KI;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KP;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_1_VELOCITY;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_2_VELOCITY;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_3_VELOCITY;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_4_VELOCITY;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RedTowerCoords;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 
@@ -17,6 +25,7 @@ import org.firstinspires.ftc.teamcode.kronbot.utils.components.AutoAim;
 import org.firstinspires.ftc.teamcode.kronbot.utils.components.FieldCentricDrive;
 import org.firstinspires.ftc.teamcode.kronbot.utils.components.RobotCentricDrive;
 import org.firstinspires.ftc.teamcode.kronbot.utils.Constants;
+import org.firstinspires.ftc.teamcode.kronbot.utils.components.TurretAligner;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
 /**
@@ -29,7 +38,9 @@ public class MainDrivingOp extends OpMode {
     private final Robot robot = Robot.getInstance();
     private  Controls drivingGP;
     private  Controls utilityGP;
-    private AutoAim autoAim;
+
+
+    private TurretAligner turretAligner;
 
     private RobotCentricDrive robotCentricDrive;
     private FieldCentricDrive fieldCentricDrive;
@@ -40,21 +51,23 @@ public class MainDrivingOp extends OpMode {
     ElapsedTime turretTimer = new ElapsedTime();
 
     boolean rumbled = false;
-    double targetVel = -1;
 
     @Override
     public void init(){
         robot.init(hardwareMap);
+        robot.initTeleop(hardwareMap);
         robot.loader.reversed = true;
 
         dashboard = FtcDashboard.getInstance();
-
         robot.webcam.init(hardwareMap, telemetry);
+
         if (robot.webcam.getVisionPortal() != null) {
             dashboard.startCameraStream(robot.webcam.getVisionPortal(), 30);
         }
 
-        autoAim = new AutoAim(robot, 0.5, 1);
+        // Initialize the new coordinate aligner
+        turretAligner = new TurretAligner(robot);
+        turretAligner.setTarget(RedTowerCoords.x, RedTowerCoords.y);
 
         drivingGP = new Controls(gamepad1);
         utilityGP = new Controls(gamepad2);
@@ -78,20 +91,27 @@ public class MainDrivingOp extends OpMode {
         drivingGP.update();
         utilityGP.update();
 
+
+
         //Intake
         robot.intake.speed = utilityGP.rightStick.y;
+        robot.intake.reversed = INTAKE_REVERSE;
 
+        //Aliniere
+        turretAligner.update();
 
         //Loader
         if(!drivingGP.rightBumper.pressed()) {
             robot.loader.speed = utilityGP.leftStick.y;
+            robot.flap.open = false;
         }
         else {
             robot.loader.speed = drivingGP.rightTrigger - drivingGP.leftTrigger;
+            robot.flap.open = true;
             if(robot.loader.speed > 0.1)
-                robot.intake.speed = 0.2;
+                robot.intake.speed = INTAKE_DRIVER_POWER;
             else if(robot.loader.speed < -0.2)
-                robot.intake.speed = -0.1;
+                robot.intake.speed = INTAKE_DRIVER_REVERSE;
             else
                 robot.intake.speed = 0;
         }
@@ -123,7 +143,7 @@ public class MainDrivingOp extends OpMode {
                 if (turretTimer.seconds() > 1.5) {
                     increment = 0.1;
                 }
-                robot.turret.angle += increment;
+                robot.turret.driverOffset += increment;
 
             }
 
@@ -143,7 +163,7 @@ public class MainDrivingOp extends OpMode {
                     decrement = 0.1;
                 }
 
-                robot.turret.angle -= decrement;
+                robot.turret.driverOffset -= decrement;
             } else {
                 turretTimer.reset();
             }
@@ -158,24 +178,22 @@ public class MainDrivingOp extends OpMode {
         //Shoot Close/Far
         if (drivingGP.triangle.justPressed()) {
             robot.shoot.activateRange(1, gamepad1);
-            targetVel = RANGE_1_VELOCITY;
         }
         if(drivingGP.square.justPressed()) {
             robot.shoot.activateRange(2, gamepad1);
-            targetVel = RANGE_2_VELOCITY;
         }
         if (drivingGP.cross.justPressed()) {
             robot.shoot.activateRange(3, gamepad1);
-            targetVel = RANGE_3_VELOCITY;
         }
         if(drivingGP.circle.justPressed()) {
             robot.shoot.activateRange(4, gamepad1);
-            targetVel = RANGE_4_VELOCITY;
         }
 
-        if(targetVel > 0 && robot.shooterMotor.getVelocity() >= targetVel - 50)
+        if( robot.outtake.on &&
+            robot.leftOuttake.getVelocity() >= robot.outtake.velocity - 30 &&
+            robot.leftOuttake.getVelocity() <= robot.outtake.velocity + 90 )
         {
-            gamepad1.rumble(1, 0, 250);
+            gamepad1.rumble(1, 0, 150);
             rumbled = true;
         }
 
@@ -183,7 +201,6 @@ public class MainDrivingOp extends OpMode {
             if(robot.outtake.on) {
                 robot.shoot.deactivate();
                 gamepad1.rumble(1, 1, 100);
-                targetVel = -1;
                 rumbled = false;
             }
         }
@@ -220,13 +237,14 @@ public class MainDrivingOp extends OpMode {
     }
 
     public void _telemetry(){
-        telemetry.addData("shooter motor vel:", robot.shooterMotor.getVelocity());
+        telemetry.addData("Heading", robot.follower.getHeading());
+        telemetry.addData("shooter motor vel:", robot.leftOuttake.getVelocity());
         telemetry.addData("angle servo pos:", robot.turretServo.getPosition());
-
+        telemetry.addData("turret angle:", robot.turret.angle);
         robot.intake.telemetry(telemetry);
         robot.loader.telemetry(telemetry);
         robot.outtake.telemetry(telemetry);
-        robot.turret.telemetry(telemetry);
+//        robot.turret.telemetry(telemetry);
         drivingGP.telemetry(telemetry);
         telemetry.update();
     }

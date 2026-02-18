@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode.kronbot.utils;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.pedropathing.ftc.localization.constants.TwoWheelConstants;
+import com.pedropathing.geometry.CoordinateSystem;
+import com.pedropathing.geometry.Pose;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot.LogoFacingDirection;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot.UsbFacingDirection;
@@ -41,28 +43,38 @@ public class Constants {
     public static UsbFacingDirection USB_FACING_DIRECTION = UsbFacingDirection.UP;
 
     public static boolean LOADER_SERVO_REVERSED = true;
-    public static double TURRET_SERVO_MAX = 0.82;
-    public static double TURRET_SERVO_MIN = 0.19;
+    public static double TURRET_SERVO_MAX = 0.76;
+    public static double TURRET_SERVO_MIN = 0.215;
     public static double TURRET_SERVO_UNITS_PER_RAD = 0.160746493;
     public static double ANGLE_SERVO_MAX = 0.72;
     public static double ANGLE_SERVO_CLOSE = 0.7;
 
     public static double ANGLE_SERVO_FAR = 0.72;
     public static double ANGLE_SERVO_MIN = 0;
+    public static double FLAP_CLOSED = 0.29;
+    public static double FLAP_OPEN = 0.55;
+
+    public static double INTAKE_DRIVER_POWER = 0.55;
+    public static double INTAKE_DRIVER_REVERSE = -0.55;
+
     public static double minVelocity = 1140;
     public static double maxVelocity = 1500;
 
     public static double RANGE_1_ANGLE = 0;
     public static double RANGE_1_VELOCITY = 950;
+    public static double RANGE_1_KS = 0.15;
 
     public static double RANGE_2_ANGLE = 0.5;
     public static double RANGE_2_VELOCITY = 1080;
+    public static double RANGE_2_KS = 0.2;
 
     public static double RANGE_3_ANGLE = 0.72;
-    public static double RANGE_3_VELOCITY = 1200;
+    public static double RANGE_3_VELOCITY = 1250;
+    public static double RANGE_3_KS = 0.3;
 
     public static double RANGE_4_ANGLE = 0.72;
     public static double RANGE_4_VELOCITY = 1400;
+    public static double RANGE_4_KS = 0.5;
 
     public static AutonomousConstants.Coordinates TestPoseStart = new AutonomousConstants.Coordinates(0, 0, 0);
 
@@ -72,11 +84,16 @@ public class Constants {
     public static double TEST_TURRET_PIVOT_DELTA = 0.05;
 
     // Outtake motor PID
-    public static double OUT_MOTOR_KP = 7;
-    public static double OUT_MOTOR_KI = 0;
-    public static double OUT_MOTOR_KD = 0.8;
+    public static boolean OUT_USE_PID = false;
+    public static double OUT_MOTOR_KP = 9;
+    public static double OUT_MOTOR_KI = 0.2;
+    public static double OUT_MOTOR_KD = 4;
     public static double OUT_MOTOR_KF = 10;
+    public static double OUT_MOTOR_V = 0;
+    public static double OUT_MOTOR_S = 0;
+    public static double OUT_MOTOR_P = 0;
 
+    public static boolean INTAKE_REVERSE = true;
 
     //AIM PID - to be tuned
     public static double AIM_KP = 0.02;
@@ -84,4 +101,9 @@ public class Constants {
     public static double AIM_KD = 0.003;
     public static double ANGLE_TOLERANCE = 2.0;
     public static double MAX_ROTATION_POWER = 0.5;
+
+
+    public static AutonomousConstants.Coordinates RedTowerCoords = new AutonomousConstants.Coordinates(130, 130, 0);
+    public static AutonomousConstants.Coordinates BlueTowerCoords = new AutonomousConstants.Coordinates(10, 135, 0);
+
 }

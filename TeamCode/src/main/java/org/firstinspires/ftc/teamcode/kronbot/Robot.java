@@ -1,10 +1,15 @@
 package org.firstinspires.ftc.teamcode.kronbot;
 
+import com.pedropathing.follower.Follower;
+import com.pedropathing.geometry.Pose;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.teamcode.kronbot.utils.PoseStorage;
 import org.firstinspires.ftc.teamcode.kronbot.utils.detection.AprilTagWebcam;
 
 import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.gamepad1;
@@ -12,14 +17,28 @@ import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_FAR;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_MAX;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_MIN;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.FLAP_CLOSED;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.FLAP_OPEN;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.LOADER_SERVO_REVERSED;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KD;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KF;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KI;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KP;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_P;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_S;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_V;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_USE_PID;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_1_ANGLE;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_1_KS;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_1_VELOCITY;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_2_ANGLE;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_2_KS;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_2_VELOCITY;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_3_ANGLE;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_3_KS;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_3_VELOCITY;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_4_ANGLE;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_4_KS;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_4_VELOCITY;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.TURRET_SERVO_MAX;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.TURRET_SERVO_MIN;
@@ -37,7 +56,10 @@ public class Robot extends KronBot {
     public final Intake intake;
     public final Loader loader;
     public final Turret turret;
+    public final Flap flap;
     public final Shoot shoot;
+    public Follower follower;
+
     
     // Private constructor
     public Robot() {
@@ -46,6 +68,7 @@ public class Robot extends KronBot {
         this.loader = new Loader();
         this.turret = new Turret();
         this.shoot = new Shoot();
+        this.flap = new Flap();
     }
     
     // Get the singleton instance
@@ -59,17 +82,20 @@ public class Robot extends KronBot {
     // Initialize robot and all systems
     public void init(HardwareMap hardwareMap) {
         super.init(hardwareMap);
-        initSystems();
+        initSystems(hardwareMap);
     }
     
-    public void initSystems() {
+    public void initSystems(HardwareMap hardwareMap) {
         outtake.init();
         intake.init();
         loader.init();
         turret.init();
+        flap.init();
 
         //Add other intis here
-
+        Pose startingPose = PoseStorage.loadPose();
+        follower = org.firstinspires.ftc.teamcode.pedroPathing.Constants.createFollower(hardwareMap);
+        follower.setStartingPose(startingPose);
     }
     
     // Updates all systems
@@ -78,18 +104,26 @@ public class Robot extends KronBot {
         intake.update();
         loader.update();
         turret.update();
+        flap.update();
 
-        gyroscope.updateOrientation();
+
+//        gyroscope.updateOrientation();
 
         //Add other updates here
 //        webcam.update();
+        if(follower != null)
+            follower.update();
     }
 
     public class Outtake {
         public boolean on = false;
         public double angle = 0;
         public double velocity;
+        public double kS = 0;
         public boolean reversed = false;
+
+        boolean braking = false;
+        double lastVelocity = 0;
 
         public void init() {
             on = false;
@@ -129,25 +163,115 @@ public class Robot extends KronBot {
             return true;
         }
 
+        double p, i, d, f;
+
         public void update(){
+
+            if(p != OUT_MOTOR_KP || i != OUT_MOTOR_KI || d != OUT_MOTOR_KD || f != OUT_MOTOR_KF) {
+                p = OUT_MOTOR_KP;
+                d = OUT_MOTOR_KD;
+                i = OUT_MOTOR_KI;
+                f = OUT_MOTOR_KF;
+
+                leftOuttake.setVelocityPIDFCoefficients(
+                        OUT_MOTOR_KP,   // P - main stabilizer
+                        OUT_MOTOR_KI,   // I - usually 0
+                        OUT_MOTOR_KD,   // D - reduces overshoot
+                        OUT_MOTOR_KF    // F - feedforward (VERY important)
+                );
+                rightOuttake.setVelocityPIDFCoefficients(
+                        OUT_MOTOR_KP,   // P - main stabilizer
+                        OUT_MOTOR_KI,   // I - usually 0
+                        OUT_MOTOR_KD,   // D - reduces overshoot
+                        OUT_MOTOR_KF    // F - feedforward (VERY important)
+                );
+
+            }
+
+            if(lastVelocity > velocity) {
+                braking = true;
+            }
+            lastVelocity = velocity;
+
+
             if(on){
-                shooterMotor.setPower(1);
-                shooterMotor.setVelocity(velocity);
+                if(OUT_USE_PID) {
+                    leftOuttake.setPower(1);
+                    leftOuttake.setVelocity(velocity);
+                    rightOuttake.setPower(1);
+                    rightOuttake.setVelocity(velocity);
+                } else {
+                    leftOuttake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                    rightOuttake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                    if(leftOuttake.getVelocity() < velocity * 1) {
+                        leftOuttake.setPower(1);
+                        rightOuttake.setPower(1);
+                    }
+                    else if(leftOuttake.getVelocity() > velocity * 1.1) {
+                        if(braking) {
+                            leftOuttake.setPower(0);
+                            rightOuttake.setPower(0);
+                        }
+                        leftOuttake.setPower(kS * 0.8);
+                        rightOuttake.setPower(kS * 0.8);
+                    }
+                    else {
+                        braking = false;
+                        leftOuttake.setPower(kS);
+                        rightOuttake.setPower(kS);
+                    }
+
+                }
             } else {
-                if(shooterMotor.getVelocity() < 21) {
-                    shooterMotor.setPower(0);
+                if(leftOuttake.getVelocity() < 21) {
+                    leftOuttake.setPower(0);
+                    rightOuttake.setPower(0);
+
+                    leftOuttake.setVelocityPIDFCoefficients(
+                            OUT_MOTOR_KP,   // P - main stabilizer
+                            OUT_MOTOR_KI,   // I - usually 0
+                            OUT_MOTOR_KD,   // D - reduces overshoot
+                            OUT_MOTOR_KF    // F - feedforward (VERY important)
+                    );
+                    rightOuttake.setVelocityPIDFCoefficients(
+                            OUT_MOTOR_KP,   // P - main stabilizer
+                            OUT_MOTOR_KI,   // I - usually 0
+                            OUT_MOTOR_KD,   // D - reduces overshoot
+                            OUT_MOTOR_KF    // F - feedforward (VERY important)
+                    );
                 }
-                else if(shooterMotor.getVelocity() < 200) {
-                    shooterMotor.setPower(-0.15);
+                else if(leftOuttake.getVelocity() < 200) {
+                    leftOuttake.setPower(-0.15);
+                    rightOuttake.setPower(-0.15);
                 }
-                else if(shooterMotor.getVelocity() < 300) {
-                    shooterMotor.setPower(-0.1);
+                else if(leftOuttake.getVelocity() < 300) {
+                    leftOuttake.setPower(-0.1);
+                    rightOuttake.setPower(-0.1);
                 }
-                else if(shooterMotor.getVelocity() < 500) {
-                    shooterMotor.setPower(0.05);
+                else if(leftOuttake.getVelocity() < 500) {
+                    leftOuttake.setPower(0.05);
+                    rightOuttake.setPower(0.05);
+                }
+                else {
+                    leftOuttake.setPower(0);
+                    rightOuttake.setPower(0);
+                }
+                /*
+                if(rightOuttake.getVelocity() < 21) {
+                    rightOuttake.setPower(0);
+                }
+                else if(rightOuttake.getVelocity() < 200) {
+                    rightOuttake.setPower(-0.15);
+                }
+                else if(rightOuttake.getVelocity() < 300) {
+                    rightOuttake.setPower(-0.1);
+                }
+                else if(rightOuttake.getVelocity() < 500) {
+                    rightOuttake.setPower(0.05);
                 }
                 else
-                    shooterMotor.setPower(0);
+                    rightOuttake.setPower(0);
+                 */
             }
 
             angleServo.setPosition(Math.min(Math.max(angle, ANGLE_SERVO_MIN), ANGLE_SERVO_MAX));
@@ -158,8 +282,10 @@ public class Robot extends KronBot {
             telemetry.addData("On", on);
             telemetry.addData("Reversed", reversed);
             telemetry.addData("Target Velocity", "%.0f", velocity);
-            telemetry.addData("Actual Velocity", "%.0f", shooterMotor.getVelocity());
-            telemetry.addData("Motor Power", "%.3f", shooterMotor.getPower());
+            telemetry.addData("Left Velocity", "%.0f", leftOuttake.getVelocity());
+            telemetry.addData("Left Power", "%.3f", leftOuttake.getPower());
+            telemetry.addData("Right Velocity", "%.0f", rightOuttake.getVelocity());
+            telemetry.addData("Right Power", "%.3f", rightOuttake.getPower());
             telemetry.addData("Angle", "%.3f", angle);
             telemetry.addData("Angle Servo Pos", "%.3f", angleServo.getPosition());
             telemetry.addData("Distance", "%.3f", rangeSensor.cmUltrasonic() * 1.08644 + 17.20917); // magic numbers from desmos
@@ -222,6 +348,7 @@ public class Robot extends KronBot {
     public class Turret {
         /** Angle in radians from straight ahead */
         public double angle = 0;
+        public double driverOffset = 0;
         private double servoPosition;
 
         public void init() {
@@ -230,13 +357,26 @@ public class Robot extends KronBot {
         }
 
         public void update() {
-            if (turretServo != null) {
+            if (turretServo != null && follower != null) {
                 if(angle > Math.PI)
                     angle = -2 * Math.PI + angle;
                 if(angle < -Math.PI)
                     angle = 2 * Math.PI + angle;
 
-                double robotRelativeAngle = angle - (gyroscope.getHeading() * 0.01745329); // deg to radian
+                if(driverOffset > Math.PI)
+                    driverOffset = -2 * Math.PI + driverOffset;
+                if(driverOffset < -Math.PI)
+                    driverOffset = 2 * Math.PI + driverOffset;
+
+                double fieldRelativeAngle = angle + driverOffset;
+
+
+                if(fieldRelativeAngle > Math.PI)
+                    fieldRelativeAngle = -2 * Math.PI + fieldRelativeAngle;
+                if(fieldRelativeAngle < -Math.PI)
+                    fieldRelativeAngle = 2 * Math.PI + fieldRelativeAngle;
+
+                double robotRelativeAngle = fieldRelativeAngle - (follower.getHeading()/* * 0.01745329*/); // deg to radian
                 servoPosition = robotRelativeAngle * TURRET_SERVO_UNITS_PER_RAD + 0.5;
 
 
@@ -247,9 +387,24 @@ public class Robot extends KronBot {
         public void telemetry(Telemetry telemetry) {
             telemetry.addLine("=== TURRET STATUS ===");
             telemetry.addData("Target Angle", "%.3f", angle);
-            telemetry.addData("Robot Heading", "%.4f", gyroscope.getHeading());
+            telemetry.addData("Robot Heading", "%.4f", follower.getHeading());
             telemetry.addData("Servo Position", "%.3f", turretServo.getPosition());
             telemetry.addData("Servo Range", "%.3f - %.3f", TURRET_SERVO_MIN, TURRET_SERVO_MAX);
+        }
+    }
+
+    public class Flap {
+        public boolean open = false;
+
+        public void init(){
+            flapsServo.setPosition(FLAP_CLOSED);
+        }
+
+        public void update(){
+            if(open)
+                flapsServo.setPosition(FLAP_OPEN);
+            else
+                flapsServo.setPosition(FLAP_CLOSED);
         }
     }
 
@@ -295,6 +450,7 @@ public class Robot extends KronBot {
                     outtake.on = true;
                     outtake.velocity = RANGE_1_VELOCITY;
                     outtake.angle = RANGE_1_ANGLE;
+                    outtake.kS = RANGE_1_KS;
                     //if(outtake.velocity>=RANGE_1_VELOCITY-100)
                     //   gamepad.rumble(1, 0, 100);
                     break;
@@ -302,6 +458,7 @@ public class Robot extends KronBot {
                     outtake.on = true;
                     outtake.velocity = RANGE_2_VELOCITY;
                     outtake.angle = RANGE_2_ANGLE;
+                    outtake.kS = RANGE_2_KS;
                     //if(outtake.velocity>=RANGE_2_VELOCITY-100)
                     //    gamepad.rumble(1, 0, 100);
                     break;
@@ -309,6 +466,7 @@ public class Robot extends KronBot {
                     outtake.on = true;
                     outtake.velocity = RANGE_3_VELOCITY;
                     outtake.angle = RANGE_3_ANGLE;
+                    outtake.kS = RANGE_3_KS;
                     //if(outtake.velocity>=RANGE_3_VELOCITY-100)
                     //    gamepad.rumble(1, 0, 100);
                     break;
@@ -316,6 +474,7 @@ public class Robot extends KronBot {
                     outtake.on = true;
                     outtake.velocity = RANGE_4_VELOCITY;
                     outtake.angle = RANGE_4_ANGLE;
+                    outtake.kS = RANGE_4_KS;
                     //if(outtake.velocity>=RANGE_4_VELOCITY-100)
                     //    gamepad.rumble(1, 0, 100);
             }

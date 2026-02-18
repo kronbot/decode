@@ -29,9 +29,9 @@ public class RobotCentricDrive {
     }
 
     public void run() {
-        double x = -gamepad.left_stick_x;
-        double y = gamepad.left_stick_y;
-        double r = -gamepad.right_stick_x;
+        double x = gamepad.left_stick_x;
+        double y = -gamepad.left_stick_y;
+        double r = gamepad.right_stick_x;
 
         x = addons(x) * reverse;
         y = addons(y) * reverse;
