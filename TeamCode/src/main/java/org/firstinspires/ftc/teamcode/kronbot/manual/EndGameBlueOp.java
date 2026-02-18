@@ -1,39 +1,39 @@
 package org.firstinspires.ftc.teamcode.kronbot.manual;
 
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.teamcode.kronbot.KronBot;
+import org.firstinspires.ftc.teamcode.kronbot.Robot;
 import org.firstinspires.ftc.teamcode.kronbot.utils.detection.SquareEndGame;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
+@TeleOp(name = "End Game Blue" , group = "Vision")
+public class EndGameBlueOp extends LinearOpMode {
 
-@TeleOp(name = "Square Detection TeleOp", group = "Vision")
-public class SquareEndGameOp extends LinearOpMode {
-
-    private OpenCvCamera webcam;
+    private OpenCvCamera camera;
     private SquareEndGame squarePipeline;
+    private  KronBot robot;
 
     @Override
     public void runOpMode() throws InterruptedException {
-
+        robot = new KronBot();
         // Initialize the pipeline
         squarePipeline = new SquareEndGame();
-
-        // Setup webcam
         int cameraMonitorViewId = hardwareMap.appContext.getResources()
                 .getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
-        webcam = OpenCvCameraFactory.getInstance()
+        camera = OpenCvCameraFactory.getInstance()
                 .createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
+        camera.setPipeline(squarePipeline);
 
-        webcam.setPipeline(squarePipeline);
-
-        // Open camera asynchronously
-        webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
+        camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
             @Override
             public void onOpened() {
-                webcam.startStreaming(640, 480, OpenCvCameraRotation.UPRIGHT);
+                camera.startStreaming(604, 480, OpenCvCameraRotation.UPRIGHT);
+                FtcDashboard.getInstance().startCameraStream(camera, 30);
             }
 
             @Override
@@ -42,26 +42,22 @@ public class SquareEndGameOp extends LinearOpMode {
                 telemetry.update();
             }
         });
-
-        telemetry.addLine("Waiting for start...");
-        telemetry.update();
         waitForStart();
-
         while (opModeIsActive()) {
+            while (squarePipeline.getDetectedQuadCount() == 0) {
+                telemetry.addData("Status", "No quadrilaterals detected");
+                telemetry.update();
 
-            // Get detected quadrilateral info
-            int quadCount = squarePipeline.getDetectedQuadCount();
-            double angle = squarePipeline.getDetectedAngle();
-
-            telemetry.addData("Quadrilaterals Detected", quadCount);
-            telemetry.addData("Detected Angle", angle);
-            telemetry.update();
-
-            sleep(50);
+                robot.motors.leftFront.setPower(0.5);
+                robot.motors.rightFront.setPower(-0.5);
+                robot.motors.leftRear.setPower(0.5);
+                robot.motors.rightRear.setPower(-0.5);
+            }
+            robot.motors.leftFront.setPower(0);
+            robot.motors.rightFront.setPower(0);
+            robot.motors.leftRear.setPower(0);
+            robot.motors.rightRear.setPower(0);
         }
 
-        // Stop streaming when OpMode ends
-        webcam.stopStreaming();
-        webcam.closeCameraDevice();
     }
 }
