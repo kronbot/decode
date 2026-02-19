@@ -24,7 +24,7 @@ public class KronBot {
     // Use this instead
     public Follower follower = null;
     public ControlHubGyroscope gyroscope;
-    public DcMotorEx intakeMotor, leftOuttake, rightOuttake;
+    public DcMotorEx intakeMotor, leftOuttake, rightOuttake, loaderMotor;
     public Servo loaderServo, turretServo, angleServo, flapsServo;
 
 
@@ -43,6 +43,7 @@ public class KronBot {
 
     public void initMotors(HardwareMap hardwareMap) {
         intakeMotor = hardwareMap.get(DcMotorEx.class, "intakeMotor");
+        loaderMotor = hardwareMap.get(DcMotorEx.class, "loaderMotor");
 
         leftOuttake = hardwareMap.get(DcMotorEx.class, "shooter0");
         leftOuttake.setDirection(DcMotorSimple.Direction.REVERSE);

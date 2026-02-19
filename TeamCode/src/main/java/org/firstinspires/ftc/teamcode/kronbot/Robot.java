@@ -287,24 +287,18 @@ public class Robot extends KronBot {
 
     public class Loader {
         public double speed;
-        public boolean reversed = false;
 
         public void init() {
             loaderServo.setPosition(0.5);
         }
 
         public void update() {
-            if(!reversed)
-                loaderServo.setPosition((speed + 1) / 2);
-            else
-                loaderServo.setPosition(1 - ((speed + 1) / 2));
+            loaderMotor.setPower(speed);
         }
 
         public void telemetry(Telemetry telemetry) {
             telemetry.addLine("=== LOADER STATUS ===");
             telemetry.addData("Speed", speed);
-            telemetry.addData("Reversed", reversed);
-            telemetry.addData("Servo Position", "%.3f", loaderServo.getPosition());
         }
 
     }

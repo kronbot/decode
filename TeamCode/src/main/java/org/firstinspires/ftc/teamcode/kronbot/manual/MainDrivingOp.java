@@ -187,8 +187,8 @@ public class MainDrivingOp extends OpMode {
         }
 
         if( robot.outtake.on &&
-            robot.leftOuttake.getVelocity() >= robot.outtake.velocity - 30 &&
-            robot.leftOuttake.getVelocity() <= robot.outtake.velocity + 90 )
+                robot.leftOuttake.getVelocity() >= robot.outtake.velocity - 30 &&
+                robot.leftOuttake.getVelocity() <= robot.outtake.velocity + 90 )
         {
             gamepad1.rumble(1, 0, 150);
             rumbled = true;
