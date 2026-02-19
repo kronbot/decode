@@ -91,6 +91,7 @@ public class Robot extends KronBot {
     }
 
     // Updates all systems
+    // Except pedro
     public void updateAllSystems() {
         outtake.update();
         intake.update();
@@ -111,8 +112,6 @@ public class Robot extends KronBot {
 
         //Add other updates here
 //        webcam.update();
-        if(follower != null)
-            follower.update();
     }
 
     public class Outtake {

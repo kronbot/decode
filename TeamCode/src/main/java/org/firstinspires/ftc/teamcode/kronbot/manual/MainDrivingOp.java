@@ -59,7 +59,6 @@ public class MainDrivingOp extends OpMode {
         lpsCounter.getLoopTime();
         robot.initFollower(hardwareMap);
         robot.init(hardwareMap);
-        robot.initHardware(hardwareMap);
 
 
         dashboard = FtcDashboard.getInstance();
@@ -86,6 +85,7 @@ public class MainDrivingOp extends OpMode {
 
     @Override
     public void start(){
+        robot.follower.startTeleopDrive();
     }
 
     @Override
@@ -96,6 +96,8 @@ public class MainDrivingOp extends OpMode {
         //Update controller inputs
         drivingGP.update();
         utilityGP.update();
+
+        robot.follower.update();
 
         //Intake
         robot.intake.speed = utilityGP.rightStick.y;
@@ -210,7 +212,7 @@ public class MainDrivingOp extends OpMode {
         }
 
         //Update robot systems status
-        robot.follower.setTeleOpDrive(drivingGP.leftStick.y, drivingGP.leftStick.x, drivingGP.rightStick.x, true);
+        robot.follower.setTeleOpDrive(-drivingGP.leftStick.y, -drivingGP.leftStick.x, -drivingGP.rightStick.x, true);
         robot.updateAllSystems();
         _telemetry();
         //robot.webcam.update();
