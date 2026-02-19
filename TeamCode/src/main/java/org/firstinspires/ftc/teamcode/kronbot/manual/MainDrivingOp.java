@@ -26,6 +26,7 @@ import org.firstinspires.ftc.teamcode.kronbot.utils.components.FieldCentricDrive
 import org.firstinspires.ftc.teamcode.kronbot.utils.components.RobotCentricDrive;
 import org.firstinspires.ftc.teamcode.kronbot.utils.Constants;
 import org.firstinspires.ftc.teamcode.kronbot.utils.components.TurretAligner;
+import org.firstinspires.ftc.teamcode.kronbot.utils.misc.LpsCounter;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
 /**
@@ -42,20 +43,24 @@ public class MainDrivingOp extends OpMode {
 
     private TurretAligner turretAligner;
 
-    private RobotCentricDrive robotCentricDrive;
-    private FieldCentricDrive fieldCentricDrive;
     private FtcDashboard dashboard;
 
     private boolean autoAimEnabled = false;
 
     ElapsedTime turretTimer = new ElapsedTime();
 
+    LpsCounter lpsCounter;
+
     boolean rumbled = false;
 
     @Override
     public void init(){
+        lpsCounter = new LpsCounter();
+        lpsCounter.getLoopTime();
+        robot.initFollower(hardwareMap);
         robot.init(hardwareMap);
         robot.initHardware(hardwareMap);
+
 
         dashboard = FtcDashboard.getInstance();
         robot.webcam.init(hardwareMap, telemetry);
@@ -74,18 +79,20 @@ public class MainDrivingOp extends OpMode {
 
     @Override
     public void init_loop(){
+        lpsCounter.getLoopTime();
         telemetry.addLine("Initialization Ready");
         telemetry.update();
     }
 
     @Override
     public void start(){
-        robotCentricDrive = new RobotCentricDrive(robot, gamepad1);
-        fieldCentricDrive = new FieldCentricDrive(robot, gamepad1);
     }
 
     @Override
     public void loop(){
+        // Update Loops/s delta
+        lpsCounter.getLoopTime();
+
         //Update controller inputs
         drivingGP.update();
         utilityGP.update();
@@ -203,30 +210,12 @@ public class MainDrivingOp extends OpMode {
         }
 
         //Update robot systems status
-        movement();
+        robot.follower.setTeleOpDrive(drivingGP.leftStick.y, drivingGP.leftStick.x, drivingGP.rightStick.x, true);
         robot.updateAllSystems();
         _telemetry();
         //robot.webcam.update();
     }
 
-    private boolean reverseMovement=false, drivingMode=false;//False for robot centric, true for field centric
-    private void movement(){
-        if(drivingGP.rightStick.button.shortPressed())
-            reverseMovement = !reverseMovement;
-
-//        if(drivingGP.circle.longPressed())
-//            drivingMode = !drivingMode;
-
-        robotCentricDrive.setReverse(reverseMovement);
-        if (!drivingMode) {
-            robotCentricDrive.run();
-            robotCentricDrive.telemetry(telemetry);
-        } else {
-            fieldCentricDrive.run();
-            fieldCentricDrive.telemetry(telemetry);
-        }
-
-    }
 
     @Override
     public void stop(){
@@ -234,6 +223,7 @@ public class MainDrivingOp extends OpMode {
     }
 
     public void _telemetry(){
+        telemetry.addData("LPS", "%.1f", 1 / lpsCounter.delta);
         telemetry.addData("Heading", robot.follower.getHeading());
         telemetry.addData("shooter motor vel:", robot.leftOuttake.getVelocity());
         telemetry.addData("angle servo pos:", robot.turretServo.getPosition());

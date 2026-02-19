@@ -77,6 +77,9 @@ public class Robot extends KronBot {
     }
 
     public void initSystems(HardwareMap hardwareMap) {
+        if(follower == null)
+            initFollower(hardwareMap);
+        follower.update();
         outtake.init();
         intake.init();
         loader.init();
@@ -289,7 +292,7 @@ public class Robot extends KronBot {
         public double speed;
 
         public void init() {
-            loaderServo.setPosition(0.5);
+            loaderMotor.setPower(0);
         }
 
         public void update() {

@@ -37,7 +37,6 @@ public class OuttakeShootingTesting extends OpMode {
     @Override
     public void init(){
         robot.init(hardwareMap);
-        robot.loader.reversed = true;
 
         drivingGP = new Controls(gamepad1);
         utilityGP = new Controls(gamepad2);

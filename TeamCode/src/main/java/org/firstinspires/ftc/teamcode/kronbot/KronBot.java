@@ -83,6 +83,7 @@ public class KronBot {
         if(loadPose) {
             Pose startingPose = PoseStorage.loadPose();
             follower.setStartingPose(startingPose);
+            follower.update();
         }
         else
             follower.setStartingPose(new Pose());
