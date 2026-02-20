@@ -1,14 +1,11 @@
 package org.firstinspires.ftc.teamcode.kronbot.autonomous;
 
 import static org.firstinspires.ftc.teamcode.kronbot.autonomous.AutonomousConstants.*;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_CLOSE;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.FLAP_OPEN;
 
 import static java.lang.Thread.sleep;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
-import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
@@ -16,7 +13,6 @@ import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
-import org.firstinspires.ftc.teamcode.kronbot.KronBot;
 import org.firstinspires.ftc.teamcode.kronbot.Robot;
 import org.firstinspires.ftc.teamcode.kronbot.utils.PoseStorage;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
@@ -24,8 +20,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 @Autonomous(name = "RED Auto_Back", group = org.firstinspires.ftc.teamcode.kronbot.utils.Constants.TEST_GROUP)
 public class Auto_BackRedOp extends OpMode {
 
-    private Robot robot;
-    private Follower follower;
+    private Robot robot = Robot.getInstance();
     private Timer pathTimer, opmodeTimer;
     private int pathState, launchState;
 
@@ -42,19 +37,21 @@ public class Auto_BackRedOp extends OpMode {
 
     @Override
     public void init() {
-        robot = Robot.getInstance();
-        robot.initAutonomy(hardwareMap);
+
+        robot.init(hardwareMap);
+
+        robot.initFollower(hardwareMap, startingPose);
 
         pathTimer = new Timer();
         opmodeTimer = new Timer();
         opmodeTimer.resetTimer();
 
-        follower = Constants.createFollower(hardwareMap);
-        FtcDashboard dashboard = FtcDashboard.getInstance();
-        telemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());
+        telemetry = new MultipleTelemetry(
+                telemetry,
+                FtcDashboard.getInstance().getTelemetry()
+        );
 
         buildPaths();
-        follower.setStartingPose(startingPose);
 
         telemetry.addLine("Initialized. Waiting for start...");
         telemetry.update();
@@ -63,12 +60,12 @@ public class Auto_BackRedOp extends OpMode {
 
     public void buildPaths() {
 
-        goToLaunch = follower.pathBuilder()
+        goToLaunch = robot.follower.pathBuilder()
                 .addPath(new BezierLine(startingPose, launchZone))
                 .setLinearHeadingInterpolation(startingPose.getHeading(), launchZone.getHeading())
                 .build();
 
-        goToPark = follower.pathBuilder()
+        goToPark = robot.follower.pathBuilder()
                 .addPath(new BezierLine(launchZone, parkZone))
                 .setLinearHeadingInterpolation(launchZone.getHeading(), parkZone.getHeading())
                 .build();
@@ -93,13 +90,13 @@ public class Auto_BackRedOp extends OpMode {
 
     @Override
     public void loop() {
-        follower.update();
+        robot.follower.update();
 
         motorVel = robot.leftOuttake.getVelocity();
 
         autonomousPathUpdate();
 
-        Pose currentPose = follower.getPose();
+        Pose currentPose = robot.follower.getPose();
         telemetry.addData("Path State", pathState);
         telemetry.addData("X", currentPose.getX());
         telemetry.addData("Y", currentPose.getY());
@@ -113,12 +110,12 @@ public class Auto_BackRedOp extends OpMode {
 
         switch (pathState) {
             case 0:
-                follower.followPath(goToLaunch);
+                robot.follower.followPath(goToLaunch);
                 setPathState(1);
                 break;
 
             case 1:
-                if (!follower.isBusy()) {
+                if (!robot.follower.isBusy()) {
                     switch (launchState) {
                         case 0:
                             // Start outtake motors
@@ -212,22 +209,22 @@ public class Auto_BackRedOp extends OpMode {
 
             case 2:
 
-                if (!follower.isBusy()) {
-                    follower.followPath(goToPark);
+                if (!robot.follower.isBusy()) {
+                    robot.follower.followPath(goToPark);
                     setPathState(3);
                 }
                 break;
 
             case 3:
-                if (!follower.isBusy()) {
+                if (!robot.follower.isBusy()) {
                     setPathState(-1);
                 }
                 break;
 
 
             case -1:
-                Pose finalPose = follower.getPose();
-                PoseStorage.savePose(finalPose);
+//                Pose finalPose = robot.follower.getPose();
+//                PoseStorage.savePose(finalPose);
 
                 break;
         }
@@ -241,6 +238,8 @@ public class Auto_BackRedOp extends OpMode {
 
     @Override
     public void stop() {
+        Pose finalPose = robot.follower.getPose();
+        PoseStorage.savePose(finalPose);
     }
 
 }

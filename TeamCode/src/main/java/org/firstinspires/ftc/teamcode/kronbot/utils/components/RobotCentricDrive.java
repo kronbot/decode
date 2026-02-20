@@ -44,9 +44,9 @@ public class RobotCentricDrive {
         double leftRearPower = (y - x + r) / normalizer;
         double rightRearPower = (y + x - r) / normalizer;
 
-        robot.motors.leftFront.setPower(leftFrontPower);
         robot.motors.rightFront.setPower(rightFrontPower);
         robot.motors.leftRear.setPower(leftRearPower);
+        robot.motors.leftFront.setPower(leftFrontPower);
         robot.motors.rightRear.setPower(rightRearPower);
     }
 

@@ -5,8 +5,7 @@ import org.firstinspires.ftc.teamcode.kronbot.Robot;
 
 public class TurretAligner {
     private final Robot robot;
-    private double targetX = 0;
-    private double targetY = 0;
+    private Pose target;
 
     // Simple P-gain if you want to smooth the movement
     // (1.0 means it snaps instantly to the target)
@@ -17,22 +16,22 @@ public class TurretAligner {
     }
 
     public void setTarget(double x, double y) {
-        this.targetX = x;
-        this.targetY = y;
+        target = new Pose(x, y);
     }
 
     public void update() {
         Pose currentPose = robot.follower.getPose();
 
-        // 1. Calculate the difference
-        double dx = targetX - currentPose.getX();
-        double dy = targetY - currentPose.getY();
+        // Angle from robot to the target
+        double r = Math.atan2(target.getY() - currentPose.getY(), target.getX() - currentPose.getX());
 
-        // 2. Calculate the global angle to the target (radians)
-        // atan2 takes (y, x)
-        double globalTargetAngle = Math.atan2(dy, dx);
+        double turret = r - currentPose.getHeading();
+        if(Math.abs(turret) > Math.PI) {
+            turret += 2 * Math.PI;
+        }
 
-        robot.turret.angle = globalTargetAngle;
+
+
     }
 
     /**

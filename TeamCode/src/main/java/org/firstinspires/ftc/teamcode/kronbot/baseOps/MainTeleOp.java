@@ -28,15 +28,13 @@ public class MainTeleOp extends OpMode {
     private FtcDashboard dashboard;
 
 
-    Button reverseButton = new Button();
-
     boolean isLaunching = false;
     boolean wasRightBumperPressed = false;
     double currentVelocity = 1300;
 
     public void init()
     {
-        robot.initTeleop(hardwareMap);
+        robot.initHardware(hardwareMap);
         dashboard = FtcDashboard.getInstance();
         telemetry.update();
 

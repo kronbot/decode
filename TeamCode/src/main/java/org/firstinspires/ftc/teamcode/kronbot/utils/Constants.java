@@ -20,6 +20,7 @@ public class Constants {
     public final static String TEST_GROUP = "test";
     public final static String MAIN_GROUP = "main";
 
+
     public static double CONTROLLER_DEADZONE = 0.15;
 
     public static int BUTTON_LONG_PRESS_TIME = 750;
@@ -61,15 +62,15 @@ public class Constants {
     public static double maxVelocity = 1500;
 
     public static double RANGE_1_ANGLE = 0;
-    public static double RANGE_1_VELOCITY = 950;
+    public static double RANGE_1_VELOCITY = 1150;
     public static double RANGE_1_KS = 0.15;
 
-    public static double RANGE_2_ANGLE = 0.5;
-    public static double RANGE_2_VELOCITY = 1080;
+    public static double RANGE_2_ANGLE = 0.3;
+    public static double RANGE_2_VELOCITY = 1280;
     public static double RANGE_2_KS = 0.2;
 
     public static double RANGE_3_ANGLE = 0.72;
-    public static double RANGE_3_VELOCITY = 1250;
+    public static double RANGE_3_VELOCITY = 1350;
     public static double RANGE_3_KS = 0.3;
 
     public static double RANGE_4_ANGLE = 0.72;
@@ -100,6 +101,7 @@ public class Constants {
     public static double AIM_KI = 0.0;
     public static double AIM_KD = 0.003;
     public static double ANGLE_TOLERANCE = 2.0;
+    public static double DELTA_THRESHOLD = 0.01;
     public static double MAX_ROTATION_POWER = 0.5;
 
 

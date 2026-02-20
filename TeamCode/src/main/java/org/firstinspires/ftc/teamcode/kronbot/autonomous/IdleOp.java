@@ -11,7 +11,7 @@ public class IdleOp extends LinearOpMode {
     KronBot robot = new KronBot();
     @Override
     public void runOpMode() throws InterruptedException {
-        robot.initAutonomy(hardwareMap);
+        robot.initHardware(hardwareMap);
 
         while (!isStopRequested() && opModeIsActive()) {
             telemetry.update();

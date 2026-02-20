@@ -37,7 +37,6 @@ public class OuttakeShootingTesting extends OpMode {
     @Override
     public void init(){
         robot.init(hardwareMap);
-        robot.loader.reversed = true;
 
         drivingGP = new Controls(gamepad1);
         utilityGP = new Controls(gamepad2);
@@ -74,8 +73,6 @@ public class OuttakeShootingTesting extends OpMode {
             robot.intake.reversed = true;
         else
             robot.intake.reversed = false;
-
-        telemetry.addData("Ultrasonic Distance", "%.0f", robot.rangeSensor.cmUltrasonic());
 
         anglePos += -drivingGP.rightStick.y * 0.01;
         anglePos = Math.max(Math.min(anglePos, ANGLE_SERVO_MAX), ANGLE_SERVO_MIN);

@@ -23,7 +23,7 @@ public class NewFieldCentricExOp extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        robot.initSimpleDriving(hardwareMap);
+        robot.initHardware(hardwareMap);
 
         drivingGamepad = gamepad1;
 

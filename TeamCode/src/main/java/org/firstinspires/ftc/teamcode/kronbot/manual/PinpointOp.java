@@ -1,10 +1,7 @@
 package org.firstinspires.ftc.teamcode.kronbot.manual;
 
-import static org.firstinspires.ftc.teamcode.kronbot.autonomous.AutonomousConstants.coordinates;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.TestPoseStart;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
-import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -12,7 +9,6 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.teamcode.kronbot.Robot;
 import org.firstinspires.ftc.teamcode.kronbot.utils.Constants;
 import org.firstinspires.ftc.teamcode.kronbot.utils.Controls;
-import org.firstinspires.ftc.teamcode.kronbot.utils.PoseStorage;
 import org.firstinspires.ftc.teamcode.kronbot.utils.components.FieldCentricDrive;
 import org.firstinspires.ftc.teamcode.kronbot.utils.components.RobotCentricDrive;
 
@@ -41,7 +37,7 @@ public class PinpointOp extends OpMode {
         utilityGP = new Controls(gamepad2);
 
         // create pedro follower with pinpoint localizer
-        robot.initAutonomy(hardwareMap);
+        robot.initHardware(hardwareMap);
 
         FtcDashboard dashboard = FtcDashboard.getInstance();
         telemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());

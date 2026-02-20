@@ -24,7 +24,7 @@ public class TestAuto extends LinearOpMode {
     KronBot robot = new KronBot();
     @Override
     public void runOpMode() throws InterruptedException {
-        robot.initAutonomy(hardwareMap);
+        robot.initHardware(hardwareMap);
         Follower follower = Constants.createFollower(hardwareMap);
 
         telemetry.addLine(follower == null ? "Follower is NULL!" : "Follower created!");
