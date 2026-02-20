@@ -315,8 +315,8 @@ public class Robot extends KronBot {
 
 
         public boolean autoAimEnabled = true;
-        static final double basket_X = 58;
-        static final double basket_Y = 63;
+        static final double basket_X = 130;
+        static final double basket_Y = 135;
 
         public void init() {
             angle = 0;
