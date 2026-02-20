@@ -192,15 +192,19 @@ public class MainDrivingOp extends OpMode {
 
         //Shoot Close/Far
         if (drivingGP.triangle.justPressed()) {
+            robot.turret.autoAimEnabled = false;
             robot.shoot.activateRange(1, gamepad1);
         }
         if(drivingGP.square.justPressed()) {
+            robot.turret.autoAimEnabled = false;
             robot.shoot.activateRange(2, gamepad1);
         }
         if (drivingGP.cross.justPressed()) {
+            robot.turret.autoAimEnabled = false;
             robot.shoot.activateRange(3, gamepad1);
         }
         if(drivingGP.circle.justPressed()) {
+            robot.turret.autoAimEnabled = false;
             robot.shoot.activateRange(4, gamepad1);
         }
 
@@ -213,6 +217,7 @@ public class MainDrivingOp extends OpMode {
         }
 
         if(!autoAimEnabled && drivingGP.leftBumper.justPressed()) {
+            robot.turret.autoAimEnabled = true;
             if(robot.outtake.on) {
                 robot.shoot.deactivate();
                 gamepad1.rumble(1, 1, 100);
@@ -235,7 +240,10 @@ public class MainDrivingOp extends OpMode {
 
     public void _telemetry(){
         telemetry.addData("LPS", "%.1f", 1 / lpsCounter.delta);
-//        telemetry.addData("Heading", robot.follower.getHeading());
+        telemetry.addData("x", robot.follower.getPose().getX());
+        telemetry.addData("y", robot.follower.getPose().getY());
+        telemetry.addData("heading", robot.follower.getPose().getHeading());
+        telemetry.addData("Heading", robot.follower.getHeading());
         telemetry.addData("shooter motor vel:", robot.leftOuttake.getVelocity());
         telemetry.addData("angle servo pos:", robot.turretServo.getPosition());
         telemetry.addData("turret angle:", robot.turret.angle);
@@ -243,7 +251,7 @@ public class MainDrivingOp extends OpMode {
         robot.loader.telemetry(telemetry);
         robot.outtake.telemetry(telemetry);
         robot.heading.telemetry(telemetry);
-//        robot.turret.telemetry(telemetry);
+        robot.turret.telemetry(telemetry);
         drivingGP.telemetry(telemetry);
         telemetry.update();
     }

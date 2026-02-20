@@ -100,6 +100,7 @@ public class Robot extends KronBot {
         loader.update();
         turret.update();
         flap.update();
+        follower.update();
 
         double rawHeading = follower.getHeading();
         heading.update(rawHeading);
@@ -306,12 +307,16 @@ public class Robot extends KronBot {
         }
 
     }
-
     public class Turret {
         /** Angle in radians from straight ahead */
         public double angle = 0;
         public double driverOffset = 0;
         private double servoPosition;
+
+
+        public boolean autoAimEnabled = true;
+        static final double basket_X = 58;
+        static final double basket_Y = 63;
 
         public void init() {
             angle = 0;
@@ -319,31 +324,65 @@ public class Robot extends KronBot {
         }
 
         public void update() {
-            if (turretServo != null && follower != null) {
-                if(angle > Math.PI)
-                    angle = -2 * Math.PI + angle;
-                if(angle < -Math.PI)
-                    angle = 2 * Math.PI + angle;
+            //angle to the basket
+            if (turretServo == null || follower == null) return;
 
-                if(driverOffset > Math.PI)
-                    driverOffset = -2 * Math.PI + driverOffset;
-                if(driverOffset < -Math.PI)
-                    driverOffset = 2 * Math.PI + driverOffset;
-
-                double fieldRelativeAngle = angle + driverOffset;
+            if(autoAimEnabled) {
+                double robot_X = follower.getPose().getX();
+                double robot_Y = follower.getPose().getY();
+                double robotHeading  =follower.getPose().getHeading();
 
 
-                if(fieldRelativeAngle > Math.PI)
-                    fieldRelativeAngle = -2 * Math.PI + fieldRelativeAngle;
-                if(fieldRelativeAngle < -Math.PI)
-                    fieldRelativeAngle = 2 * Math.PI + fieldRelativeAngle;
+                double dx = basket_X - robot_X;
+                double dy = basket_Y - robot_Y;
 
-                double robotRelativeAngle = fieldRelativeAngle - (follower.getHeading()/* * 0.01745329*/); // deg to radian
+                double targetFieldAngle = Math.atan2(dy, dx);
+
+                //calculate
+                double robotRelativeAngle = targetFieldAngle - robotHeading;
+
+                //normalize
+                robotRelativeAngle = Math.atan2(
+                        Math.sin(robotRelativeAngle),
+                        Math.cos(robotRelativeAngle)
+                );
+
                 servoPosition = robotRelativeAngle * TURRET_SERVO_UNITS_PER_RAD + 0.5;
-
-
-                turretServo.setPosition(Math.clamp(servoPosition, TURRET_SERVO_MIN, TURRET_SERVO_MAX));
+            } else {
+                servoPosition =
+                        driverOffset * TURRET_SERVO_UNITS_PER_RAD + 0.5;
             }
+
+            turretServo.setPosition(
+                    Math.clamp(servoPosition, TURRET_SERVO_MIN, TURRET_SERVO_MAX)
+            );
+
+
+//            if (turretServo != null && follower != null) {
+//                if(angle > Math.PI)
+//                    angle = -2 * Math.PI + angle;
+//                if(angle < -Math.PI)
+//                    angle = 2 * Math.PI + angle;
+//
+//                if(driverOffset > Math.PI)
+//                    driverOffset = -2 * Math.PI + driverOffset;
+//                if(driverOffset < -Math.PI)
+//                    driverOffset = 2 * Math.PI + driverOffset;
+//
+//                double fieldRelativeAngle = angle + driverOffset;
+//
+//
+//                if(fieldRelativeAngle > Math.PI)
+//                    fieldRelativeAngle = -2 * Math.PI + fieldRelativeAngle;
+//                if(fieldRelativeAngle < -Math.PI)
+//                    fieldRelativeAngle = 2 * Math.PI + fieldRelativeAngle;
+//
+//                double robotRelativeAngle = fieldRelativeAngle - (follower.getHeading()/* * 0.01745329*/); // deg to radian
+//                servoPosition = robotRelativeAngle * TURRET_SERVO_UNITS_PER_RAD + 0.5;
+//
+//
+//                turretServo.setPosition(Math.clamp(servoPosition, TURRET_SERVO_MIN, TURRET_SERVO_MAX));
+//            }
         }
 
         public void telemetry(Telemetry telemetry) {
@@ -391,21 +430,7 @@ public class Robot extends KronBot {
         }
 
         public void update (double rawHeading) {
-            //the raw angular vel
             double delta = rawHeading - lastRawHeading;
-//
-//            //delta for PI
-//            delta = Math.atan2(Math.sin(delta), Math.cos(delta));
-//
-//            double rawRate = delta / loopDt;
-//
-//            //the low pass filter
-//            double filteredRate = lpAlpha * rawRate + (1 - lpAlpha) * lastFilteredRate;
-//
-//            //integrate back to get filtered heading
-//            filteredHeading += filteredRate * loopDt;
-                //save for next iteration
-                //  lastFilteredRate = filteredRate;
 
             //simple threshold filter
             //if delta larger than threshold, we add it to our filtered heading, if not, we ignore it

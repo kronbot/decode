@@ -223,8 +223,8 @@ public class Auto_BackRedOp extends OpMode {
 
 
             case -1:
-                Pose finalPose = robot.follower.getPose();
-                PoseStorage.savePose(finalPose);
+//                Pose finalPose = robot.follower.getPose();
+//                PoseStorage.savePose(finalPose);
 
                 break;
         }
@@ -238,6 +238,8 @@ public class Auto_BackRedOp extends OpMode {
 
     @Override
     public void stop() {
+        Pose finalPose = robot.follower.getPose();
+        PoseStorage.savePose(finalPose);
     }
 
 }

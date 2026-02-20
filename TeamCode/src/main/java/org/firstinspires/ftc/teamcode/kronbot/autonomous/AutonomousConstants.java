@@ -28,9 +28,9 @@ public final class AutonomousConstants {
     public static Coordinates LaunchZoneClose = new Coordinates(-25, 32, -0.8);
     public static Coordinates LaunchZoneClose2 = new Coordinates(-19, 55, -0.84);
     public static Coordinates ParkClose = new Coordinates(-20, 18, 0);
-    public static Coordinates StartingPoseBackRed = new Coordinates(0, 0, 0);
-    public static Coordinates LaunchZoneBack = new Coordinates(13, -2.3, -0.4);
-    public static Coordinates ParkBack = new Coordinates(30, 0, 0);
+    public static Coordinates StartingPoseBackRed = new Coordinates(8, -64, 0);
+    public static Coordinates LaunchZoneBack = new Coordinates(13, -53, -0.4);
+    public static Coordinates ParkBack = new Coordinates(20, -38, 0);
 
     /// BLUE auto movement
     public static Coordinates StartingPoseCloseBlue = new Coordinates(0, 0, 0);
