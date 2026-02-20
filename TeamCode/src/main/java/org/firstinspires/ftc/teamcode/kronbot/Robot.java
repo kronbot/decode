@@ -10,6 +10,7 @@ import org.firstinspires.ftc.teamcode.kronbot.utils.detection.AprilTagWebcam;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_CLOSE;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_MAX;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_MIN;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.DELTA_THRESHOLD;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.FLAP_CLOSED;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.FLAP_OPEN;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KD;
@@ -85,6 +86,7 @@ public class Robot extends KronBot {
         loader.init();
         turret.init();
         flap.init();
+        heading.init();
 
         //Add other inits here
 
@@ -374,8 +376,9 @@ public class Robot extends KronBot {
         private double lastRawHeading = 0.0;       // last reading from PinPoint
         private double lastFilteredRate = 0.0;     // filtered angular velocity
         private double filteredHeading = 0.0;      // output heading
-        private final double lpAlpha = 0.1;        // smoothing factor, (0.05 - 0.2 for tuning?)
+        private final double lpAlpha = 0.2;        // smoothing factor, (0.05 - 0.2 for tuning?)
         private final double loopDt = 0.02;        // control loop period (sec)
+
 
         /** Prevents IMU from PinPoint from drifting
          * Calculates the angular velocity (heading / time) from the PinPoint IMU
@@ -383,27 +386,35 @@ public class Robot extends KronBot {
          * Integrates the filtered angular velocity back into a stable heading
          */
 
+        public void init(){
+            filteredHeading = 0;
+        }
+
         public void update (double rawHeading) {
             //the raw angular vel
             double delta = rawHeading - lastRawHeading;
+//
+//            //delta for PI
+//            delta = Math.atan2(Math.sin(delta), Math.cos(delta));
+//
+//            double rawRate = delta / loopDt;
+//
+//            //the low pass filter
+//            double filteredRate = lpAlpha * rawRate + (1 - lpAlpha) * lastFilteredRate;
+//
+//            //integrate back to get filtered heading
+//            filteredHeading += filteredRate * loopDt;
+                //save for next iteration
+                //  lastFilteredRate = filteredRate;
 
-            //delta for PI
-            delta = Math.atan2(Math.sin(delta), Math.cos(delta));
-
-            double rawRate = delta / loopDt;
-
-            //the low pass filter
-            double filteredRate = lpAlpha * rawRate + (1 - lpAlpha) * lastFilteredRate;
-
-            //integrate back to get filtered heading
-            filteredHeading += filteredRate * loopDt;
-
-            //wrap filtered heading -PI..PI
-            filteredHeading = Math.atan2(Math.sin(filteredHeading), Math.cos(filteredHeading));
-
-            //save for next iteration
+            //simple threshold filter
+            //if delta larger than threshold, we add it to our filtered heading, if not, we ignore it
+            if(delta>DELTA_THRESHOLD || delta<-DELTA_THRESHOLD) {
+                //wrap filtered heading -PI..PI
+//                filteredHeading = Math.atan2(Math.sin(filteredHeading), Math.cos(filteredHeading));
+                filteredHeading += delta;
+            }
             lastRawHeading = rawHeading;
-            lastFilteredRate = filteredRate;
         }
         /**
          *@return Returns the current filtered heading

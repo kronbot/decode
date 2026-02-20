@@ -74,18 +74,27 @@ public class MainDrivingOp extends OpMode {
 
         drivingGP = new Controls(gamepad1);
         utilityGP = new Controls(gamepad2);
+
+        try {
+            robot.follower.getPoseTracker().resetIMU();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public void init_loop(){
         lpsCounter.getLoopTime();
+
         telemetry.addLine("Initialization Ready");
         telemetry.update();
     }
 
     @Override
     public void start(){
+
         robot.follower.startTeleopDrive();
+
     }
 
     @Override
@@ -226,13 +235,14 @@ public class MainDrivingOp extends OpMode {
 
     public void _telemetry(){
         telemetry.addData("LPS", "%.1f", 1 / lpsCounter.delta);
-        telemetry.addData("Heading", robot.follower.getHeading());
+//        telemetry.addData("Heading", robot.follower.getHeading());
         telemetry.addData("shooter motor vel:", robot.leftOuttake.getVelocity());
         telemetry.addData("angle servo pos:", robot.turretServo.getPosition());
         telemetry.addData("turret angle:", robot.turret.angle);
         robot.intake.telemetry(telemetry);
         robot.loader.telemetry(telemetry);
         robot.outtake.telemetry(telemetry);
+        robot.heading.telemetry(telemetry);
 //        robot.turret.telemetry(telemetry);
         drivingGP.telemetry(telemetry);
         telemetry.update();
