@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.kronbot.utils.devices.PCF8574;
+package org.firstinspires.ftc.teamcode.kronbot.utils.devices;
 
 import com.qualcomm.hardware.lynx.LynxI2cDeviceSynch;
 import com.qualcomm.robotcore.hardware.I2cAddr;

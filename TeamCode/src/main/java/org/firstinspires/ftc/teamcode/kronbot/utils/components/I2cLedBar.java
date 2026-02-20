@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode.kronbot.utils.components;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.I2cAddr;
 
-import org.firstinspires.ftc.teamcode.kronbot.utils.devices.PCF8574.PCF8574;
+import org.firstinspires.ftc.teamcode.kronbot.utils.devices.PCF8574;
 
 /**
  * Uses two PCF8574 I/O expanders to control an LED bar
