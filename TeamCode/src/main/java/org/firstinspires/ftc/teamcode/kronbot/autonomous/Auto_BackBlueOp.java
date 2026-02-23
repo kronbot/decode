@@ -217,8 +217,7 @@ public class Auto_BackBlueOp extends OpMode {
 
             case -1:
                 // Idle / done
-                Pose finalPose = robot.follower.getPose();
-                PoseStorage.savePose(finalPose);
+
                 break;
         }
     }
@@ -231,6 +230,8 @@ public class Auto_BackBlueOp extends OpMode {
 
     @Override
     public void stop() {
+        Pose finalPose = robot.follower.getPose();
+        PoseStorage.savePose(finalPose);
     }
 
 }

@@ -57,7 +57,7 @@ public class MainDrivingOp extends OpMode {
     public void init(){
         lpsCounter = new LpsCounter();
         lpsCounter.getLoopTime();
-        robot.initFollower(hardwareMap);
+        robot.initFollower(hardwareMap, true);
         robot.init(hardwareMap);
 
 

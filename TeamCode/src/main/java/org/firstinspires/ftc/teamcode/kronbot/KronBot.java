@@ -106,8 +106,8 @@ public class KronBot {
 
 
     public void initHardware(HardwareMap hardwareMap) {
-        if(follower != null)
-            initFollower(hardwareMap);
+//        if(follower != null)
+//            initFollower(hardwareMap);
         initMotors(hardwareMap);
         initServos(hardwareMap);
         initSensors(hardwareMap);
