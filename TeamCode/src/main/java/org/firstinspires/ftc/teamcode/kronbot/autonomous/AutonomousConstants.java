@@ -23,11 +23,19 @@ public final class AutonomousConstants {
     public static double angleServoBack = 0.6;
     public static double angleServoClose = 0.65;
 
-    /// RED auto movement
-    public static Coordinates StartingPoseCloseRed = new Coordinates(0, 0, 0);
-    public static Coordinates LaunchZoneClose = new Coordinates(-25, 32, -0.8);
-    public static Coordinates LaunchZoneClose2 = new Coordinates(-19, 55, -0.84);
-    public static Coordinates ParkClose = new Coordinates(-20, 18, 0);
+    /// RED CLOSE auto movement
+    public static Coordinates StartingPoseCloseRed = new Coordinates(130, 111, 1.57);
+    public static Coordinates LaunchZoneClose1 = new Coordinates(108.7, 107.40, 0.8);
+    public static Coordinates IntakeZoneClose1 = new Coordinates(100, 83, 0);
+    public static Coordinates LoadZoneClose1 = new Coordinates(128, 83, 0);
+    public static Coordinates LaunchZoneClose2 = new Coordinates(108.7, 107.40, 0.8);
+    public static Coordinates IntakeZoneClose2 = new Coordinates(102, 60, 0);
+    public static Coordinates LoadZoneClose2 = new Coordinates(130, 59, 0);
+
+    public static Coordinates LaunchZoneClose3 = new Coordinates(108.7, 107.40, 0.8);
+    public static Coordinates ParkClose = new Coordinates(128, 104, 0);
+
+    /// RED FAR auto movement
     public static Coordinates StartingPoseBackRed = new Coordinates(79, 7.4, 0);
     public static Coordinates LaunchZoneBack = new Coordinates(83, 19, -0.4);
     public static Coordinates ParkBack = new Coordinates(81, 35, 0);
