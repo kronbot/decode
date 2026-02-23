@@ -5,7 +5,9 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.R;
 import org.firstinspires.ftc.teamcode.kronbot.utils.detection.AprilTagWebcam;
+import org.opencv.core.Mat;
 
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_CLOSE;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_MAX;
@@ -17,15 +19,19 @@ import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_K
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KF;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KI;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KP;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_1;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_1_ANGLE;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_1_KS;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_1_VELOCITY;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_2;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_2_ANGLE;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_2_KS;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_2_VELOCITY;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_3;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_3_ANGLE;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_3_KS;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_3_VELOCITY;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_4;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_4_ANGLE;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_4_KS;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_4_VELOCITY;
@@ -34,6 +40,14 @@ import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.TURRET_SERV
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.TURRET_SERVO_UNITS_PER_RAD;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.maxVelocity;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.minVelocity;
+
+import android.util.Pair;
+
+import java.util.ArrayList;
+import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class Robot extends KronBot {
     // Singleton instance
@@ -49,6 +63,18 @@ public class Robot extends KronBot {
     public final Flap flap;
     public final Shoot shoot;
     public final Heading heading;
+
+    public static class RangeConfig {
+        public double angle;
+        public double velocity;
+        public double kS;
+
+        public RangeConfig(double angle, double velocity, double kS) {
+            this.angle = angle;
+            this.velocity = velocity;
+            this.kS = kS;
+        }
+    }
 
 
 
@@ -95,6 +121,9 @@ public class Robot extends KronBot {
     // Updates all systems
     // Except pedro
     public void updateAllSystems() {
+        double rawHeading = follower.getHeading();
+        heading.update(rawHeading);
+
         outtake.update();
         intake.update();
         loader.update();
@@ -102,9 +131,6 @@ public class Robot extends KronBot {
         flap.update();
         follower.update();
 
-        double rawHeading = follower.getHeading();
-        heading.update(rawHeading);
-        double filtered = heading.get();
         /**
          eg usage for turret calculations:
          double robotRelativeAngle = fieldRelativeAngle - filtered;
@@ -117,56 +143,64 @@ public class Robot extends KronBot {
 //        webcam.update();
     }
 
+    static final double basket_X = 130;
+    static final double basket_Y = 135;
+
+
     public class Outtake {
         public boolean on = false;
-        public double angle = 0;
-        public double autoAimAngle = 0;
-        public double velocity;
-        public double kS = 0;
+        public RangeConfig activeConfig;
+//        RangeConfig autoAimConfig;
         public boolean reversed = false;
 
         boolean braking = false;
-        double lastVelocity = 0;
+//        double lastVelocity = 0;
+        private TreeMap<Double, RangeConfig> ranges;
 
         public void init() {
             on = false;
             reversed = false;
-            velocity = minVelocity;
+            activeConfig = new RangeConfig(0,0,0);
+
+            //Initialize Range based shooter settings
+            ranges.put(RANGE_1, new RangeConfig(RANGE_1_ANGLE, RANGE_1_VELOCITY, RANGE_1_KS));
+            ranges.put(RANGE_2, new RangeConfig(RANGE_2_ANGLE, RANGE_2_VELOCITY, RANGE_2_KS));
+            ranges.put(RANGE_3, new RangeConfig(RANGE_3_ANGLE, RANGE_3_VELOCITY,RANGE_3_KS));
+            ranges.put(RANGE_4, new RangeConfig(RANGE_4_ANGLE, RANGE_4_VELOCITY, RANGE_4_KS));
         }
 
 
 
         /** Configures the launch angle and launch motor speed for the given distance.<br>
          *  Returns true if a good configuration is possible (If the distance is in the correct range)
-         * @param distance The distance, measured horizontally, from the tower wall to the center of the turret.
          * @return  Returns true if a configuration is possible
          */
-        public boolean configureDistance(double distance) {
-            if(distance < 20)
-                return false;
-            double shooterVel = 0;
-            double servoAngle = 0;
-
-            // magic numbers for quadratics from desmos
-            if(distance < 46)
-                servoAngle = 0;
-            else if(distance < 150)
-                servoAngle = -0.0000557692 * (distance * distance) + 0.0181423 * distance - 0.716538;
-            else
-                servoAngle = 0.75;
-
-            if(distance < 215) {
-                shooterVel = -0.00460596 * (distance * distance) + 3.42411 * distance + 752.43325;
-            }
-            else if(distance > 250 && distance < 375)
-                shooterVel = 1400; // todo: check if this speed works
-
-            on = true;
-            velocity = shooterVel;
-            angle = servoAngle;
-
-            return true;
-        }
+//        public boolean configureDistance(double distance) {
+//            if(distance < 20)
+//                return false;
+//            double shooterVel = 0;
+//            double servoAngle = 0;
+//
+//            // magic numbers for quadratics from desmos
+//            if(distance < 46)
+//                servoAngle = 0;
+//            else if(distance < 150)
+//                servoAngle = -0.0000557692 * (distance * distance) + 0.0181423 * distance - 0.716538;
+//            else
+//                servoAngle = 0.75;
+//
+//            if(distance < 215) {
+//                shooterVel = -0.00460596 * (distance * distance) + 3.42411 * distance + 752.43325;
+//            }
+//            else if(distance > 250 && distance < 375)
+//                shooterVel = 1400; // todo: check if this speed works
+//
+//            on = true;
+//            velocity = shooterVel;
+//            angle = servoAngle;
+//
+//            return true;
+//        }
 
 
         public void update(){
@@ -174,22 +208,22 @@ public class Robot extends KronBot {
             if(on){
                 leftOuttake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                 rightOuttake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-                if(leftOuttake.getVelocity() < velocity * 1) {
+                if(leftOuttake.getVelocity() < activeConfig.velocity * 1) {
                     leftOuttake.setPower(1);
                     rightOuttake.setPower(1);
                 }
-                else if(leftOuttake.getVelocity() > velocity * 1.1) {
+                else if(leftOuttake.getVelocity() > activeConfig.velocity * 1.1) {
                     if(braking) {
                         leftOuttake.setPower(0);
                         rightOuttake.setPower(0);
                     }
-                    leftOuttake.setPower(kS * 0.8);
-                    rightOuttake.setPower(kS * 0.8);
+                    leftOuttake.setPower(activeConfig.kS * 0.8);
+                    rightOuttake.setPower(activeConfig.kS * 0.8);
                 }
                 else {
                     braking = false;
-                    leftOuttake.setPower(kS);
-                    rightOuttake.setPower(kS);
+                    leftOuttake.setPower(activeConfig.kS);
+                    rightOuttake.setPower(activeConfig.kS);
                 }
 
             } else {
@@ -244,19 +278,71 @@ public class Robot extends KronBot {
                  */
             }
 
-            angleServo.setPosition(Math.min(Math.max(angle, ANGLE_SERVO_MIN), ANGLE_SERVO_MAX));
+            angleServo.setPosition(Math.min(Math.max(activeConfig.angle, ANGLE_SERVO_MIN), ANGLE_SERVO_MAX));
+        }
+
+
+
+        public RangeConfig interpolateRange() {
+            double robot_X = follower.getPose().getX();
+            double robot_Y = follower.getPose().getY();
+
+            double dx = basket_X - robot_X;
+            double dy = basket_Y - robot_Y;
+
+            double distance = Math.sqrt(dx*dx + dy*dy);
+
+            if(distance<ranges.firstKey())
+                return new RangeConfig(ranges.get(ranges.firstKey()).angle, ranges.get(ranges.firstKey()).velocity, ranges.get(ranges.firstKey()).kS);
+
+            if(distance<ranges.lastKey())
+                return new RangeConfig(ranges.get(ranges.lastKey()).angle, ranges.get(ranges.lastKey()).velocity, ranges.get(ranges.lastKey()).kS);
+
+            //I used TreeMaps as its ordered and offers floorEntry (the biggest entry smaller than the value searched) and ceilingEntry (the opposite)
+            Map.Entry<Double, RangeConfig> lower = ranges.floorEntry(distance);
+            Map.Entry<Double, RangeConfig> upper = ranges.ceilingEntry(distance);
+
+            if (lower == null && upper!=null) return upper.getValue();
+            if (upper == null && lower!=null) return lower.getValue();
+
+            if (lower.getKey().equals(upper.getKey()))
+                return lower.getValue();
+
+            //Linear interpolation between the two ranges
+            double d1 = lower.getKey();
+            double d2 = upper.getKey();
+
+            double angle1 = lower.getValue().angle;
+            double vel1   = lower.getValue().velocity;
+            double kS1 = lower.getValue().kS;
+
+            double angle2 = upper.getValue().angle;
+            double vel2   = upper.getValue().velocity;
+            double kS2 = upper.getValue().kS;
+
+            double t = (distance - d1) / (d2 - d1);
+
+            double interpAngle = angle1 + (angle2 - angle1) * t;
+            double interpVel = vel1 + (vel2   - vel1) * t;
+            double interpKs = kS1 + (kS2 - kS1) * t;
+
+            //Clamp manual ca Math.Clamp nu merge cu double
+            interpAngle = Math.max(ANGLE_SERVO_MIN, interpAngle);
+            interpAngle = Math.min(ANGLE_SERVO_MAX, interpAngle);
+
+            return new RangeConfig(interpAngle, interpVel, interpKs);
         }
 
         public void telemetry(Telemetry telemetry) {
             telemetry.addLine("=== OUTTAKE STATUS ===");
             telemetry.addData("On", on);
             telemetry.addData("Reversed", reversed);
-            telemetry.addData("Target Velocity", "%.0f", velocity);
+            telemetry.addData("Target Velocity", "%.0f", activeConfig.velocity);
             telemetry.addData("Left Velocity", "%.0f", leftOuttake.getVelocity());
             telemetry.addData("Left Power", "%.3f", leftOuttake.getPower());
             telemetry.addData("Right Velocity", "%.0f", rightOuttake.getVelocity());
             telemetry.addData("Right Power", "%.3f", rightOuttake.getPower());
-            telemetry.addData("Angle", "%.3f", angle);
+            telemetry.addData("Angle", "%.3f", activeConfig.angle);
             telemetry.addData("Angle Servo Pos", "%.3f", angleServo.getPosition());
         }
 
@@ -328,10 +414,11 @@ public class Robot extends KronBot {
             if (turretServo == null || follower == null) return;
 
             if(autoAimEnabled) {
+
+                //Turret angle
                 double robot_X = follower.getPose().getX();
                 double robot_Y = follower.getPose().getY();
-                double robotHeading  =follower.getPose().getHeading();
-
+                double robotHeading = heading.get();
 
                 double dx = basket_X - robot_X;
                 double dy = basket_Y - robot_Y;
@@ -348,6 +435,8 @@ public class Robot extends KronBot {
                 );
 
                 servoPosition = robotRelativeAngle * TURRET_SERVO_UNITS_PER_RAD + 0.5;
+
+
             } else {
                 servoPosition =
                         driverOffset * TURRET_SERVO_UNITS_PER_RAD + 0.5;
@@ -457,84 +546,50 @@ public class Robot extends KronBot {
     }
 
 
-
-    public class ShootClose {
-
-        public void activate() {
-            // Turn shooter on
-            outtake.on = true;
-
-            // Set shooter velocity
-            outtake.velocity = minVelocity;
-
-            // Set angle servo
-            outtake.angle = ANGLE_SERVO_CLOSE;
-
-            // Set turret position
-            //turret.angle = TURRET_SERVO_MIN;
-        }
-
-        public void deactivate() {
-            outtake.on = false;
-        }
-    }
-
-    public class ShootFar {
-
-        public void activate() {
-            outtake.on = true;
-            outtake.velocity = maxVelocity;
-            outtake.angle = ANGLE_SERVO_MAX;
-            //turret.angle = TURRET_SERVO_MAX;
-        }
-
-        public void deactivate() {
-            outtake.on = false;
-        }
-    }
-
     public class Shoot {
-        public void activateRange(int range, Gamepad gamepad) {
+        public void activateRange(int range) {
+            RangeConfig config;
             switch (range) {
                 case 1:
                     outtake.on = true;
-                    outtake.velocity = RANGE_1_VELOCITY;
-                    outtake.angle = RANGE_1_ANGLE;
-                    outtake.kS = RANGE_1_KS;
+                    config = new RangeConfig(RANGE_1_ANGLE, RANGE_1_VELOCITY, RANGE_1_KS);
                     //if(outtake.velocity>=RANGE_1_VELOCITY-100)
                     //   gamepad.rumble(1, 0, 100);
                     break;
                 case 2:
                     outtake.on = true;
-                    outtake.velocity = RANGE_2_VELOCITY;
-                    outtake.angle = RANGE_2_ANGLE;
-                    outtake.kS = RANGE_2_KS;
+                    config = new RangeConfig(RANGE_2_ANGLE, RANGE_2_VELOCITY, RANGE_2_KS);
                     //if(outtake.velocity>=RANGE_2_VELOCITY-100)
                     //    gamepad.rumble(1, 0, 100);
                     break;
                 case 3:
                     outtake.on = true;
-                    outtake.velocity = RANGE_3_VELOCITY;
-                    outtake.angle = RANGE_3_ANGLE;
-                    outtake.kS = RANGE_3_KS;
+                    config = new RangeConfig(RANGE_3_ANGLE, RANGE_3_VELOCITY, RANGE_3_KS);
                     //if(outtake.velocity>=RANGE_3_VELOCITY-100)
                     //    gamepad.rumble(1, 0, 100);
                     break;
                 case 4:
                     outtake.on = true;
-                    outtake.velocity = RANGE_4_VELOCITY;
-                    outtake.angle = RANGE_4_ANGLE;
-                    outtake.kS = RANGE_4_KS;
+                    config = new RangeConfig(RANGE_4_ANGLE, RANGE_4_VELOCITY, RANGE_4_KS);
                     //if(outtake.velocity>=RANGE_4_VELOCITY-100)
                     //    gamepad.rumble(1, 0, 100);
+                    break;
+                case 0:
+                    outtake.on = true;
+                    config = outtake.interpolateRange();
+                    break;
+
+                default:
+                    outtake.on=false;
+                    outtake.activeConfig = new RangeConfig(0,0,0);
+                    break;
             }
 
         }
 
         public void deactivate() {
             outtake.on = false;
-            outtake.velocity = 0;
-            outtake.angle = ANGLE_SERVO_MIN;
+            outtake.activeConfig = new RangeConfig(0,0,0);
         }
     }
 

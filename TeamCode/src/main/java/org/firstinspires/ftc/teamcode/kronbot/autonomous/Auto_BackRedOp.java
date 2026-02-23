@@ -121,8 +121,8 @@ public class Auto_BackRedOp extends OpMode {
                             // Start outtake motors
                             if(pathTimer.getElapsedTimeSeconds() >= 0.5) {
                                 robot.outtake.on = true;
-                                robot.outtake.velocity = launchSpeedBack;
-                                robot.outtake.kS = 0.5; // magic number from constants
+                                robot.outtake.activeConfig.velocity = launchSpeedBack;
+                                robot.outtake.activeConfig.kS = 0.5; // magic number from constants
                                 robot.flap.open = true;
                                 launchState++;
                                 robot.updateAllSystems();
@@ -135,7 +135,7 @@ public class Auto_BackRedOp extends OpMode {
                             // Wait for motors to reach speed and launch 1
                             if (motorVel+40 >= launchSpeedBack) {
                                 robot.loaderServo.runContinuous(false, true);
-                                robot.outtake.angle = 1;
+                                robot.outtake.activeConfig.angle = 1;
                                 launchState++;
                                 robot.updateAllSystems();
                                 pathTimer.resetTimer();
