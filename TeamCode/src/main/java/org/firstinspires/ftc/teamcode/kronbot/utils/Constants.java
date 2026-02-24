@@ -53,7 +53,7 @@ public class Constants {
     public static double ANGLE_SERVO_FAR = 0.72;
     public static double ANGLE_SERVO_MIN = 0;
     public static double FLAP_CLOSED = 0.29;
-    public static double FLAP_OPEN = 0.55;
+    public static double FLAP_OPEN = 0.59;
 
     public static double INTAKE_DRIVER_POWER = 0.55;
     public static double INTAKE_DRIVER_REVERSE = -0.55;

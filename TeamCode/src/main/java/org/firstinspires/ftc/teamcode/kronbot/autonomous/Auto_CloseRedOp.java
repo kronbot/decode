@@ -2,7 +2,10 @@ package org.firstinspires.ftc.teamcode.kronbot.autonomous;
 
 import static org.firstinspires.ftc.teamcode.kronbot.autonomous.AutonomousConstants.*;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_CLOSE;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.FLAP_CLOSED;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.FLAP_OPEN;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_2_KS;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_2_VELOCITY;
 
 
 import com.acmerobotics.dashboard.FtcDashboard;
@@ -25,14 +28,19 @@ public class Auto_CloseRedOp extends OpMode {
     private Robot robot = Robot.getInstance();
     private Timer pathTimer, opmodeTimer;
     private int pathState;
-    private int launchState;
+    private int launchState=0;
 
     // Define poses
     Pose start = coordinates(StartingPoseCloseRed);
     Pose launch1 = coordinates(LaunchZoneClose1);
+    Pose launch11 = coordinates(LaunchZoneClose11);
     Pose launch2 = coordinates(LaunchZoneClose2);
     Pose intake1 = coordinates(IntakeZoneClose1);
-    Pose load1 = coordinates(LoadZoneClose1);
+    Pose intake11 = coordinates(IntakeZoneClose11);
+
+    Pose intake2 = coordinates(IntakeZoneClose2);
+    Pose intake22 = coordinates(IntakeZoneClose22);
+    Pose launch3 = coordinates(LaunchZoneClose3);
 
     Pose parkZone = coordinates(ParkClose);
 
@@ -40,7 +48,7 @@ public class Auto_CloseRedOp extends OpMode {
     private double motorVel;
 
     // Paths and PathChains
-    private PathChain goToLaunch1, goToLaunch2, goToIntake1, goToLoad1, goToPark;
+    private PathChain goToLaunch1, goToLaunch11, goToLaunch2, goToLaunch3, goToIntake1, goToIntake11, goToIntake2, goToIntake22, goToPark;
 
     @Override
     public void init() {
@@ -49,9 +57,6 @@ public class Auto_CloseRedOp extends OpMode {
 
 
         robot.initFollower(hardwareMap, start);
-        robot.flapsServo.setPosition(FLAP_OPEN);
-        robot.angleServo.setPosition(ANGLE_SERVO_CLOSE);
-        robot.turretServo.setPosition(0.7);
 
         pathTimer = new Timer();
         opmodeTimer = new Timer();
@@ -76,21 +81,40 @@ public class Auto_CloseRedOp extends OpMode {
                 .setLinearHeadingInterpolation(start.getHeading(), launch1.getHeading())
                 .build();
 
-        goToIntake1 = robot.follower.pathBuilder()
-                .addPath(new BezierLine(launch1, intake1))
-                .setLinearHeadingInterpolation(launch1.getHeading(), intake1.getHeading())
+        goToLaunch11 = robot.follower.pathBuilder()
+                .addPath(new BezierLine(launch1, launch11))
+                .setLinearHeadingInterpolation(launch1.getHeading(), launch11.getHeading())
                 .build();
 
-        goToLoad1 = robot.follower.pathBuilder()
-                .addPath(new BezierLine(intake1, load1))
-                .setLinearHeadingInterpolation(intake1.getHeading(), load1.getHeading())
+        goToIntake1 = robot.follower.pathBuilder()
+                .addPath(new BezierLine(launch11, intake1))
+                .setLinearHeadingInterpolation(launch11.getHeading(), intake1.getHeading())
+                .build();
+        goToIntake11 = robot.follower.pathBuilder()
+                .addPath(new BezierLine(intake1, intake11))
+                .setLinearHeadingInterpolation(intake1.getHeading(), intake11.getHeading())
+                .setBrakingStrength(0.2)
                 .build();
 
         goToLaunch2 = robot.follower.pathBuilder()
-                .addPath(new BezierLine(load1, launch2))
-                .setLinearHeadingInterpolation(load1.getHeading(), launch2.getHeading())
+                .addPath(new BezierLine(intake11, launch2))
+                .setLinearHeadingInterpolation(intake11.getHeading(), launch2.getHeading())
                 .build();
 
+
+        goToIntake2 = robot.follower.pathBuilder()
+                .addPath(new BezierLine(launch2, intake2))
+                .setLinearHeadingInterpolation(launch2.getHeading(), intake2.getHeading())
+                .build();
+        goToIntake22 = robot.follower.pathBuilder()
+                .addPath(new BezierLine(intake2, intake22))
+                .setLinearHeadingInterpolation(intake2.getHeading(), intake22.getHeading())
+                .setBrakingStrength(0.2)
+                .build();
+        goToLaunch3 = robot.follower.pathBuilder()
+                .addPath(new BezierLine(intake22, launch3))
+                .setLinearHeadingInterpolation(intake22.getHeading(), launch3.getHeading())
+                .build();
 
         goToPark = robot.follower.pathBuilder()
                 .addPath(new BezierLine(start, parkZone))
@@ -109,8 +133,11 @@ public class Auto_CloseRedOp extends OpMode {
         opmodeTimer.resetTimer();
         setPathState(0);
 
-        robot.turretServo.setPosition(0.5);
+        robot.turretServo.setPosition(0);
         robot.angleServo.setPosition(angleServoClose);
+        robot.flapsServo.setPosition(FLAP_OPEN);
+        robot.turretServo.setPosition(0.46);
+        robot.intakeMotor.setPower(-1);
         robot.loaderServo.runContinuous(false, false);
     }
 
@@ -119,6 +146,8 @@ public class Auto_CloseRedOp extends OpMode {
         robot.follower.update();
 
         motorVel = robot.leftOuttake.getVelocity();
+
+        robot.outtake.update();
 
         autonomousPathUpdate();
 
@@ -138,26 +167,35 @@ public class Auto_CloseRedOp extends OpMode {
         switch (pathState) {
             case 0:
                 //also start motors to save time
-                robot.leftOuttake.setVelocity(launchSpeedClose);
-                robot.rightOuttake.setVelocity(launchSpeedClose);
+                robot.outtake.velocity = RANGE_2_VELOCITY;
+                robot.outtake.kS = RANGE_2_KS;
+                robot.outtake.on = true;
                 //go to pose
                 robot.follower.followPath(goToLaunch1);
                 setPathState(1);
                 break;
 
             case 1:
+                //go to pose
+                if (!robot.follower.isBusy()) {
+                    robot.follower.followPath(goToLaunch11);
+                    launchState = 0;
+                    setPathState(2);
+                }
+                break;
+
+            case 2:
                 if (!robot.follower.isBusy()) {
                     switch (launchState) {
                         case 0:
-                            // Start outtake motors
                             launchState++;
                             pathTimer.resetTimer();
                             break;
 
                         case 1:
                             // Wait for motors to reach speed and launch first 2
-                            if (motorVel + 100 >= launchSpeedClose && motorVel + 100 >= launchSpeedClose && pathTimer.getElapsedTimeSeconds() > 2.0) {
-                                robot.loaderMotor.setPower(1);
+                            if (motorVel + 50 >= launchSpeedClose && pathTimer.getElapsedTimeSeconds() > 1.0) {
+                                robot.loaderMotor.setPower(0.8);
                                 launchState++;
                                 pathTimer.resetTimer();
                             }
@@ -166,7 +204,7 @@ public class Auto_CloseRedOp extends OpMode {
                         case 2:
                             // intake on and launch the third
                             if (pathTimer.getElapsedTimeSeconds() > 1.0) {
-                                robot.intakeMotor.setPower(1);
+                                robot.loaderMotor.setPower(0.8);
                                 launchState++;
                                 pathTimer.resetTimer();
                             }
@@ -176,53 +214,64 @@ public class Auto_CloseRedOp extends OpMode {
                             // timer to see when all 3 are launched
                             if (pathTimer.getElapsedTimeSeconds() > 2.0) {
                                 robot.intakeMotor.setPower(0);
-                                robot.loaderMotor.setPower(0);
-                                launchState = -1;
+                                //robot.loaderMotor.setPower(0);
+                                launchState++;
                                 pathTimer.resetTimer();
                             }
                             break;
-                        case -1:
+                        case 4:
+                            setPathState(3);
                             break;
-                    }
-                }
-            case 2:
-                if (!robot.follower.isBusy()) {
-                    robot.follower.followPath(goToIntake1);
-                    robot.intakeMotor.setPower(1);
-                    robot.loaderMotor.setPower(1);
-                    setPathState(3);
-                }
-                break;
 
-           case 3:
-                if (!robot.follower.isBusy() && pathTimer.getElapsedTimeSeconds()>2) {
-                    robot.follower.followPath(goToLoad1);
-                    if (!robot.follower.isBusy() && pathTimer.getElapsedTimeSeconds()>1) {
-                        robot.intakeMotor.setPower(0);
-                        robot.loaderMotor.setPower(0);
                     }
+                    break;
+
+                }
+            case 3:
+                if (!robot.follower.isBusy() && pathTimer.getElapsedTimeSeconds()>1) {
+                    robot.flapsServo.setPosition(FLAP_CLOSED);
+                    robot.follower.followPath(goToIntake1);
+                    robot.intakeMotor.setPower(-1);
+                    robot.loaderMotor.setPower(1);
+
+                    pathTimer.resetTimer();
+                    setPathState(4);
                 }
                 break;
 
             case 4:
-                if (!robot.follower.isBusy()) {
-                    robot.follower.followPath(goToLaunch2);
+                if (!robot.follower.isBusy() && pathTimer.getElapsedTimeSeconds()>1) {
+                    robot.follower.followPath(goToIntake11);
+                    pathTimer.resetTimer();
+                    setPathState(5);
                 }
                 break;
 
             case 5:
-                if (!robot.follower.isBusy()) {
+                if (!robot.follower.isBusy() && pathTimer.getElapsedTimeSeconds()>1) {
+                    robot.follower.followPath(goToLaunch2);
+                    robot.loaderMotor.setPower(0);
+
+                    launchState = 0;
+                    pathTimer.resetTimer();
+                    setPathState(6);
+                }
+                break;
+
+            case 6:
+                if (!robot.follower.isBusy() && pathTimer.getElapsedTimeSeconds()>1) {
                     switch (launchState) {
                         case 0:
-                            // Start outtake motors
                             launchState++;
                             pathTimer.resetTimer();
+                            robot.flapsServo.setPosition(FLAP_OPEN);
+                            robot.turretServo.setPosition(0.5);
                             break;
 
                         case 1:
                             // Wait for motors to reach speed and launch first 2
-                            if (motorVel + 100 >= launchSpeedClose && motorVel + 100 >= launchSpeedClose && pathTimer.getElapsedTimeSeconds() > 2.0) {
-                                robot.loaderMotor.setPower(1);
+                            if (motorVel + 50 >= launchSpeedClose && pathTimer.getElapsedTimeSeconds() > 2.0) {
+                                robot.loaderMotor.setPower(0.8);
                                 launchState++;
                                 pathTimer.resetTimer();
                             }
@@ -231,7 +280,7 @@ public class Auto_CloseRedOp extends OpMode {
                         case 2:
                             // intake on and launch the third
                             if (pathTimer.getElapsedTimeSeconds() > 1.0) {
-                                robot.intakeMotor.setPower(1);
+                                robot.loaderMotor.setPower(0.8);
                                 launchState++;
                                 pathTimer.resetTimer();
                             }
@@ -241,14 +290,95 @@ public class Auto_CloseRedOp extends OpMode {
                             // timer to see when all 3 are launched
                             if (pathTimer.getElapsedTimeSeconds() > 2.0) {
                                 robot.intakeMotor.setPower(0);
-                                robot.loaderMotor.setPower(0);
-                                launchState = -1;
+                                //robot.loaderMotor.setPower(0);
+                                launchState++;
                                 pathTimer.resetTimer();
                             }
                             break;
-                        case -1:
+                        case 4:
+                            setPathState(7);
                             break;
+
                     }
+                    break;
+
+                }
+
+            case 7:
+                if (!robot.follower.isBusy() && pathTimer.getElapsedTimeSeconds()>1) {
+                    robot.flapsServo.setPosition(FLAP_CLOSED);
+                    robot.follower.followPath(goToIntake2);
+                    robot.intakeMotor.setPower(-1);
+                    robot.loaderMotor.setPower(1);
+
+                    pathTimer.resetTimer();
+                    setPathState(8);
+                }
+                break;
+
+            case 8:
+                if (!robot.follower.isBusy() && pathTimer.getElapsedTimeSeconds()>1) {
+                    robot.follower.followPath(goToIntake22);
+                    pathTimer.resetTimer();
+                    setPathState(9);
+                }
+                break;
+
+            case 9:
+                if (!robot.follower.isBusy() && pathTimer.getElapsedTimeSeconds()>1) {
+                    robot.follower.followPath(goToLaunch3);
+                    robot.loaderMotor.setPower(0);
+
+                    launchState = 0;
+                    pathTimer.resetTimer();
+                    setPathState(10);
+                }
+                break;
+
+            case 10:
+                if (!robot.follower.isBusy() && pathTimer.getElapsedTimeSeconds()>1) {
+                    switch (launchState) {
+                        case 0:
+                            launchState++;
+                            pathTimer.resetTimer();
+                            robot.flapsServo.setPosition(FLAP_OPEN);
+                            robot.turretServo.setPosition(0.47);
+                            break;
+
+                        case 1:
+                            // Wait for motors to reach speed and launch first 2
+                            if (motorVel + 50 >= launchSpeedClose && pathTimer.getElapsedTimeSeconds() > 3.0) {
+                                robot.loaderMotor.setPower(0.8);
+                                launchState++;
+                                pathTimer.resetTimer();
+                            }
+                            break;
+
+                        case 2:
+                            // intake on and launch the third
+                            if (pathTimer.getElapsedTimeSeconds() > 1.0) {
+                                robot.loaderMotor.setPower(0.8);
+                                launchState++;
+                                pathTimer.resetTimer();
+                            }
+                            break;
+
+                        case 3:
+                            // timer to see when all 3 are launched
+                            if (pathTimer.getElapsedTimeSeconds() > 2.0) {
+                                robot.intakeMotor.setPower(0);
+                                //robot.loaderMotor.setPower(0);
+                                launchState++;
+                                pathTimer.resetTimer();
+                            }
+                            break;
+                        case 4:
+                            setPathState(-1);
+                            break;
+
+                    }
+                    break;
+
                 }
 
             case -1:
