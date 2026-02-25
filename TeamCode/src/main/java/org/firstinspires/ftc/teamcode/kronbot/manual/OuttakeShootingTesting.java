@@ -85,8 +85,8 @@ public class OuttakeShootingTesting extends OpMode {
         telemetry.addData("Turret Angle", "%.4f", robot.turret.angle);
 
         robot.outtake.on = true;
-        robot.outtake.velocity = shooterVel;
-        robot.outtake.angle = anglePos;
+        robot.outtake.activeConfig.velocity = shooterVel;
+        robot.outtake.activeConfig.angle = anglePos;
 
 
 

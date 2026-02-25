@@ -37,8 +37,8 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 @TeleOp(name = "Main Driving", group = Constants.MAIN_GROUP)
 public class MainDrivingOp extends OpMode {
     private final Robot robot = Robot.getInstance();
-    private  Controls drivingGP;
-    private  Controls utilityGP;
+    private Controls drivingGP;
+    private Controls utilityGP;
 
 
     private TurretAligner turretAligner;
@@ -54,7 +54,7 @@ public class MainDrivingOp extends OpMode {
     boolean rumbled = false;
 
     @Override
-    public void init(){
+    public void init() {
         lpsCounter = new LpsCounter();
         lpsCounter.getLoopTime();
         robot.initFollower(hardwareMap, true);
@@ -83,7 +83,7 @@ public class MainDrivingOp extends OpMode {
     }
 
     @Override
-    public void init_loop(){
+    public void init_loop() {
         lpsCounter.getLoopTime();
 
         telemetry.addLine("Initialization Ready");
@@ -91,14 +91,14 @@ public class MainDrivingOp extends OpMode {
     }
 
     @Override
-    public void start(){
+    public void start() {
 
         robot.follower.startTeleopDrive();
 
     }
 
     @Override
-    public void loop(){
+    public void loop() {
         // Update Loops/s delta
         lpsCounter.getLoopTime();
 
@@ -116,16 +116,15 @@ public class MainDrivingOp extends OpMode {
         turretAligner.update();
 
         //Loader
-        if(!drivingGP.rightBumper.pressed()) {
+        if (!drivingGP.rightBumper.pressed()) {
             robot.loader.speed = utilityGP.leftStick.y;
             robot.flap.open = false;
-        }
-        else {
+        } else {
             robot.loader.speed = drivingGP.rightTrigger - drivingGP.leftTrigger;
             robot.flap.open = true;
-            if(robot.loader.speed > 0.1)
+            if (robot.loader.speed > 0.1)
                 robot.intake.speed = INTAKE_DRIVER_POWER;
-            else if(robot.loader.speed < -0.2)
+            else if (robot.loader.speed < -0.2)
                 robot.intake.speed = INTAKE_DRIVER_REVERSE;
             else
                 robot.intake.speed = 0;
@@ -135,95 +134,86 @@ public class MainDrivingOp extends OpMode {
         //autoAim.telemetry(telemetry, tag);
 
         //Turret/Angle aiming
-        if(autoAimEnabled){
-            //To do
-//            robot.webcam.update();
 
-            //robot.turret.angle = autoAim.calculateServoPosition(tag);
+        //Turret aiming
+        if (drivingGP.dpadLeft.pressed()) {
 
-        } else {
-            //Turret aiming
-            if(drivingGP.dpadLeft.pressed()) {
+            //if button is pressed for longer, increase increment
+            if (turretTimer.seconds() == 0) {
+                turretTimer.reset();
+            }
+            double increment = 0.03;
 
-                //if button is pressed for longer, increase increment
-                if (turretTimer.seconds() == 0) {
-                    turretTimer.reset();
-                }
-                double increment = 0.03;
-
-                if (turretTimer.seconds() > 1) {
-                    increment = 0.07;
-                }
-
-                if (turretTimer.seconds() > 1.5) {
-                    increment = 0.1;
-                }
-                robot.turret.driverOffset += increment;
-
+            if (turretTimer.seconds() > 1) {
+                increment = 0.07;
             }
 
-            else if(drivingGP.dpadRight.pressed()) {
+            if (turretTimer.seconds() > 1.5) {
+                increment = 0.1;
+            }
+            robot.turret.driverOffset += increment;
 
-                double decrement = 0.03;
+        } else if (drivingGP.dpadRight.pressed()) {
 
-                if (turretTimer.seconds() == 0) {
-                    turretTimer.reset();
-                }
+            double decrement = 0.03;
 
-                if (turretTimer.seconds() > 1) {
-                    decrement = 0.07;
-                }
-
-                if (turretTimer.seconds() > 1.5) {
-                    decrement = 0.1;
-                }
-
-                robot.turret.driverOffset -= decrement;
-            } else {
+            if (turretTimer.seconds() == 0) {
                 turretTimer.reset();
             }
 
-            //Angle aiming
-            if(drivingGP.dpadUp.pressed())
-                robot.outtake.angle += 0.01;
-            else if(drivingGP.dpadDown.pressed())
-                robot.outtake.angle -= 0.01;
+            if (turretTimer.seconds() > 1) {
+                decrement = 0.07;
+            }
+
+            if (turretTimer.seconds() > 1.5) {
+                decrement = 0.1;
+            }
+
+            robot.turret.driverOffset -= decrement;
+        } else {
+            turretTimer.reset();
         }
 
+//            //Angle aiming
+//            if(drivingGP.dpadUp.pressed())
+//                robot.outtake.activeConfig.angle += 0.01;
+//            else if(drivingGP.dpadDown.pressed())
+//                robot.outtake.activeConfig.angle -= 0.01;
+
+        if(drivingGP.dpadDown.justPressed())
+            robot.turret.autoAimEnabled = !robot.turret.autoAimEnabled;
+
+        if(drivingGP.dpadUp.justPressed())
+            robot.shoot.activateRange(0);
         //Shoot Close/Far
         if (drivingGP.triangle.justPressed()) {
-            robot.turret.autoAimEnabled = false;
-            robot.shoot.activateRange(1, gamepad1);
+            robot.shoot.activateRange(1);
         }
-        if(drivingGP.square.justPressed()) {
-            robot.turret.autoAimEnabled = false;
-            robot.shoot.activateRange(2, gamepad1);
+        if (drivingGP.square.justPressed()) {
+            robot.shoot.activateRange(2);
         }
         if (drivingGP.cross.justPressed()) {
-            robot.turret.autoAimEnabled = false;
-            robot.shoot.activateRange(3, gamepad1);
+            robot.shoot.activateRange(3);
         }
-        if(drivingGP.circle.justPressed()) {
-            robot.turret.autoAimEnabled = false;
-            robot.shoot.activateRange(4, gamepad1);
+        if (drivingGP.circle.justPressed()) {
+            robot.shoot.activateRange(4);
         }
 
-        if( robot.outtake.on &&
-                robot.leftOuttake.getVelocity() >= robot.outtake.velocity - 30 &&
-                robot.leftOuttake.getVelocity() <= robot.outtake.velocity + 90 )
-        {
+        if (robot.outtake.on &&
+                robot.leftOuttake.getVelocity() >= robot.outtake.activeConfig.velocity - 30 &&
+                robot.leftOuttake.getVelocity() <= robot.outtake.activeConfig.velocity + 90) {
             gamepad1.rumble(1, 0, 150);
             rumbled = true;
         }
 
-        if(!autoAimEnabled && drivingGP.leftBumper.justPressed()) {
-            robot.turret.autoAimEnabled = true;
-            if(robot.outtake.on) {
-                robot.shoot.deactivate();
-                gamepad1.rumble(1, 1, 100);
-                rumbled = false;
-            }
-        }
+//        if (!autoAimEnabled && drivingGP.leftBumper.justPressed()) {
+//            robot.turret.autoAimEnabled = true;
+//            if (robot.outtake.on) {
+//                robot.shoot.deactivate();
+//                gamepad1.rumble(1, 1, 100);
+//                rumbled = false;
+//            }
+//        }
 
         //Update robot systems status
         robot.follower.setTeleOpDrive(-drivingGP.leftStick.y, -drivingGP.leftStick.x, -drivingGP.rightStick.x, true);
@@ -234,11 +224,11 @@ public class MainDrivingOp extends OpMode {
 
 
     @Override
-    public void stop(){
+    public void stop() {
         robot.webcam.stop();
     }
 
-    public void _telemetry(){
+    public void _telemetry() {
         telemetry.addData("LPS", "%.1f", 1 / lpsCounter.delta);
         telemetry.addData("x", robot.follower.getPose().getX());
         telemetry.addData("y", robot.follower.getPose().getY());
