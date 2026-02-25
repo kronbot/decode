@@ -18,10 +18,10 @@ public final class AutonomousConstants {
         }
     }
 
-    public static double launchSpeedClose = 1200;
+    public static double launchSpeedClose = 1150;
     public static double launchSpeedBack = 1400;
     public static double angleServoBack = 0.6;
-    public static double angleServoClose = 0.4;
+    public static double angleServoClose = 0.45;
 
     /// RED CLOSE auto movement
     public static Coordinates StartingPoseCloseRed = new Coordinates(130, 110, 0);

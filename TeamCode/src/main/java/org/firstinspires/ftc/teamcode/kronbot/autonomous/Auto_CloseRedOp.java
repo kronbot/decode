@@ -117,8 +117,8 @@ public class Auto_CloseRedOp extends OpMode {
                 .build();
 
         goToPark = robot.follower.pathBuilder()
-                .addPath(new BezierLine(start, parkZone))
-                .setLinearHeadingInterpolation(start.getHeading(), parkZone.getHeading())
+                .addPath(new BezierLine(launch3, parkZone))
+                .setLinearHeadingInterpolation(launch3.getHeading(), parkZone.getHeading())
                 .build();
     }
 
@@ -167,8 +167,8 @@ public class Auto_CloseRedOp extends OpMode {
         switch (pathState) {
             case 0:
                 //also start motors to save time
-                robot.outtake.velocity = RANGE_2_VELOCITY;
-                robot.outtake.kS = RANGE_2_KS;
+                robot.outtake.activeConfig.velocity = RANGE_2_VELOCITY;
+                robot.outtake.activeConfig.kS = RANGE_2_KS;
                 robot.outtake.on = true;
                 //go to pose
                 robot.follower.followPath(goToLaunch1);
@@ -202,24 +202,15 @@ public class Auto_CloseRedOp extends OpMode {
                             break;
 
                         case 2:
-                            // intake on and launch the third
-                            if (pathTimer.getElapsedTimeSeconds() > 1.0) {
-                                robot.loaderMotor.setPower(0.8);
-                                launchState++;
-                                pathTimer.resetTimer();
-                            }
-                            break;
-
-                        case 3:
                             // timer to see when all 3 are launched
-                            if (pathTimer.getElapsedTimeSeconds() > 2.0) {
+                            if (pathTimer.getElapsedTimeSeconds() > 3.0) {
                                 robot.intakeMotor.setPower(0);
                                 //robot.loaderMotor.setPower(0);
                                 launchState++;
                                 pathTimer.resetTimer();
                             }
                             break;
-                        case 4:
+                        case 3:
                             setPathState(3);
                             break;
 
@@ -278,24 +269,15 @@ public class Auto_CloseRedOp extends OpMode {
                             break;
 
                         case 2:
-                            // intake on and launch the third
-                            if (pathTimer.getElapsedTimeSeconds() > 1.0) {
-                                robot.loaderMotor.setPower(0.8);
-                                launchState++;
-                                pathTimer.resetTimer();
-                            }
-                            break;
-
-                        case 3:
                             // timer to see when all 3 are launched
-                            if (pathTimer.getElapsedTimeSeconds() > 2.0) {
+                            if (pathTimer.getElapsedTimeSeconds() > 3.0) {
                                 robot.intakeMotor.setPower(0);
                                 //robot.loaderMotor.setPower(0);
                                 launchState++;
                                 pathTimer.resetTimer();
                             }
                             break;
-                        case 4:
+                        case 3:
                             setPathState(7);
                             break;
 
@@ -355,31 +337,31 @@ public class Auto_CloseRedOp extends OpMode {
                             break;
 
                         case 2:
-                            // intake on and launch the third
-                            if (pathTimer.getElapsedTimeSeconds() > 1.0) {
-                                robot.loaderMotor.setPower(0.8);
-                                launchState++;
-                                pathTimer.resetTimer();
-                            }
-                            break;
-
-                        case 3:
                             // timer to see when all 3 are launched
-                            if (pathTimer.getElapsedTimeSeconds() > 2.0) {
+                            if (pathTimer.getElapsedTimeSeconds() > 3.0) {
                                 robot.intakeMotor.setPower(0);
                                 //robot.loaderMotor.setPower(0);
                                 launchState++;
                                 pathTimer.resetTimer();
                             }
                             break;
-                        case 4:
-                            setPathState(-1);
+                        case 3:
+                            setPathState(11);
                             break;
 
                     }
                     break;
 
                 }
+
+            case 11:
+                if (!robot.follower.isBusy() && pathTimer.getElapsedTimeSeconds()>1) {
+                    robot.follower.followPath(goToPark);
+                    robot.loaderMotor.setPower(0);
+                    pathTimer.resetTimer();
+                    setPathState(-1);
+                }
+                break;
 
             case -1:
                 Pose finalPose = robot.follower.getPose();
