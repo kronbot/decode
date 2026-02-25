@@ -51,6 +51,9 @@ import java.util.TreeMap;
 
 public class Robot extends KronBot {
     // Singleton instance
+
+    double dx;
+    double dy;
     private static Robot instance = null;
 
     // Systems used in all opModes
@@ -63,6 +66,8 @@ public class Robot extends KronBot {
     public final Flap flap;
     public final Shoot shoot;
     public final Heading heading;
+
+    double distance;
 
     public static class RangeConfig {
         public double angle;
@@ -154,8 +159,9 @@ public class Robot extends KronBot {
         public boolean reversed = false;
 
         boolean braking = false;
+        private double selectedRange1, selectedRange2;
 //        double lastVelocity = 0;
-        private TreeMap<Double, RangeConfig> ranges;
+        private TreeMap<Double, RangeConfig> ranges = new TreeMap<>();
 
         public void init() {
             on = false;
@@ -287,30 +293,35 @@ public class Robot extends KronBot {
             double robot_X = follower.getPose().getX();
             double robot_Y = follower.getPose().getY();
 
-            double dx = basket_X - robot_X;
-            double dy = basket_Y - robot_Y;
+            dx = basket_X - robot_X;
+            dy = basket_Y - robot_Y;
 
-            double distance = Math.sqrt(dx*dx + dy*dy);
+            distance = Math.sqrt(dx*dx + dy*dy);
 
-            if(distance<ranges.firstKey())
+            if(distance <= ranges.firstKey())
                 return new RangeConfig(ranges.get(ranges.firstKey()).angle, ranges.get(ranges.firstKey()).velocity, ranges.get(ranges.firstKey()).kS);
 
-            if(distance<ranges.lastKey())
+            if(distance >= ranges.lastKey())
                 return new RangeConfig(ranges.get(ranges.lastKey()).angle, ranges.get(ranges.lastKey()).velocity, ranges.get(ranges.lastKey()).kS);
 
             //I used TreeMaps as its ordered and offers floorEntry (the biggest entry smaller than the value searched) and ceilingEntry (the opposite)
             Map.Entry<Double, RangeConfig> lower = ranges.floorEntry(distance);
             Map.Entry<Double, RangeConfig> upper = ranges.ceilingEntry(distance);
 
-            if (lower == null && upper!=null) return upper.getValue();
-            if (upper == null && lower!=null) return lower.getValue();
-
-            if (lower.getKey().equals(upper.getKey()))
-                return lower.getValue();
+            // Null checks moved before d1/d2 are accessed
+            if (lower == null && upper != null) return upper.getValue();
+            if (upper == null && lower != null) return lower.getValue();
+            if (lower == null) return new RangeConfig(0, 0, 0);
 
             //Linear interpolation between the two ranges
             double d1 = lower.getKey();
             double d2 = upper.getKey();
+            selectedRange1=d1; selectedRange2=d2;
+
+
+            if (lower.getKey().equals(upper.getKey()))
+                return lower.getValue();
+
 
             double angle1 = lower.getValue().angle;
             double vel1   = lower.getValue().velocity;
@@ -333,8 +344,12 @@ public class Robot extends KronBot {
             return new RangeConfig(interpAngle, interpVel, interpKs);
         }
 
+
         public void telemetry(Telemetry telemetry) {
             telemetry.addLine("=== OUTTAKE STATUS ===");
+            telemetry.addData("d1", selectedRange1);
+            telemetry.addData("d2", selectedRange2);
+            telemetry.addData("Distance", distance);
             telemetry.addData("On", on);
             telemetry.addData("Reversed", reversed);
             telemetry.addData("Target Velocity", "%.0f", activeConfig.velocity);
@@ -409,6 +424,7 @@ public class Robot extends KronBot {
             servoPosition = 0.5;
         }
 
+
         public void update() {
             //angle to the basket
             if (turretServo == null || follower == null) return;
@@ -426,7 +442,7 @@ public class Robot extends KronBot {
                 double targetFieldAngle = Math.atan2(dy, dx);
 
                 //calculate
-                double robotRelativeAngle = targetFieldAngle - robotHeading;
+                double robotRelativeAngle = targetFieldAngle - robotHeading + driverOffset;
 
                 //normalize
                 robotRelativeAngle = Math.atan2(
@@ -548,7 +564,7 @@ public class Robot extends KronBot {
 
     public class Shoot {
         public void activateRange(int range) {
-            RangeConfig config;
+            RangeConfig config = new RangeConfig(0,0,0);
             switch (range) {
                 case 1:
                     outtake.on = true;
@@ -578,13 +594,8 @@ public class Robot extends KronBot {
                     outtake.on = true;
                     config = outtake.interpolateRange();
                     break;
-
-                default:
-                    outtake.on=false;
-                    outtake.activeConfig = new RangeConfig(0,0,0);
-                    break;
             }
-
+            outtake.activeConfig=config;
         }
 
         public void deactivate() {

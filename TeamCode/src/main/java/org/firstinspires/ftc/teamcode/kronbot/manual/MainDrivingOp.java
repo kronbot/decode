@@ -120,7 +120,7 @@ public class MainDrivingOp extends OpMode {
             robot.loader.speed = utilityGP.leftStick.y;
             robot.flap.open = false;
         } else {
-            robot.loader.speed = drivingGP.rightTrigger - drivingGP.leftTrigger;
+            robot.loader.speed = (drivingGP.rightTrigger - drivingGP.leftTrigger) * 0.9;
             robot.flap.open = true;
             if (robot.loader.speed > 0.1)
                 robot.intake.speed = INTAKE_DRIVER_POWER;
@@ -184,6 +184,9 @@ public class MainDrivingOp extends OpMode {
             robot.turret.autoAimEnabled = !robot.turret.autoAimEnabled;
 
         if(drivingGP.dpadUp.justPressed())
+            autoAimEnabled=!autoAimEnabled;
+
+        if(autoAimEnabled)
             robot.shoot.activateRange(0);
         //Shoot Close/Far
         if (drivingGP.triangle.justPressed()) {
@@ -206,14 +209,14 @@ public class MainDrivingOp extends OpMode {
             rumbled = true;
         }
 
-//        if (!autoAimEnabled && drivingGP.leftBumper.justPressed()) {
-//            robot.turret.autoAimEnabled = true;
-//            if (robot.outtake.on) {
-//                robot.shoot.deactivate();
-//                gamepad1.rumble(1, 1, 100);
-//                rumbled = false;
-//            }
-//        }
+        if (!autoAimEnabled && drivingGP.leftBumper.justPressed()) {
+            robot.turret.autoAimEnabled = true;
+            if (robot.outtake.on) {
+                robot.shoot.deactivate();
+                gamepad1.rumble(1, 1, 100);
+                rumbled = false;
+            }
+        }
 
         //Update robot systems status
         robot.follower.setTeleOpDrive(-drivingGP.leftStick.y, -drivingGP.leftStick.x, -drivingGP.rightStick.x, true);
