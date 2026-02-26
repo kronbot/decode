@@ -109,6 +109,9 @@ public class Constants {
     public static double DELTA_THRESHOLD = 0.01;
     public static double MAX_ROTATION_POWER = 0.5;
 
+    public static double BASKET_X = 140;
+    public static double BASKET_Y = 140;
+
 
     public static AutonomousConstants.Coordinates RedTowerCoords = new AutonomousConstants.Coordinates(130, 130, 0);
     public static AutonomousConstants.Coordinates BlueTowerCoords = new AutonomousConstants.Coordinates(10, 135, 0);

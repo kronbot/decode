@@ -12,6 +12,8 @@ import org.opencv.core.Mat;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_CLOSE;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_MAX;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_MIN;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.BASKET_X;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.BASKET_Y;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.DELTA_THRESHOLD;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.FLAP_CLOSED;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.FLAP_OPEN;
@@ -52,8 +54,6 @@ import java.util.TreeMap;
 public class Robot extends KronBot {
     // Singleton instance
 
-    double dx;
-    double dy;
     private static Robot instance = null;
 
     // Systems used in all opModes
@@ -67,7 +67,7 @@ public class Robot extends KronBot {
     public final Shoot shoot;
     public final Heading heading;
 
-    double distance;
+    public boolean Blue_Target = false;
 
     public static class RangeConfig {
         public double angle;
@@ -155,10 +155,6 @@ public class Robot extends KronBot {
 //        webcam.update();
     }
 
-    static final double basket_X = 130;
-    static final double basket_Y = 135;
-
-
     public class Outtake {
         public boolean on = false;
         public RangeConfig activeConfig;
@@ -167,6 +163,7 @@ public class Robot extends KronBot {
 
         boolean braking = false;
         private double selectedRange1, selectedRange2;
+        private double distance;
 //        double lastVelocity = 0;
         private TreeMap<Double, RangeConfig> ranges = new TreeMap<>();
 
@@ -300,8 +297,8 @@ public class Robot extends KronBot {
             double robot_X = follower.getPose().getX();
             double robot_Y = follower.getPose().getY();
 
-            dx = basket_X - robot_X;
-            dy = basket_Y - robot_Y;
+            double dx = BASKET_X * (Blue_Target ? 1 : -1) - robot_X;
+            double dy = BASKET_Y - robot_Y;
 
             distance = Math.sqrt(dx*dx + dy*dy);
 
@@ -423,8 +420,6 @@ public class Robot extends KronBot {
 
 
         public boolean autoAimEnabled = true;
-        static final double basket_X = 130;
-        static final double basket_Y = 135;
 
         public void init() {
             angle = 0;
@@ -443,8 +438,8 @@ public class Robot extends KronBot {
                 double robot_Y = follower.getPose().getY();
                 double robotHeading = heading.get();
 
-                double dx = basket_X - robot_X;
-                double dy = basket_Y - robot_Y;
+                double dx = BASKET_X * (Blue_Target ? 1 : -1) - robot_X;
+                double dy = BASKET_Y - robot_Y;
 
                 double targetFieldAngle = Math.atan2(dy, dx);
 
