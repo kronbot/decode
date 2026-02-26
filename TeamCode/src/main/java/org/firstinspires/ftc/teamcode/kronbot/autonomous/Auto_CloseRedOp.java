@@ -203,7 +203,7 @@ public class Auto_CloseRedOp extends OpMode {
 
                         case 2:
                             // timer to see when all 3 are launched
-                            if (pathTimer.getElapsedTimeSeconds() > 3.0) {
+                            if (pathTimer.getElapsedTimeSeconds() > 2.0) {
                                 robot.intakeMotor.setPower(0);
                                 //robot.loaderMotor.setPower(0);
                                 launchState++;
@@ -241,8 +241,9 @@ public class Auto_CloseRedOp extends OpMode {
             case 5:
                 if (!robot.follower.isBusy() && pathTimer.getElapsedTimeSeconds()>1) {
                     robot.follower.followPath(goToLaunch2);
-                    robot.loaderMotor.setPower(0);
 
+                    robot.loaderMotor.setPower(0);
+                    robot.loaderMotor.setPower(-0.3);
                     launchState = 0;
                     pathTimer.resetTimer();
                     setPathState(6);
@@ -250,7 +251,7 @@ public class Auto_CloseRedOp extends OpMode {
                 break;
 
             case 6:
-                if (!robot.follower.isBusy() && pathTimer.getElapsedTimeSeconds()>1) {
+                if (!robot.follower.isBusy() && pathTimer.getElapsedTimeSeconds()>0.6) {
                     switch (launchState) {
                         case 0:
                             launchState++;
@@ -262,7 +263,7 @@ public class Auto_CloseRedOp extends OpMode {
                         case 1:
                             // Wait for motors to reach speed and launch first 2
                             if (motorVel + 50 >= launchSpeedClose && pathTimer.getElapsedTimeSeconds() > 2.0) {
-                                robot.loaderMotor.setPower(0.8);
+                                robot.loaderMotor.setPower(0.7);
                                 launchState++;
                                 pathTimer.resetTimer();
                             }
@@ -270,7 +271,7 @@ public class Auto_CloseRedOp extends OpMode {
 
                         case 2:
                             // timer to see when all 3 are launched
-                            if (pathTimer.getElapsedTimeSeconds() > 3.0) {
+                            if (pathTimer.getElapsedTimeSeconds() > 1.0) {
                                 robot.intakeMotor.setPower(0);
                                 //robot.loaderMotor.setPower(0);
                                 launchState++;
@@ -310,7 +311,7 @@ public class Auto_CloseRedOp extends OpMode {
                 if (!robot.follower.isBusy() && pathTimer.getElapsedTimeSeconds()>1) {
                     robot.follower.followPath(goToLaunch3);
                     robot.loaderMotor.setPower(0);
-
+                    robot.loaderMotor.setPower(-0.3);
                     launchState = 0;
                     pathTimer.resetTimer();
                     setPathState(10);
@@ -318,7 +319,7 @@ public class Auto_CloseRedOp extends OpMode {
                 break;
 
             case 10:
-                if (!robot.follower.isBusy() && pathTimer.getElapsedTimeSeconds()>1) {
+                if (!robot.follower.isBusy() && pathTimer.getElapsedTimeSeconds()>0.6) {
                     switch (launchState) {
                         case 0:
                             launchState++;
@@ -329,8 +330,8 @@ public class Auto_CloseRedOp extends OpMode {
 
                         case 1:
                             // Wait for motors to reach speed and launch first 2
-                            if (motorVel + 50 >= launchSpeedClose && pathTimer.getElapsedTimeSeconds() > 3.0) {
-                                robot.loaderMotor.setPower(0.8);
+                            if (motorVel + 50 >= launchSpeedClose && pathTimer.getElapsedTimeSeconds() > 2.0) {
+                                robot.loaderMotor.setPower(0.7);
                                 launchState++;
                                 pathTimer.resetTimer();
                             }
@@ -338,7 +339,7 @@ public class Auto_CloseRedOp extends OpMode {
 
                         case 2:
                             // timer to see when all 3 are launched
-                            if (pathTimer.getElapsedTimeSeconds() > 3.0) {
+                            if (pathTimer.getElapsedTimeSeconds() > 1.0) {
                                 robot.intakeMotor.setPower(0);
                                 //robot.loaderMotor.setPower(0);
                                 launchState++;

@@ -75,11 +75,7 @@ public class MainDrivingOp extends OpMode {
         drivingGP = new Controls(gamepad1);
         utilityGP = new Controls(gamepad2);
 
-        try {
-            robot.follower.getPoseTracker().resetIMU();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+
     }
 
     @Override
