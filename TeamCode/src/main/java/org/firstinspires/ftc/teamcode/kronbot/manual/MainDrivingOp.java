@@ -15,6 +15,7 @@ import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RedTowerCoo
 
 import com.acmerobotics.dashboard.FtcDashboard;
 
+import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -57,16 +58,16 @@ public class MainDrivingOp extends OpMode {
     public void init() {
         lpsCounter = new LpsCounter();
         lpsCounter.getLoopTime();
-        robot.initFollower(hardwareMap, true);
+        robot.initFollower(hardwareMap, new Pose(68, 68, 0));
         robot.init(hardwareMap);
 
 
         dashboard = FtcDashboard.getInstance();
-        robot.webcam.init(hardwareMap, telemetry);
+//        robot.webcam.init(hardwareMap, telemetry);
 
-        if (robot.webcam.getVisionPortal() != null) {
-            dashboard.startCameraStream(robot.webcam.getVisionPortal(), 30);
-        }
+//        if (robot.webcam.getVisionPortal() != null) {
+//            dashboard.startCameraStream(robot.webcam.getVisionPortal(), 30);
+//        }
 
         // Initialize the new coordinate aligner
         turretAligner = new TurretAligner(robot);

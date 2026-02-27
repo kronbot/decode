@@ -34,7 +34,7 @@ public class Auto_CloseRedOp extends OpMode {
     Pose start = coordinates(StartingPoseCloseRed);
     Pose launch1 = coordinates(LaunchZoneClose1);
     Pose launch11 = coordinates(LaunchZoneClose11);
-    Pose launch2 = coordinates(LaunchZoneClose1);
+    Pose launch2 = coordinates(LaunchZoneClose2);
     Pose intake1 = coordinates(IntakeZoneClose1);
     Pose intake11 = coordinates(IntakeZoneClose11);
 
@@ -53,10 +53,8 @@ public class Auto_CloseRedOp extends OpMode {
     @Override
     public void init() {
 
-        robot.init(hardwareMap);
-
-
         robot.initFollower(hardwareMap, start);
+        robot.init(hardwareMap);
 
         pathTimer = new Timer();
         opmodeTimer = new Timer();
@@ -342,6 +340,8 @@ public class Auto_CloseRedOp extends OpMode {
                             // timer to see when all 3 are launched
                             if (pathTimer.getElapsedTimeSeconds() > 1.0) {
                                 robot.intakeMotor.setPower(0);
+                                robot.outtake.on = false;
+                                robot.outtake.activeConfig = new Robot.RangeConfig(0, 0, 0);
                                 //robot.loaderMotor.setPower(0);
                                 launchState++;
                                 pathTimer.resetTimer();

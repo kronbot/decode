@@ -109,8 +109,8 @@ public class Robot extends KronBot {
     }
 
     public void initSystems(HardwareMap hardwareMap) {
-        if(follower == null)
-            initFollower(hardwareMap);
+//        if(follower == null)
+//            initFollower(hardwareMap, true);
 
         try {
             follower.getPoseTracker().resetIMU();

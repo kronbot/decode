@@ -30,8 +30,8 @@ public final class AutonomousConstants {
     public static Coordinates IntakeZoneClose1 = new Coordinates(105, 140, -1.5);
     public static Coordinates IntakeZoneClose11 = new Coordinates(105, 110, -1.5);
     public static Coordinates LaunchZoneClose2 = new Coordinates(125, 144, -0.8);
-    public static Coordinates IntakeZoneClose2 = new Coordinates(80, 140, -1.5);
-    public static Coordinates IntakeZoneClose22 = new Coordinates(80, 110, -1.5);
+    public static Coordinates IntakeZoneClose2 = new Coordinates(76, 140, -1.5);
+    public static Coordinates IntakeZoneClose22 = new Coordinates(76, 110, -1.5);
 
     public static Coordinates LaunchZoneClose3 = new Coordinates(125, 144, -0.8);
     public static Coordinates ParkClose = new Coordinates(100, 110, 0);

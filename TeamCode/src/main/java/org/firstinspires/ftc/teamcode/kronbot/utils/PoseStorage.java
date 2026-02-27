@@ -29,7 +29,7 @@ public class PoseStorage {
         File file = new File(Environment.getExternalStorageDirectory().getPath() + "/" + FILE_NAME);
 
         if (!file.exists()) {
-            return new Pose(0, 0, 0);
+            return new Pose(67, 67, 0);
         }
 
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
@@ -40,7 +40,7 @@ public class PoseStorage {
             return new Pose(x, y, heading);
         } catch (Exception e) {
             RobotLog.ee("PoseStorage", "Failed to load pose", e);
-            return new Pose(0, 0, 0);
+            return new Pose(69, 69, 0);
         }
     }
 }
