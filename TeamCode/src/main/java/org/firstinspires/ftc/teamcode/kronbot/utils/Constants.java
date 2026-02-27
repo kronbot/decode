@@ -66,14 +66,14 @@ public class Constants {
     public static double RANGE_1_VELOCITY = 1000;
     public static double RANGE_1_KS = 0.15;
 
-    public static double RANGE_2 = 70;
+    public static double RANGE_2 = 20;
     public static double RANGE_2_ANGLE = 0.32;
     public static double RANGE_2_VELOCITY = 1150;
     public static double RANGE_2_KS = 0.2;
 
-    public static double RANGE_3 = 100;
+    public static double RANGE_3 = 70;
     public static double RANGE_3_ANGLE = 0.64;
-    public static double RANGE_3_VELOCITY = 1450;
+    public static double RANGE_3_VELOCITY = 1350;
     public static double RANGE_3_KS = 0.3;
 
 
@@ -109,8 +109,9 @@ public class Constants {
     public static double DELTA_THRESHOLD = 0.01;
     public static double MAX_ROTATION_POWER = 0.5;
 
-    public static double BASKET_X = 72;
-    public static double BASKET_Y = 72;
+    public static double BASKET_Y = 140;
+    public static double BASKET_BLUE_Y = 20;
+    public static double BASKET_X = 140;
 
 
     public static AutonomousConstants.Coordinates RedTowerCoords = new AutonomousConstants.Coordinates(130, 130, 0);

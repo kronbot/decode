@@ -54,11 +54,15 @@ public class MainDrivingOp extends OpMode {
 
     boolean rumbled = false;
 
+//    Pose idk67;
+
     @Override
     public void init() {
         lpsCounter = new LpsCounter();
         lpsCounter.getLoopTime();
-        robot.initFollower(hardwareMap, new Pose(68, 68, 0));
+//        idk67 = new Pose(68, 68, 0);
+        robot.initFollower(hardwareMap, true);
+//        robot.follower.setStartingPose(idk67);
         robot.init(hardwareMap);
 
 

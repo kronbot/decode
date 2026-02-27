@@ -12,6 +12,7 @@ import org.opencv.core.Mat;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_CLOSE;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_MAX;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_MIN;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.BASKET_BLUE_Y;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.BASKET_X;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.BASKET_Y;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.DELTA_THRESHOLD;
@@ -112,13 +113,9 @@ public class Robot extends KronBot {
 //        if(follower == null)
 //            initFollower(hardwareMap, true);
 
-        try {
-            follower.getPoseTracker().resetIMU();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
 
-        follower.update();
+
+//        follower.update();
         outtake.init();
         intake.init();
         loader.init();
@@ -297,8 +294,8 @@ public class Robot extends KronBot {
             double robot_X = follower.getPose().getX();
             double robot_Y = follower.getPose().getY();
 
-            double dx = BASKET_X * (Blue_Target ? -1 : 1) - robot_X;
-            double dy = BASKET_Y - robot_Y;
+            double dy = (Blue_Target ? BASKET_BLUE_Y : BASKET_Y) - robot_Y;
+            double dx = BASKET_X - robot_X;
 
             distance = Math.sqrt(dx*dx + dy*dy);
 
@@ -438,8 +435,8 @@ public class Robot extends KronBot {
                 double robot_Y = follower.getPose().getY();
                 double robotHeading = heading.get();
 
-                double dx = BASKET_X * (Blue_Target ? -1 : 1) - robot_X;
-                double dy = BASKET_Y - robot_Y;
+                double dy = (Blue_Target ? BASKET_BLUE_Y : BASKET_Y) - robot_Y;
+                double dx = BASKET_X - robot_X;
 
                 double targetFieldAngle = Math.atan2(dy, dx);
 

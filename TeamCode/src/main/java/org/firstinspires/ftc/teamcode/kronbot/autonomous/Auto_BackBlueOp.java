@@ -25,7 +25,8 @@ public class Auto_BackBlueOp extends OpMode {
 
     private Robot robot = Robot.getInstance();
     private Timer pathTimer, opmodeTimer;
-    private int pathState, launchState;
+    private int pathState;
+    private int launchState=0;
 
     // Define poses
     Pose startingPoseBack = coordinates(StartingPoseBackBlue);
@@ -41,9 +42,8 @@ public class Auto_BackBlueOp extends OpMode {
     @Override
     public void init() {
 
-        robot.init(hardwareMap);
-
         robot.initFollower(hardwareMap, startingPoseBack);
+        robot.init(hardwareMap);
 
         pathTimer = new Timer();
         opmodeTimer = new Timer();
