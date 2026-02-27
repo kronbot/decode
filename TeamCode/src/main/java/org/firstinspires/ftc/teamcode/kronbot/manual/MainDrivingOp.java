@@ -109,14 +109,14 @@ public class MainDrivingOp extends OpMode {
         robot.intake.reversed = INTAKE_REVERSE;
 
         //Aliniere
-        turretAligner.update();
+//        turretAligner.update();
 
         //Loader
         if (!drivingGP.rightBumper.pressed()) {
             robot.loader.speed = utilityGP.leftStick.y;
             robot.flap.open = false;
         } else {
-            robot.loader.speed = (drivingGP.rightTrigger - drivingGP.leftTrigger) * 0.9;
+            robot.loader.speed = (drivingGP.rightTrigger - drivingGP.leftTrigger) * 0.8;
             robot.flap.open = true;
             if (robot.loader.speed > 0.1)
                 robot.intake.speed = INTAKE_DRIVER_POWER;
@@ -213,6 +213,9 @@ public class MainDrivingOp extends OpMode {
                 rumbled = false;
             }
         }
+
+        if(drivingGP.rightStick.button.justPressed())
+            robot.Blue_Target = !robot.Blue_Target;
 
         //Update robot systems status
         robot.follower.setTeleOpDrive(-drivingGP.leftStick.y, -drivingGP.leftStick.x, -drivingGP.rightStick.x, true);

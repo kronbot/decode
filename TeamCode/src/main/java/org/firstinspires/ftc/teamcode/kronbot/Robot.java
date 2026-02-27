@@ -297,7 +297,7 @@ public class Robot extends KronBot {
             double robot_X = follower.getPose().getX();
             double robot_Y = follower.getPose().getY();
 
-            double dx = BASKET_X * (Blue_Target ? 1 : -1) - robot_X;
+            double dx = BASKET_X * (Blue_Target ? -1 : 1) - robot_X;
             double dy = BASKET_Y - robot_Y;
 
             distance = Math.sqrt(dx*dx + dy*dy);
@@ -438,7 +438,7 @@ public class Robot extends KronBot {
                 double robot_Y = follower.getPose().getY();
                 double robotHeading = heading.get();
 
-                double dx = BASKET_X * (Blue_Target ? 1 : -1) - robot_X;
+                double dx = BASKET_X * (Blue_Target ? -1 : 1) - robot_X;
                 double dy = BASKET_Y - robot_Y;
 
                 double targetFieldAngle = Math.atan2(dy, dx);

@@ -33,14 +33,14 @@ public class Auto_CloseRedOp extends OpMode {
     // Define poses
     Pose start = coordinates(StartingPoseCloseRed);
     Pose launch1 = coordinates(LaunchZoneClose1);
-    Pose launch11 = coordinates(LaunchZoneClose1);
+    Pose launch11 = coordinates(LaunchZoneClose11);
     Pose launch2 = coordinates(LaunchZoneClose1);
     Pose intake1 = coordinates(IntakeZoneClose1);
     Pose intake11 = coordinates(IntakeZoneClose11);
 
     Pose intake2 = coordinates(IntakeZoneClose2);
     Pose intake22 = coordinates(IntakeZoneClose22);
-    Pose launch3 = coordinates(LaunchZoneClose1);
+    Pose launch3 = coordinates(LaunchZoneClose3);
 
     Pose parkZone = coordinates(ParkClose);
 
