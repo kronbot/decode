@@ -52,8 +52,8 @@ public class Constants {
 
     public static double ANGLE_SERVO_FAR = 0.72;
     public static double ANGLE_SERVO_MIN = 0;
-    public static double FLAP_CLOSED = 0.29;
-    public static double FLAP_OPEN = 0.59;
+    public static double FLAP_CLOSED = 0.55;
+    public static double FLAP_OPEN = 1;
 
     public static double INTAKE_DRIVER_POWER = 0.55;
     public static double INTAKE_DRIVER_REVERSE = -0.55;
@@ -61,23 +61,23 @@ public class Constants {
     public static double minVelocity = 1140;
     public static double maxVelocity = 1500;
 
-    public static double RANGE_1 = 40;
+    public static double RANGE_1 = 20;
     public static double RANGE_1_ANGLE = 0;
     public static double RANGE_1_VELOCITY = 1000;
     public static double RANGE_1_KS = 0.15;
 
-    public static double RANGE_2 = 20;
+    public static double RANGE_2 = 40;
     public static double RANGE_2_ANGLE = 0.32;
     public static double RANGE_2_VELOCITY = 1150;
     public static double RANGE_2_KS = 0.2;
 
-    public static double RANGE_3 = 70;
+    public static double RANGE_3 = 90;
     public static double RANGE_3_ANGLE = 0.64;
     public static double RANGE_3_VELOCITY = 1350;
     public static double RANGE_3_KS = 0.3;
 
 
-    public static double RANGE_4 = 140;
+    public static double RANGE_4 = 120;
     public static double RANGE_4_ANGLE = 0.70;
     public static double RANGE_4_VELOCITY = 1600;
     public static double RANGE_4_KS = 0.5;
@@ -109,9 +109,9 @@ public class Constants {
     public static double DELTA_THRESHOLD = 0.01;
     public static double MAX_ROTATION_POWER = 0.5;
 
-    public static double BASKET_Y = 140;
-    public static double BASKET_BLUE_Y = 20;
-    public static double BASKET_X = 140;
+    public static double BASKET_Y = -140;
+    public static double BASKET_BLUE_Y = -20;
+    public static double BASKET_X = 130;
 
 
     public static AutonomousConstants.Coordinates RedTowerCoords = new AutonomousConstants.Coordinates(130, 130, 0);

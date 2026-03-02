@@ -94,6 +94,7 @@ public class Auto_CloseRedOp extends OpMode {
                 .setBrakingStrength(0.2)
                 .build();
 
+
         goToLaunch2 = robot.follower.pathBuilder()
                 .addPath(new BezierLine(intake11, launch2))
                 .setLinearHeadingInterpolation(intake11.getHeading(), launch2.getHeading())
@@ -134,7 +135,7 @@ public class Auto_CloseRedOp extends OpMode {
         robot.turretServo.setPosition(0);
         robot.angleServo.setPosition(angleServoClose);
         robot.flapsServo.setPosition(FLAP_OPEN);
-        robot.turretServo.setPosition(0.46);
+        robot.turretServo.setPosition(0.3);
         robot.intakeMotor.setPower(-1);
         robot.loaderServo.runContinuous(false, false);
     }
@@ -166,9 +167,10 @@ public class Auto_CloseRedOp extends OpMode {
         switch (pathState) {
             case 0:
                 //also start motors to save time
-                robot.outtake.activeConfig.velocity = RANGE_2_VELOCITY;
-                robot.outtake.activeConfig.kS = RANGE_2_KS;
-                robot.outtake.on = true;
+                robot.leftOuttake.setVelocity(launchSpeedClose);
+                robot.rightOuttake.setVelocity(launchSpeedClose);
+                robot.angleServo.setPosition(angleServoClose);
+//                robot.outtake.on = true;
                 //go to pose
                 robot.follower.followPath(goToLaunch1);
                 setPathState(1);
