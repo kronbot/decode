@@ -80,6 +80,11 @@ public class KronBot {
      */
     public void initFollower(HardwareMap hardwareMap, boolean loadPose) {
         follower = org.firstinspires.ftc.teamcode.pedroPathing.Constants.createFollower(hardwareMap);
+//        try {
+//            follower.getPoseTracker().resetIMU();
+//        } catch (InterruptedException e) {
+//            throw new RuntimeException(e);
+//        }
         if(loadPose) {
             Pose startingPose = PoseStorage.loadPose();
             follower.setStartingPose(startingPose);
@@ -101,13 +106,18 @@ public class KronBot {
      */
     public void initFollower(HardwareMap hardwareMap, Pose startingPose) {
         follower = org.firstinspires.ftc.teamcode.pedroPathing.Constants.createFollower(hardwareMap);
+//        try {
+//            follower.getPoseTracker().resetIMU();
+//        } catch (InterruptedException e) {
+//            throw new RuntimeException(e);
+//        }
         follower.setStartingPose(startingPose);
     }
 
 
     public void initHardware(HardwareMap hardwareMap) {
-        if(follower != null)
-            initFollower(hardwareMap);
+//        if(follower != null)
+//            initFollower(hardwareMap);
         initMotors(hardwareMap);
         initServos(hardwareMap);
         initSensors(hardwareMap);

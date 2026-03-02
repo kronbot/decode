@@ -54,8 +54,8 @@ public class Constants {
             .rightFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
             .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)
             .useBrakeModeInTeleOp(true)
-            .xVelocity(93.675629)
-            .yVelocity(77.158601);
+            .xVelocity(293.675629)
+            .yVelocity(277.158601);
 
 
 //    public static TwoWheelConstants localizerConstants = new TwoWheelConstants()
