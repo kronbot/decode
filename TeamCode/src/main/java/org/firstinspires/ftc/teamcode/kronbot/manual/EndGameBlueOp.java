@@ -31,7 +31,7 @@ public class EndGameBlueOp extends LinearOpMode {
         camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
             @Override
             public void onOpened() {
-                camera.startStreaming(604, 480, OpenCvCameraRotation.UPRIGHT);
+                camera.startStreaming(640, 480, OpenCvCameraRotation.UPRIGHT);
                 FtcDashboard.getInstance().startCameraStream(camera, 30);
             }
 
@@ -43,7 +43,7 @@ public class EndGameBlueOp extends LinearOpMode {
         });
         waitForStart();
         while (opModeIsActive()) {
-            while (squarePipeline.getDetectedQuadCount() == 0) {
+            if (squarePipeline.getDetectedQuadCount() == 0) {
                 telemetry.addData("Status", "No quadrilaterals detected");
                 telemetry.update();
 
@@ -52,10 +52,15 @@ public class EndGameBlueOp extends LinearOpMode {
                 robot.motors.leftRear.setPower(0.5);
                 robot.motors.rightRear.setPower(-0.5);
             }
-            robot.motors.leftFront.setPower(0);
-            robot.motors.rightFront.setPower(0);
-            robot.motors.leftRear.setPower(0);
-            robot.motors.rightRear.setPower(0);
+            else {
+                robot.motors.leftFront.setPower(0);
+                robot.motors.rightFront.setPower(0);
+                robot.motors.leftRear.setPower(0);
+                robot.motors.rightRear.setPower(0);
+                telemetry.addData("Area" , squarePipeline.getDetectedArea());
+                telemetry.update();
+                return;
+            }
         }
 
     }

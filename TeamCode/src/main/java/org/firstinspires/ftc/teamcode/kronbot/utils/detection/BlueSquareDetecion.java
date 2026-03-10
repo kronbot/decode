@@ -21,6 +21,7 @@ public class BlueSquareDetecion extends OpenCvPipeline {
 
     private volatile int detectedQuadCount = 0;
     private volatile double detectedAngle = 0.0;
+    private volatile double detectedArea = 0.0;
 
     @Override
     public Mat processFrame(Mat frame) {
@@ -46,6 +47,7 @@ public class BlueSquareDetecion extends OpenCvPipeline {
                     double area = Math.abs(Imgproc.contourArea(approxPolygon));
                     if (area > MIN_QUADRILATERAL_AREA && area > largestArea) {
                         largestArea = area;
+                        detectedArea  = largestArea;
                         if (largestQuadrilateral != null) {
                             largestQuadrilateral.release();
                         }
@@ -110,12 +112,11 @@ public class BlueSquareDetecion extends OpenCvPipeline {
         pts.release();
         return angle;
     }
-
     public int getDetectedQuadCount() {
         return detectedQuadCount;
     }
-
     public double getDetectedAngle() {
         return detectedAngle;
     }
+    public double getDetectedArea(){return  detectedArea;}
 }
