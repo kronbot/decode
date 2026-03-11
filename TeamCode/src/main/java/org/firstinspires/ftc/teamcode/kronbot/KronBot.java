@@ -24,13 +24,13 @@ import com.qualcomm.robotcore.hardware.ColorSensor;
 public class KronBot {
     public MotorDriver motors;
     public ControlHubGyroscope gyroscope;
-    public ModernRoboticsI2cRangeSensor rangeSensor;
+    ///public ModernRoboticsI2cRangeSensor rangeSensor;
 
     public DcMotorEx intakeMotor, leftOuttake, rightOuttake;
     public Servo loaderServo;
 
     public Servo turretServo, angleServo, flapsServo;
-    public ColorSensor outtakeColor;
+    ///public ColorSensor outtakeColor;
 
 
 
@@ -86,8 +86,8 @@ public class KronBot {
     }
 
     public void initSensors(HardwareMap hardwareMap) {
-        //outtakeColor = hardwareMap.get(ColorSensor.class, "outtakeColor");
-        rangeSensor = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "rangeSensor");
+        /*outtakeColor = hardwareMap.get(ColorSensor.class, "outtakeColor");
+        rangeSensor = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "rangeSensor");*/
     }
 
 

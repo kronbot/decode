@@ -19,8 +19,9 @@ public class RedSquareDetection extends OpenCvPipeline {
 
     private double detectedAngle = 0.0;
     private  int detectedQuadCount = 0;
-    private final double MIN_SQUARE_AREA = 5000.0;
+    private final double MIN_SQUARE_AREA = 1000.0;
 
+    private final double MAX_SQUARE_AREA = 10000.0;
     @Override
     public Mat processFrame(Mat frame) {
         double largestArea = 0.0;
@@ -33,7 +34,7 @@ public class RedSquareDetection extends OpenCvPipeline {
         Imgproc.findContours(redMat, contourList, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
         for (MatOfPoint contour : contourList) {
             double area = Imgproc.contourArea(contour);
-            if (area < 5000) {
+            if (area < MIN_SQUARE_AREA || area > MAX_SQUARE_AREA) {
                 continue;
             }
             MatOfPoint2f contourFloat = new MatOfPoint2f(contour.toArray());

@@ -288,7 +288,7 @@ public class Robot extends KronBot {
             telemetry.addData("Right Power", "%.3f", rightOuttake.getPower());
             telemetry.addData("Angle", "%.3f", angle);
             telemetry.addData("Angle Servo Pos", "%.3f", angleServo.getPosition());
-            telemetry.addData("Distance", "%.3f", rangeSensor.cmUltrasonic() * 1.08644 + 17.20917); // magic numbers from desmos
+            ///telemetry.addData("Distance", "%.3f", rangeSensor.cmUltrasonic() * 1.08644 + 17.20917); // magic numbers from desmos
         }
 
     }

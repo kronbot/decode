@@ -15,13 +15,14 @@ public class BlueSquareDetecion extends OpenCvPipeline {
     private final List<MatOfPoint> contourList = new ArrayList<>();
 
     private static final double MIN_QUADRILATERAL_AREA = 10000.0;
-
+    private static final double MAX_QUADRILATERAL_AREA = 50000.0;
     private static final Scalar HSV_LOWER_BLUE = new Scalar(90, 40, 100);
     private static final Scalar HSV_UPPER_BLUE = new Scalar(135, 255, 255);
 
     private volatile int detectedQuadCount = 0;
     private volatile double detectedAngle = 0.0;
     private volatile double detectedArea = 0.0;
+
 
     @Override
     public Mat processFrame(Mat frame) {
@@ -45,7 +46,7 @@ public class BlueSquareDetecion extends OpenCvPipeline {
                 MatOfPoint approxPolygon = new MatOfPoint(approxCurve2f.toArray());
                 if (Imgproc.isContourConvex(approxPolygon)) {
                     double area = Math.abs(Imgproc.contourArea(approxPolygon));
-                    if (area > MIN_QUADRILATERAL_AREA && area > largestArea) {
+                    if (area > MIN_QUADRILATERAL_AREA &&  area < MAX_QUADRILATERAL_AREA && area > largestArea) {
                         largestArea = area;
                         detectedArea  = largestArea;
                         if (largestQuadrilateral != null) {

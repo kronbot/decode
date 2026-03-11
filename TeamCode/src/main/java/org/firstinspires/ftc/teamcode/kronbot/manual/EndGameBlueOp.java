@@ -10,6 +10,7 @@ import org.firstinspires.ftc.teamcode.kronbot.utils.detection.BlueSquareDetecion
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
+
 @TeleOp(name = "End Game Blue" , group = "Vision")
 public class EndGameBlueOp extends LinearOpMode {
 
@@ -20,6 +21,7 @@ public class EndGameBlueOp extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         robot = new KronBot();
+        robot.initTeleop(hardwareMap);
         // Initialize the pipeline
         squarePipeline = new BlueSquareDetecion();
         int cameraMonitorViewId = hardwareMap.appContext.getResources()
@@ -34,23 +36,22 @@ public class EndGameBlueOp extends LinearOpMode {
                 camera.startStreaming(640, 480, OpenCvCameraRotation.UPRIGHT);
                 FtcDashboard.getInstance().startCameraStream(camera, 30);
             }
-
             @Override
             public void onError(int errorCode) {
                 telemetry.addData("Camera error", errorCode);
                 telemetry.update();
             }
         });
+        int ok = 1;
         waitForStart();
         while (opModeIsActive()) {
-            if (squarePipeline.getDetectedQuadCount() == 0) {
+            if (squarePipeline.getDetectedQuadCount() == 0 && ok == 1) {
                 telemetry.addData("Status", "No quadrilaterals detected");
                 telemetry.update();
-
-                robot.motors.leftFront.setPower(0.5);
-                robot.motors.rightFront.setPower(-0.5);
-                robot.motors.leftRear.setPower(0.5);
-                robot.motors.rightRear.setPower(-0.5);
+                robot.motors.leftFront.setPower(-0.3);
+                robot.motors.rightFront.setPower(-0.3);
+                robot.motors.leftRear.setPower(0.3);
+                robot.motors.rightRear.setPower(-0.3);
             }
             else {
                 robot.motors.leftFront.setPower(0);
@@ -59,9 +60,8 @@ public class EndGameBlueOp extends LinearOpMode {
                 robot.motors.rightRear.setPower(0);
                 telemetry.addData("Area" , squarePipeline.getDetectedArea());
                 telemetry.update();
-                return;
+                ok = 0;
             }
         }
-
     }
 }
