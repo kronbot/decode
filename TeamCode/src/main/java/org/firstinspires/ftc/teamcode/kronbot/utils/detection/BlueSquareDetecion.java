@@ -14,8 +14,8 @@ public class BlueSquareDetecion extends OpenCvPipeline {
     private final Mat contourHierarchyMat = new Mat();
     private final List<MatOfPoint> contourList = new ArrayList<>();
 
-    private static final double MIN_QUADRILATERAL_AREA = 10000.0;
-    private static final double MAX_QUADRILATERAL_AREA = 50000.0;
+    private static final double MIN_QUADRILATERAL_AREA = 20000.0;
+    private static final double MAX_QUADRILATERAL_AREA = 90000.0;
     private static final Scalar HSV_LOWER_BLUE = new Scalar(90, 40, 100);
     private static final Scalar HSV_UPPER_BLUE = new Scalar(135, 255, 255);
 
@@ -84,6 +84,15 @@ public class BlueSquareDetecion extends OpenCvPipeline {
                     Imgproc.FONT_HERSHEY_SIMPLEX,
                     1.0,
                     new Scalar(0, 255, 0),
+                    2
+            );
+            Imgproc.putText(
+                    frame,
+                    String.format("Area: %.1f" , detectedArea),
+                    new Point (400,40),
+                    Imgproc.FONT_HERSHEY_SIMPLEX,
+                    1.0,
+                    new Scalar(0,255,0),
                     2
             );
 

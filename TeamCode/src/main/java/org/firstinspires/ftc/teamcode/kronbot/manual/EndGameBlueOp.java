@@ -11,6 +11,8 @@ import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 
+import org.firstinspires.ftc.teamcode.kronbot.utils.Constants;
+
 @TeleOp(name = "End Game Blue", group = "Vision")
 public class EndGameBlueOp extends LinearOpMode {
 
@@ -19,13 +21,11 @@ public class EndGameBlueOp extends LinearOpMode {
     private KronBot robot;
 
     // Tunable constants
-    private final double SPIN_SPEED    = 0.3;  // Speed to spin while searching
-    private final double ORBIT_STRAFE  = 0.3;  // Lateral orbit speed
-    private final double kP_DISTANCE   = 0.01; // How aggressively to correct distance
-    private final double kP_ROTATION   = 0.02; // How aggressively to face the square
-    private final double TARGET_AREA   = 5000.0; // Tune: desired apparent size of square
-    private final double TARGET_ANGLE  = 0.0;    // Tune: desired angle offset from center (0 = centered)
-    private final double ANGLE_TOLERANCE = 5.0;
+    private final double SPIN_SPEED    = Constants.SpinEndGame;
+    private final double ORBIT_STRAFE  = Constants.StrafeEndGame;
+    private final double kP_DISTANCE   = Constants.pDistanceEndGame; // area values are large, keep this tiny
+    private final double kP_ROTATION   = Constants.pRoataionEndGame;      // angleError is -1 to 1, needs stronger gain
+    private final double TARGET_AREA   = Constants.squareAreaEndGame;  // tune between 20000-90000
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -42,7 +42,7 @@ public class EndGameBlueOp extends LinearOpMode {
         camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
             @Override
             public void onOpened() {
-                camera.startStreaming(640, 480, OpenCvCameraRotation.UPRIGHT);
+                camera.startStreaming(640, 480, OpenCvCameraRotation.UPSIDE_DOWN);
                 FtcDashboard.getInstance().startCameraStream(camera, 30);
             }
 
@@ -54,63 +54,54 @@ public class EndGameBlueOp extends LinearOpMode {
         });
 
         waitForStart();
+        boolean found = false;
 
         while (opModeIsActive()) {
 
             boolean squareVisible = squarePipeline.getDetectedQuadCount() > 0;
 
-            if (!squareVisible) {
+            if (!squareVisible && !found) {
                 // === SEARCH MODE: Spin in place ===
                 telemetry.addData("Status", "Searching — spinning...");
                 telemetry.update();
 
                 setMecanumPower(0, 0, SPIN_SPEED);
 
-            } else {
-                double detectedAngle = squarePipeline.getDetectedAngle();
+            }
+            /*else if(squarePipeline.getDetectedAngle() == 0 || squarePipeline.getDetectedAngle() == 90 || squarePipeline.getDetectedAngle() == 180){
+                setMecanumPower(0,0,0);
+                break;
+            }*/
+            else if (squarePipeline.getDetectedQuadCount() > 0) {
+                found = true;
+                // Use angleError (-1 to 1) to keep square centered in frame
+                double angleError    = squarePipeline.getAngleError();
+                double rotationSpeed = angleError * kP_ROTATION;
+
+                // Use area to maintain distance
                 double detectedArea  = squarePipeline.getDetectedArea();
+                double distanceError = TARGET_AREA - detectedArea;
+                double forwardSpeed  = distanceError * kP_DISTANCE;
+                forwardSpeed = Math.max(-0.3, Math.min(0.3, forwardSpeed)); // clamp
 
-                // Check if we've reached either target angle
-                boolean at90  = Math.abs(detectedAngle - 90.0)  <= ANGLE_TOLERANCE;
-                boolean at180 = Math.abs(detectedAngle - 180.0) <= ANGLE_TOLERANCE;
+                telemetry.addData("Status", "Orbiting");
+                telemetry.addData("Angle Error", angleError);
+                telemetry.addData("Detected Area", detectedArea);
+                telemetry.addData("Distance Error", distanceError);
+                telemetry.addData("Forward Speed", forwardSpeed);
+                telemetry.addData("Rotation Speed", rotationSpeed);
+                telemetry.update();
 
-                if (at90 || at180) {
-                    // === DONE: Stop the robot ===
-                    telemetry.addData("Status", "Target angle reached: " + detectedAngle);
-                    telemetry.update();
-
-                    setMecanumPower(0, 0, 0);
-
-                } else {
-                    // === ORBIT MODE: Circle around the square ===
-                    double angleError    = 0 - detectedAngle; // Keep square centered in frame
-                    double rotationSpeed = angleError * kP_ROTATION;
-
-                    double distanceError = TARGET_AREA - detectedArea;
-                    double forwardSpeed  = distanceError * kP_DISTANCE;
-
-                    double strafe = ORBIT_STRAFE;
-
-                    telemetry.addData("Status", "Orbiting");
-                    telemetry.addData("Detected Angle", detectedAngle);
-                    telemetry.addData("Detected Area", detectedArea);
-                    telemetry.update();
-
-                    setMecanumPower(forwardSpeed, strafe, rotationSpeed);
-                }
+                setMecanumPower(forwardSpeed, ORBIT_STRAFE, rotationSpeed);
+            }
+            else{
+                setMecanumPower( -ORBIT_STRAFE , 0 , 0);
             }
         }
 
         setMecanumPower(0, 0, 0);
     }
 
-    /**
-     * Sets mecanum wheel powers using standard mecanum drive math.
-     *
-     * @param forward  Positive = forward, negative = backward
-     * @param strafe   Positive = right, negative = left
-     * @param rotation Positive = clockwise, negative = counter-clockwise
-     */
     private void setMecanumPower(double forward, double strafe, double rotation) {
         double leftFrontPower  = forward + strafe + rotation;
         double rightFrontPower = forward - strafe - rotation;

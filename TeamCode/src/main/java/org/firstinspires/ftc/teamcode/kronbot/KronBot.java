@@ -40,7 +40,7 @@ public class KronBot {
         DcMotorEx rightRear = hardwareMap.get(DcMotorEx.class, "rightRear");
         DcMotorEx rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
         rightRear.setDirection(DcMotorSimple.Direction.REVERSE);
-
+        ///leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
         motors = new MotorDriver();
         motors.init(leftRear, leftFront, rightRear, rightFront);
     }
