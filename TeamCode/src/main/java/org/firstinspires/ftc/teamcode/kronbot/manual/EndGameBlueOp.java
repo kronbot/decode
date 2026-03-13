@@ -17,7 +17,18 @@ public class EndGameBlueOp extends LinearOpMode {
     private OpenCvCamera camera;
     private BlueSquareDetecion squarePipeline;
     private  KronBot robot;
-
+    private double kD = 0.01;
+    private double kP = 0.2;
+    private double strafeSpeed = 0.3;
+    private double targetAngle = 90.0;
+    private double targetArea = 0.0;
+    private double angleTolerance = 5.0;
+    private double strafeDirection = 1.0; // 1 for right, -1 for left
+    private double strafe = 0.0;
+    private double distanceError = 0.0;
+    private double forwardSpeed = 0.0;
+    private double rotationSpeed = 0.0;
+    private double angleError = 0.0;
     @Override
     public void runOpMode() throws InterruptedException {
         robot = new KronBot();
@@ -42,26 +53,60 @@ public class EndGameBlueOp extends LinearOpMode {
                 telemetry.update();
             }
         });
-        int ok = 1;
+        boolean found = false;
         waitForStart();
-        while (opModeIsActive()) {
-            if (squarePipeline.getDetectedQuadCount() == 0 && ok == 1) {
+        while(opModeIsActive()) {
+
+            if (squarePipeline.getDetectedQuadCount() == 0 && !found) {
+                // search for square
+                targetArea = squarePipeline.getDetectedArea();
                 telemetry.addData("Status", "No quadrilaterals detected");
                 telemetry.update();
+                // example search motion
                 robot.motors.leftFront.setPower(-0.3);
                 robot.motors.rightFront.setPower(-0.3);
                 robot.motors.leftRear.setPower(0.3);
                 robot.motors.rightRear.setPower(-0.3);
             }
             else {
-                robot.motors.leftFront.setPower(0);
-                robot.motors.rightFront.setPower(0);
-                robot.motors.leftRear.setPower(0);
-                robot.motors.rightRear.setPower(0);
-                telemetry.addData("Area" , squarePipeline.getDetectedArea());
+                telemetry.addData("Area", squarePipeline.getDetectedArea());
                 telemetry.update();
-                ok = 0;
+                found = true;
+                // decide strafe direction
+                if (squarePipeline.getDetectedAngle() < targetAngle - angleTolerance) {
+                    strafeDirection = 1;  // strafe right
+                } else if (squarePipeline.getDetectedAngle() > targetAngle + angleTolerance) {
+                    strafeDirection = -1; // strafe left
+                } else {
+                    strafeDirection = 0;  // stop orbit
+                }
+
+                // compute motion
+                strafe = strafeDirection * strafeSpeed;
+                distanceError = targetArea - squarePipeline.getDetectedArea();
+                forwardSpeed = distanceError * kD;
+                angleError = squarePipeline.getAngleError();
+                rotationSpeed = angleError * kP;
+
+                // mecanum wheel powers
+                double lf = forwardSpeed + strafe + rotationSpeed;
+                double rf = forwardSpeed - strafe - rotationSpeed;
+                double lr = forwardSpeed - strafe + rotationSpeed;
+                double rr = forwardSpeed + strafe - rotationSpeed;
+
+                // normalize
+                double max = Math.max(Math.abs(lf), Math.max(Math.abs(rf), Math.max(Math.abs(lr), Math.abs(rr))));
+                if (max > 1.0) {
+                    lf /= max; rf /= max; lr /= max; rr /= max;
+                }
+
+                // set motors
+                robot.motors.leftFront.setPower(lf);
+                robot.motors.rightFront.setPower(rf);
+                robot.motors.leftRear.setPower(lr);
+                robot.motors.rightRear.setPower(rr);
             }
         }
     }
 }
+

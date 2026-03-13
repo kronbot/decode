@@ -22,8 +22,7 @@ public class BlueSquareDetecion extends OpenCvPipeline {
     private volatile int detectedQuadCount = 0;
     private volatile double detectedAngle = 0.0;
     private volatile double detectedArea = 0.0;
-
-
+    private volatile double angleError = 0.0;
     @Override
     public Mat processFrame(Mat frame) {
         Imgproc.cvtColor(frame, hsvMat, Imgproc.COLOR_RGB2HSV);
@@ -73,7 +72,10 @@ public class BlueSquareDetecion extends OpenCvPipeline {
                     -1,
                     new Scalar(0, 255, 0),
                     3);
-
+            Rect rect = Imgproc.boundingRect(largestQuadrilateral);
+            double squareCenterX = rect.x + rect.width / 2.0;
+            double frameCenterX = frame.width() / 2.0;
+            angleError = (squareCenterX - frameCenterX) / frameCenterX;
             // overlay angle text for EOCV-Sim
             Imgproc.putText(
                     frame,
@@ -89,6 +91,7 @@ public class BlueSquareDetecion extends OpenCvPipeline {
             detectedAngle = angle;
             largestQuadrilateral.release();
         } else {
+            angleError = 0.0;
             detectedQuadCount = 0;
             detectedAngle = 0.0;
         }
@@ -120,4 +123,5 @@ public class BlueSquareDetecion extends OpenCvPipeline {
         return detectedAngle;
     }
     public double getDetectedArea(){return  detectedArea;}
+    public double getAngleError() {return angleError;}
 }
