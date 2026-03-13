@@ -11,29 +11,27 @@ import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 
-@TeleOp(name = "End Game Blue" , group = "Vision")
+@TeleOp(name = "End Game Blue", group = "Vision")
 public class EndGameBlueOp extends LinearOpMode {
 
     private OpenCvCamera camera;
     private BlueSquareDetecion squarePipeline;
-    private  KronBot robot;
-    private double kD = 0.01;
-    private double kP = 0.2;
-    private double strafeSpeed = 0.3;
-    private double targetAngle = 90.0;
-    private double targetArea = 0.0;
-    private double angleTolerance = 5.0;
-    private double strafeDirection = 1.0; // 1 for right, -1 for left
-    private double strafe = 0.0;
-    private double distanceError = 0.0;
-    private double forwardSpeed = 0.0;
-    private double rotationSpeed = 0.0;
-    private double angleError = 0.0;
+    private KronBot robot;
+
+    // Tunable constants
+    private final double SPIN_SPEED    = 0.3;  // Speed to spin while searching
+    private final double ORBIT_STRAFE  = 0.3;  // Lateral orbit speed
+    private final double kP_DISTANCE   = 0.01; // How aggressively to correct distance
+    private final double kP_ROTATION   = 0.02; // How aggressively to face the square
+    private final double TARGET_AREA   = 5000.0; // Tune: desired apparent size of square
+    private final double TARGET_ANGLE  = 0.0;    // Tune: desired angle offset from center (0 = centered)
+    private final double ANGLE_TOLERANCE = 5.0;
+
     @Override
     public void runOpMode() throws InterruptedException {
         robot = new KronBot();
         robot.initTeleop(hardwareMap);
-        // Initialize the pipeline
+
         squarePipeline = new BlueSquareDetecion();
         int cameraMonitorViewId = hardwareMap.appContext.getResources()
                 .getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
@@ -47,66 +45,87 @@ public class EndGameBlueOp extends LinearOpMode {
                 camera.startStreaming(640, 480, OpenCvCameraRotation.UPRIGHT);
                 FtcDashboard.getInstance().startCameraStream(camera, 30);
             }
+
             @Override
             public void onError(int errorCode) {
                 telemetry.addData("Camera error", errorCode);
                 telemetry.update();
             }
         });
-        boolean found = false;
+
         waitForStart();
-        while(opModeIsActive()) {
 
-            if (squarePipeline.getDetectedQuadCount() == 0 && !found) {
-                // search for square
-                targetArea = squarePipeline.getDetectedArea();
-                telemetry.addData("Status", "No quadrilaterals detected");
+        while (opModeIsActive()) {
+
+            boolean squareVisible = squarePipeline.getDetectedQuadCount() > 0;
+
+            if (!squareVisible) {
+                // === SEARCH MODE: Spin in place ===
+                telemetry.addData("Status", "Searching — spinning...");
                 telemetry.update();
-                // example search motion
-                robot.motors.leftFront.setPower(-0.3);
-                robot.motors.rightFront.setPower(-0.3);
-                robot.motors.leftRear.setPower(0.3);
-                robot.motors.rightRear.setPower(-0.3);
-            }
-            else {
-                telemetry.addData("Area", squarePipeline.getDetectedArea());
-                telemetry.update();
-                found = true;
-                // decide strafe direction
-                if (squarePipeline.getDetectedAngle() < targetAngle - angleTolerance) {
-                    strafeDirection = 1;  // strafe right
-                } else if (squarePipeline.getDetectedAngle() > targetAngle + angleTolerance) {
-                    strafeDirection = -1; // strafe left
+
+                setMecanumPower(0, 0, SPIN_SPEED);
+
+            } else {
+                double detectedAngle = squarePipeline.getDetectedAngle();
+                double detectedArea  = squarePipeline.getDetectedArea();
+
+                // Check if we've reached either target angle
+                boolean at90  = Math.abs(detectedAngle - 90.0)  <= ANGLE_TOLERANCE;
+                boolean at180 = Math.abs(detectedAngle - 180.0) <= ANGLE_TOLERANCE;
+
+                if (at90 || at180) {
+                    // === DONE: Stop the robot ===
+                    telemetry.addData("Status", "Target angle reached: " + detectedAngle);
+                    telemetry.update();
+
+                    setMecanumPower(0, 0, 0);
+
                 } else {
-                    strafeDirection = 0;  // stop orbit
+                    // === ORBIT MODE: Circle around the square ===
+                    double angleError    = 0 - detectedAngle; // Keep square centered in frame
+                    double rotationSpeed = angleError * kP_ROTATION;
+
+                    double distanceError = TARGET_AREA - detectedArea;
+                    double forwardSpeed  = distanceError * kP_DISTANCE;
+
+                    double strafe = ORBIT_STRAFE;
+
+                    telemetry.addData("Status", "Orbiting");
+                    telemetry.addData("Detected Angle", detectedAngle);
+                    telemetry.addData("Detected Area", detectedArea);
+                    telemetry.update();
+
+                    setMecanumPower(forwardSpeed, strafe, rotationSpeed);
                 }
-
-                // compute motion
-                strafe = strafeDirection * strafeSpeed;
-                distanceError = targetArea - squarePipeline.getDetectedArea();
-                forwardSpeed = distanceError * kD;
-                angleError = squarePipeline.getAngleError();
-                rotationSpeed = angleError * kP;
-
-                // mecanum wheel powers
-                double lf = forwardSpeed + strafe + rotationSpeed;
-                double rf = forwardSpeed - strafe - rotationSpeed;
-                double lr = forwardSpeed - strafe + rotationSpeed;
-                double rr = forwardSpeed + strafe - rotationSpeed;
-
-                // normalize
-                double max = Math.max(Math.abs(lf), Math.max(Math.abs(rf), Math.max(Math.abs(lr), Math.abs(rr))));
-                if (max > 1.0) {
-                    lf /= max; rf /= max; lr /= max; rr /= max;
-                }
-
-                // set motors
-                robot.motors.leftFront.setPower(lf);
-                robot.motors.rightFront.setPower(rf);
-                robot.motors.leftRear.setPower(lr);
-                robot.motors.rightRear.setPower(rr);
             }
         }
+
+        setMecanumPower(0, 0, 0);
+    }
+
+    /**
+     * Sets mecanum wheel powers using standard mecanum drive math.
+     *
+     * @param forward  Positive = forward, negative = backward
+     * @param strafe   Positive = right, negative = left
+     * @param rotation Positive = clockwise, negative = counter-clockwise
+     */
+    private void setMecanumPower(double forward, double strafe, double rotation) {
+        double leftFrontPower  = forward + strafe + rotation;
+        double rightFrontPower = forward - strafe - rotation;
+        double leftRearPower   = forward - strafe + rotation;
+        double rightRearPower  = forward + strafe - rotation;
+
+        double maxPower = Math.max(1.0, Math.max(
+                Math.abs(leftFrontPower),
+                Math.max(Math.abs(rightFrontPower),
+                        Math.max(Math.abs(leftRearPower), Math.abs(rightRearPower)))
+        ));
+
+        robot.motors.leftFront.setPower(leftFrontPower / maxPower);
+        robot.motors.rightFront.setPower(rightFrontPower / maxPower);
+        robot.motors.leftRear.setPower(leftRearPower / maxPower);
+        robot.motors.rightRear.setPower(rightRearPower / maxPower);
     }
 }
-
