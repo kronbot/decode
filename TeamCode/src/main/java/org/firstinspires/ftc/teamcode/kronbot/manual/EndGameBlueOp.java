@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.kronbot.manual;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.kronbot.KronBot;
@@ -26,6 +27,8 @@ public class EndGameBlueOp extends LinearOpMode {
     private final double kP_DISTANCE   = Constants.pDistanceEndGame; // area values are large, keep this tiny
     private final double kP_ROTATION   = Constants.pRoataionEndGame;      // angleError is -1 to 1, needs stronger gain
     private final double TARGET_AREA   = Constants.squareAreaEndGame;  // tune between 20000-90000
+    private final double BACK_SPIN_SPEED = Constants.BACK_SPIN_SPEED;
+    private final double BACK_SPEED = Constants.BACK_SPEED;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -55,11 +58,12 @@ public class EndGameBlueOp extends LinearOpMode {
 
         waitForStart();
         boolean found = false;
-
+        ElapsedTime CorrectionTimer = new ElapsedTime();
         while (opModeIsActive()) {
 
             boolean squareVisible = squarePipeline.getDetectedQuadCount() > 0;
-
+            boolean correcting = false;
+            double angle = squarePipeline.getDetectedAngle();
             if (!squareVisible && !found) {
                 // === SEARCH MODE: Spin in place ===
                 telemetry.addData("Status", "Searching — spinning...");
@@ -68,10 +72,10 @@ public class EndGameBlueOp extends LinearOpMode {
                 setMecanumPower(0, 0, SPIN_SPEED);
 
             }
-            /*else if(squarePipeline.getDetectedAngle() == 0 || squarePipeline.getDetectedAngle() == 90 || squarePipeline.getDetectedAngle() == 180){
+            else if((angle > 88 && angle < 92) || (angle > 178)){
                 setMecanumPower(0,0,0);
                 break;
-            }*/
+            }
             else if (squarePipeline.getDetectedQuadCount() > 0) {
                 found = true;
                 // Use angleError (-1 to 1) to keep square centered in frame
@@ -94,8 +98,17 @@ public class EndGameBlueOp extends LinearOpMode {
 
                 setMecanumPower(forwardSpeed, ORBIT_STRAFE, rotationSpeed);
             }
-            else{
-                setMecanumPower( -ORBIT_STRAFE , 0 , 0);
+            else if (!squareVisible && found){
+                if(!correcting) {
+                    CorrectionTimer = new ElapsedTime();
+                    correcting = true;
+                    setMecanumPower(0,0,0);
+                }
+                else if(CorrectionTimer.seconds() > 1 && correcting) {
+                    found = false;
+                    correcting = false;
+                }
+                setMecanumPower(-BACK_SPEED, 0 , -BACK_SPIN_SPEED);
             }
         }
 

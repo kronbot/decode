@@ -17,11 +17,13 @@ import org.firstinspires.ftc.teamcode.kronbot.autonomous.AutonomousConstants;
  */
 @Config
 public class Constants {
-    public static double pRoataionEndGame = 0.8;
-    public static double pDistanceEndGame = 0.00005;
-    public static double StrafeEndGame = 0.2;
-    public static double SpinEndGame = 0.2;
-    public static double squareAreaEndGame = 50000.0;
+    public static double pRoataionEndGame = 0.5;
+    public static double pDistanceEndGame = 0.00001;
+    public static double StrafeEndGame = 0.35;
+    public static double SpinEndGame = 0.35;
+    public static double BACK_SPIN_SPEED = 0.2;
+    public static double BACK_SPEED = 0.1;
+    public static double squareAreaEndGame = 55000.0;
     public final static String TEST_GROUP = "test";
     public final static String MAIN_GROUP = "main";
 
