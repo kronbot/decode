@@ -25,15 +25,10 @@ public class KronBot {
     public MotorDriver motors;
     public ControlHubGyroscope gyroscope;
     ///public ModernRoboticsI2cRangeSensor rangeSensor;
-
     public DcMotorEx intakeMotor, leftOuttake, rightOuttake;
     public Servo loaderServo;
-
     public Servo turretServo, angleServo, flapsServo;
     ///public ColorSensor outtakeColor;
-
-
-
     public void initDrivetrain(HardwareMap hardwareMap) {
         DcMotorEx leftRear = hardwareMap.get(DcMotorEx.class, "leftRear");
         DcMotorEx leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");

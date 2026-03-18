@@ -23,6 +23,10 @@ public class Constants {
     public static double SpinEndGame = 0.35;
     public static double BACK_SPIN_SPEED = 0.2;
     public static double BACK_SPEED = 0.1;
+    public static double ALGIN_STRAFE_SPEED = 4;
+    public static double ALIGN_ROATION_SPEED = 0.3;
+    public static double pALIGN_ROTATION = 0.5;
+    public static double pALIGN = 1;
     public static double squareAreaEndGame = 55000.0;
     public final static String TEST_GROUP = "test";
     public final static String MAIN_GROUP = "main";
