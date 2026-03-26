@@ -41,6 +41,9 @@ public final class AutonomousConstants {
     public static Coordinates LaunchZoneBackBlue = new Coordinates(11, 2.3, 0.4);
     public static Coordinates ParkBackBlue = new Coordinates(30, 0, 0);
 
+
+    public static Coordinates StartingPoseTest = new Coordinates(80 , 80, 90);
+    public static Coordinates FinalPoseTest = new Coordinates(100,100, 180);
     public static Pose coordinates(Coordinates coord) {
         return new Pose(coord.x, coord.y, coord.heading);
     }
