@@ -3,44 +3,47 @@ package org.firstinspires.ftc.teamcode.kronbot.manual;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.INTAKE_DRIVER_POWER;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.INTAKE_DRIVER_REVERSE;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.INTAKE_REVERSE;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KD;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KF;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KI;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KP;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_1_VELOCITY;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_2_VELOCITY;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_3_VELOCITY;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_4_VELOCITY;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RedTowerCoords;
 
-import com.acmerobotics.dashboard.FtcDashboard;
+import android.os.Environment;
 
-import com.pedropathing.geometry.Pose;
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.kronbot.Robot;
 import org.firstinspires.ftc.teamcode.kronbot.utils.Controls;
-import org.firstinspires.ftc.teamcode.kronbot.utils.components.AutoAim;
-import org.firstinspires.ftc.teamcode.kronbot.utils.components.FieldCentricDrive;
-import org.firstinspires.ftc.teamcode.kronbot.utils.components.RobotCentricDrive;
-import org.firstinspires.ftc.teamcode.kronbot.utils.Constants;
 import org.firstinspires.ftc.teamcode.kronbot.utils.components.TurretAligner;
 import org.firstinspires.ftc.teamcode.kronbot.utils.misc.LpsCounter;
-import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Locale;
 
 /**
- * The main TeleOP program for the driving period of the game.
+ * Enhanced TeleOP data recorder (V3).
+ * Records drive motor powers (for feedforward replay) and mechanism velocities
+ * (for faithful shooter reproduction).
  *
- * @version 1.0
+ * CSV columns (17 total):
+ * Time, LR, RR, LF, RF, X, Y, Heading, Voltage,
+ * IntakeVel, LoaderVel, LeftShtrVel, RightShtrVel,
+ * TurretPos, AnglePos, FlapPos
+ *
+ * Key differences from DataRecordingOp2:
+ * - Mechanism columns record velocities instead of raw powers (better for shooter replay)
+ * - Uses ElapsedTime (nanosecond resolution) for timestamps, matching the replay timer exactly
+ * - Otherwise identical format for drive motors (LR, RR, LF, RF powers)
+ *
+ * @version 3.0
  */
-@TeleOp(name = "Main Driving", group = Constants.MAIN_GROUP)
-public class MainDrivingOp extends OpMode {
+@TeleOp(name = "Data Recorder V3", group = "Replay")
+public class DataRecordingOp3 extends OpMode {
     private final Robot robot = Robot.getInstance();
     private Controls drivingGP;
     private Controls utilityGP;
-
 
     private TurretAligner turretAligner;
 
@@ -54,6 +57,14 @@ public class MainDrivingOp extends OpMode {
 
     boolean rumbled = false;
 
+    // Data Recording Fields
+    private FileWriter dataRecorder;
+    private static final double RECORD_INTERVAL_SEC = 0.020; // 20ms in seconds
+    private ElapsedTime recordTimer = new ElapsedTime();
+    private double lastRecordTime = 0;
+
+    // Direct access to drive motors for recording (follower hides them)
+    private DcMotorEx leftFront, rightFront, leftRear, rightRear;
 
     @Override
     public void init() {
@@ -62,58 +73,79 @@ public class MainDrivingOp extends OpMode {
         robot.initFollower(hardwareMap, true);
         robot.init(hardwareMap);
 
-
         dashboard = FtcDashboard.getInstance();
-//        robot.webcam.init(hardwareMap, telemetry);
+        robot.webcam.init(hardwareMap, telemetry);
 
-//        if (robot.webcam.getVisionPortal() != null) {
-//            dashboard.startCameraStream(robot.webcam.getVisionPortal(), 30);
-//        }
+        if (robot.webcam.getVisionPortal() != null) {
+            dashboard.startCameraStream(robot.webcam.getVisionPortal(), 30);
+        }
 
-        // Initialize the new coordinate aligner
         turretAligner = new TurretAligner(robot);
         turretAligner.setTarget(RedTowerCoords.x, RedTowerCoords.y);
 
         drivingGP = new Controls(gamepad1);
         utilityGP = new Controls(gamepad2);
 
+        try {
+            robot.follower.getPoseTracker().resetIMU();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
 
+        // Initialize drive motors for recording
+        leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
+        rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
+        leftRear = hardwareMap.get(DcMotorEx.class, "leftRear");
+        rightRear = hardwareMap.get(DcMotorEx.class, "rightRear");
+
+        // Initialize Data Recorder
+        String filePath = Environment.getExternalStorageDirectory().getPath() + "/robot_data.csv";
+        try {
+            dataRecorder = new FileWriter(filePath);
+            dataRecorder.write("Time,LR,RR,LF,RF,X,Y,Heading,Voltage,IntakeVel,LoaderVel,LeftShtrVel,RightShtrVel,TurretPos,AnglePos,FlapPos\n");
+        } catch (IOException e) {
+            telemetry.addData("Error initializing recorder", e.getMessage());
+        }
     }
 
     @Override
     public void init_loop() {
         lpsCounter.getLoopTime();
 
-        telemetry.addLine("Initialization Ready");
+        telemetry.addLine("Initialization Ready (Recording V3 Enabled)");
         telemetry.update();
     }
 
     @Override
     public void start() {
         robot.follower.startTeleopDrive();
+        recordTimer.reset();
     }
 
     @Override
     public void loop() {
-        // Update Loops/s delta
+        double now = recordTimer.seconds();
+
         lpsCounter.getLoopTime();
 
-        //Update controller inputs
         drivingGP.update();
         utilityGP.update();
 
         robot.follower.update();
 
-        //Intake
+        // Intake
         robot.intake.speed = utilityGP.rightStick.y;
         robot.intake.reversed = INTAKE_REVERSE;
 
-        //Loader
+        // Alignment
+        turretAligner.update();
+
+        // Loader
         if (!drivingGP.rightBumper.pressed()) {
             robot.loader.speed = utilityGP.leftStick.y;
             robot.flap.open = false;
         } else {
-            robot.loader.speed = (drivingGP.rightTrigger - drivingGP.leftTrigger) * 0.8;
+            robot.loader.speed = (drivingGP.rightTrigger - drivingGP.leftTrigger) * 0.9;
             robot.flap.open = true;
             if (robot.loader.speed > 0.1)
                 robot.intake.speed = INTAKE_DRIVER_POWER;
@@ -123,12 +155,9 @@ public class MainDrivingOp extends OpMode {
                 robot.intake.speed = 0;
         }
 
-        //AprilTagDetection tag = robot.webcam.getTowerTags();
-        //autoAim.telemetry(telemetry, tag);
+        // Turret/Angle aiming
 
-        //Turret/Angle aiming
-
-        //Turret aiming
+        // Turret aiming
         if (drivingGP.dpadLeft.pressed()) {
 
             //if button is pressed for longer, increase increment
@@ -167,12 +196,6 @@ public class MainDrivingOp extends OpMode {
             turretTimer.reset();
         }
 
-//            //Angle aiming
-//            if(drivingGP.dpadUp.pressed())
-//                robot.outtake.activeConfig.angle += 0.01;
-//            else if(drivingGP.dpadDown.pressed())
-//                robot.outtake.activeConfig.angle -= 0.01;
-
         if(drivingGP.dpadDown.justPressed())
             robot.turret.autoAimEnabled = !robot.turret.autoAimEnabled;
 
@@ -181,7 +204,7 @@ public class MainDrivingOp extends OpMode {
 
         if(autoAimEnabled)
             robot.shoot.activateRange(0);
-        //Shoot Close/Far
+        // Shoot ranges
         if (drivingGP.triangle.justPressed()) {
             robot.shoot.activateRange(1);
         }
@@ -211,28 +234,44 @@ public class MainDrivingOp extends OpMode {
             }
         }
 
-        if(drivingGP.rightStick.button.justPressed())
-            robot.Blue_Target = !robot.Blue_Target;
-
-        //Update robot systems status
+        // Update robot systems
         robot.follower.setTeleOpDrive(-drivingGP.leftStick.y, -drivingGP.leftStick.x, -drivingGP.rightStick.x, true);
         robot.updateAllSystems();
-        _telemetry();
-        //robot.webcam.update();
-    }
 
+        // Record Data (Fix #5: uses same ElapsedTime as replay for consistent timestamps)
+        if (now - lastRecordTime >= RECORD_INTERVAL_SEC) {
+            try {
+                recordData(now);
+            } catch (IOException e) {
+                telemetry.addData("Recording Error", e.getMessage());
+            }
+            lastRecordTime = now;
+        }
+
+        _telemetry();
+    }
 
     @Override
     public void stop() {
         robot.webcam.stop();
+        if (dataRecorder != null) {
+            try {
+                dataRecorder.flush();
+                dataRecorder.close();
+            } catch (IOException ignored) {
+            }
+        }
     }
 
     public void _telemetry() {
         telemetry.addData("LPS", "%.1f", 1 / lpsCounter.delta);
+        telemetry.addData("Recording V3", "ACTIVE");
         telemetry.addData("x", robot.follower.getPose().getX());
         telemetry.addData("y", robot.follower.getPose().getY());
         telemetry.addData("heading", robot.follower.getPose().getHeading());
         telemetry.addData("Heading", robot.follower.getHeading());
+        telemetry.addData("Drive Powers", "LF:%.2f RF:%.2f LR:%.2f RR:%.2f",
+                leftFront.getPower(), rightFront.getPower(), leftRear.getPower(), rightRear.getPower());
         telemetry.addData("shooter motor vel:", robot.leftOuttake.getVelocity());
         telemetry.addData("angle servo pos:", robot.turretServo.getPosition());
         telemetry.addData("turret angle:", robot.turret.angle);
@@ -243,5 +282,41 @@ public class MainDrivingOp extends OpMode {
         robot.turret.telemetry(telemetry);
         drivingGP.telemetry(telemetry);
         telemetry.update();
+    }
+
+    private void recordData(double t) throws IOException {
+
+        double x = robot.follower.getPose().getX();
+        double y = robot.follower.getPose().getY();
+        double heading = robot.follower.getHeading();
+
+        double voltage = hardwareMap.voltageSensor.iterator().next().getVoltage();
+
+        // Record mechanism velocities instead of raw powers for better reproduction
+        double intakeVel = robot.intakeMotor.getVelocity();
+        double loaderVel = robot.loaderMotor.getVelocity();
+        double leftShtrVel = robot.leftOuttake.getVelocity();
+        double rightShtrVel = robot.rightOuttake.getVelocity();
+
+        // CSV: Time, LR, RR, LF, RF, X, Y, Heading, Voltage, IntakeVel, LoaderVel, LeftShtrVel, RightShtrVel, TurretPos, AnglePos, FlapPos
+        dataRecorder.write(String.format(Locale.US,
+                "%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.2f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n",
+                t,
+                leftRear.getPower(),
+                rightRear.getPower(),
+                leftFront.getPower(),
+                rightFront.getPower(),
+                x,
+                y,
+                heading,
+                voltage,
+                intakeVel,
+                loaderVel,
+                leftShtrVel,
+                rightShtrVel,
+                robot.turretServo.getPosition(),
+                robot.angleServo.getPosition(),
+                robot.flapsServo.getPosition()
+        ));
     }
 }
