@@ -5,10 +5,13 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.teamcode.R;
 import org.firstinspires.ftc.teamcode.kronbot.utils.detection.AprilTagWebcam;
 import org.opencv.core.Mat;
 
+import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.hardwareMap;
+import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_CLOSE;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_MAX;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_MIN;
@@ -49,8 +52,23 @@ import android.util.Pair;
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.LLResultTypes;
+import com.qualcomm.hardware.limelightvision.LLStatus;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
+
+import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.util.ElapsedTime;
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.LLResultTypes;
+import com.qualcomm.hardware.limelightvision.LLStatus;
 
 public class Robot extends KronBot {
     // Singleton instance
@@ -617,6 +635,96 @@ public class Robot extends KronBot {
             telemetry.addData("Left Front Power", "%.2f", motors.leftFront.getPower());
             telemetry.addData("Right Front Power", "%.2f", motors.rightFront.getPower());
             telemetry.addData("Left Rear Power", "%.2f", motors.leftRear.getPower());
+        }
+    }
+
+    public static class Limelight {
+
+        private Limelight3A limelight;
+        private Telemetry telemetry;
+        private LLResult result;
+
+        // Call this once, from your OpMode's init(), passing in its hardwareMap and telemetry
+        public void init(HardwareMap hardwareMap, Telemetry telemetry) {
+            this.telemetry = telemetry;
+            limelight = hardwareMap.get(Limelight3A.class, "limelight");
+            limelight.setPollRateHz(100); // ask Limelight for data 100 times per second
+            limelight.pipelineSwitch(7);  // switch to pipeline 7
+            limelight.start();            // start looking
+        }
+
+        // Call this once per loop() BEFORE calling telemetry(), so 'result' is fresh
+        public void update() {
+            result = limelight.getLatestResult();
+        }
+
+        public void telemetry() {
+            if (result == null) {
+                telemetry.addData("Limelight", "No data yet");
+                return;
+            }
+
+            if (result.isValid()) {
+                double tx = result.getTx(); // left/right (degrees)
+                double ty = result.getTy(); // up/down (degrees)
+                double ta = result.getTa(); // target size (0-100%)
+
+                telemetry.addData("Target X", tx);
+                telemetry.addData("Target Y", ty);
+                telemetry.addData("Target Area", ta);
+
+                Pose3D botpose = result.getBotpose();
+                if (botpose != null) {
+                    double x = botpose.getPosition().x;
+                    double y = botpose.getPosition().y;
+                    telemetry.addData("MT1 Location", "(" + x + ", " + y + ")");
+                }
+            } else {
+                telemetry.addData("Limelight", "No Targets");
+            }
+
+            List<LLResultTypes.ColorResult> colorTargets = result.getColorResults();
+            for (LLResultTypes.ColorResult colorTarget : colorTargets) {
+                double x = colorTarget.getTargetXDegrees();
+                double y = colorTarget.getTargetYDegrees();
+                double area = colorTarget.getTargetArea();
+                telemetry.addData("Color Target", "x=" + x + " y=" + y + " area=" + area + "%");
+            }
+
+            List<LLResultTypes.FiducialResult> fiducials = result.getFiducialResults();
+            for (LLResultTypes.FiducialResult fiducial : fiducials) {
+                int id = fiducial.getFiducialId();
+                double x = fiducial.getTargetXDegrees();
+                double y = fiducial.getTargetYDegrees();
+                Pose3D poseInTargetSpace = fiducial.getRobotPoseTargetSpace();
+                double distance = poseInTargetSpace != null ? poseInTargetSpace.getPosition().y : -1;
+                telemetry.addData("Fiducial " + id, "x=" + x + " y=" + y + " dist=" + distance + "m");
+            }
+
+            List<LLResultTypes.BarcodeResult> barcodes = result.getBarcodeResults();
+            for (LLResultTypes.BarcodeResult barcode : barcodes) {
+                String data = barcode.getData();
+                String family = barcode.getFamily();
+                telemetry.addData("Barcode", data + " (" + family + ")");
+            }
+
+            List<LLResultTypes.ClassifierResult> classifications = result.getClassifierResults();
+            for (LLResultTypes.ClassifierResult classification : classifications) {
+                String className = classification.getClassName();
+                double confidence = classification.getConfidence();
+                telemetry.addData("I see a", className + " (" + confidence + "%)");
+            }
+
+            long staleness = result.getStaleness();
+            if (staleness < 100) {
+                telemetry.addData("Data", "Good");
+            } else {
+                telemetry.addData("Data", "Old (" + staleness + " ms)");
+            }
+        }
+
+        public LLResult getResult() {
+            return result;
         }
     }
 }
