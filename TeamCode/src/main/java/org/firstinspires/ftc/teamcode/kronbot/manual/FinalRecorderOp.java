@@ -23,18 +23,18 @@ import java.io.IOException;
 import java.util.Locale;
 
 /**
- * TeleOp data recorder (V3.3).
+ * TeleOp data recorder (V3.4).
  *
  * This OpMode is a faithful copy of MainDrivingOp with data-recording added.
  * Every mechanism control line is identical to MainDrivingOp so the driver
  * experiences exactly the same robot behavior while recording.
  *
- * CSV columns (23 total):
+ * CSV columns (27 total):
  *   Time, LR, RR, LF, RF, X, Y, Heading, Voltage,
  *   IntakeVel, LoaderVel, LeftShtrVel, RightShtrVel,
  *   TurretPos, AnglePos, FlapPos,
  *   IntakeCmd, LoaderCmd, FlapOpen, ShootRange, TurretOffset, BlueTarget,
- *   AutoAimEnabled
+ *   AutoAimEnabled, DriveFwd, DriveStr, DriveTurn, OuttakeKs
  *
  * V3.3 changes over V3.2:
  *   - Removed resetIMU() from init() to match MainDrivingOp exactly. The
@@ -52,7 +52,14 @@ import java.util.Locale;
  *     with the exact same arguments the driver used, instead of trying
  *     to reverse-engineer the range from activeConfig.velocity.
  *
- * @version 3.3
+ * V3.4 changes over V3.3:
+ *   - Records the exact drive commands passed to Pedro's setTeleOpDrive().
+ *     Replay can now use driver feedforward plus odometry correction instead
+ *     of relying only on pose PD or trying to infer intent from wheel powers.
+ *   - Records auto-aim as ShootRange 0 and stores the active shooter kS, so
+ *     replay can keep the recorded interpolated shooter velocity stable.
+ *
+ * @version 3.4
  */
 @TeleOp(name = "FINAL Recorder", group = "Replay")
 public class FinalRecorderOp extends OpMode {
@@ -118,11 +125,11 @@ public class FinalRecorderOp extends OpMode {
         // for parity. The replay still does its own setPose() at the
         // first recorded frame, so this is fine.
 
-        // Initialize Data Recorder — V3.3 header (23 columns)
+        // Initialize Data Recorder — V3.4 header (27 columns)
         String filePath = Environment.getExternalStorageDirectory().getPath() + "/robot_data.csv";
         try {
             dataRecorder = new FileWriter(filePath);
-            dataRecorder.write("Time,LR,RR,LF,RF,X,Y,Heading,Voltage,IntakeVel,LoaderVel,LeftShtrVel,RightShtrVel,TurretPos,AnglePos,FlapPos,IntakeCmd,LoaderCmd,FlapOpen,ShootRange,TurretOffset,BlueTarget,AutoAim\n");
+            dataRecorder.write("Time,LR,RR,LF,RF,X,Y,Heading,Voltage,IntakeVel,LoaderVel,LeftShtrVel,RightShtrVel,TurretPos,AnglePos,FlapPos,IntakeCmd,LoaderCmd,FlapOpen,ShootRange,TurretOffset,BlueTarget,AutoAim,DriveFwd,DriveStr,DriveTurn,OuttakeKs\n");
         } catch (IOException e) {
             telemetry.addData("Error initializing recorder", e.getMessage());
         }
@@ -132,7 +139,7 @@ public class FinalRecorderOp extends OpMode {
     public void init_loop() {
         lpsCounter.getLoopTime();
 
-        telemetry.addLine("Initialization Ready (Recording V3.3 Enabled)");
+        telemetry.addLine("Initialization Ready (Recording V3.4 Enabled)");
         telemetry.update();
     }
 
@@ -152,6 +159,10 @@ public class FinalRecorderOp extends OpMode {
         utilityGP.update();
 
         robot.follower.update();
+
+        double driveFwd = -drivingGP.leftStick.y;
+        double driveStr = -drivingGP.leftStick.x;
+        double driveTurn = -drivingGP.rightStick.x;
 
         // ----- Everything below this point is identical to MainDrivingOp -----
 
@@ -210,8 +221,10 @@ public class FinalRecorderOp extends OpMode {
         if(drivingGP.dpadUp.justPressed())
             autoAimEnabled=!autoAimEnabled;
 
-        if(autoAimEnabled)
+        if(autoAimEnabled) {
             robot.shoot.activateRange(0);
+            lastActivateRange = 0;
+        }
         //Shoot Close/Far
         if (drivingGP.triangle.justPressed()) {
             robot.shoot.activateRange(1);
@@ -251,7 +264,7 @@ public class FinalRecorderOp extends OpMode {
             robot.Blue_Target = !robot.Blue_Target;
 
         //Update robot systems status
-        robot.follower.setTeleOpDrive(-drivingGP.leftStick.y, -drivingGP.leftStick.x, -drivingGP.rightStick.x, true);
+        robot.follower.setTeleOpDrive(driveFwd, driveStr, driveTurn, true);
         robot.updateAllSystems();
 
         // ----- End of MainDrivingOp-identical block -----
@@ -259,7 +272,7 @@ public class FinalRecorderOp extends OpMode {
         // Record Data
         if (now - lastRecordTime >= RECORD_INTERVAL_SEC) {
             try {
-                recordData(now);
+                recordData(now, driveFwd, driveStr, driveTurn);
             } catch (IOException e) {
                 telemetry.addData("Recording Error", e.getMessage());
             }
@@ -282,7 +295,7 @@ public class FinalRecorderOp extends OpMode {
 
     public void _telemetry() {
         telemetry.addData("LPS", "%.1f", 1 / lpsCounter.delta);
-        telemetry.addData("Recording V3.3", "ACTIVE");
+        telemetry.addData("Recording V3.4", "ACTIVE");
         telemetry.addData("x", robot.follower.getPose().getX());
         telemetry.addData("y", robot.follower.getPose().getY());
         telemetry.addData("heading", robot.follower.getPose().getHeading());
@@ -301,7 +314,7 @@ public class FinalRecorderOp extends OpMode {
         telemetry.update();
     }
 
-    private void recordData(double t) throws IOException {
+    private void recordData(double t, double driveFwd, double driveStr, double driveTurn) throws IOException {
 
         double x = robot.follower.getPose().getX();
         double y = robot.follower.getPose().getY();
@@ -329,9 +342,10 @@ public class FinalRecorderOp extends OpMode {
         double turretOffset  = robot.turret.driverOffset;
         int    blueTarget    = robot.Blue_Target ? 1 : 0;
         int    autoAim       = autoAimEnabled ? 1 : 0;
+        double outtakeKs     = robot.outtake.activeConfig.kS;
 
         dataRecorder.write(String.format(Locale.US,
-                "%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.2f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%d,%d,%.4f,%d,%d\n",
+                "%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.2f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%d,%d,%.4f,%d,%d,%.4f,%.4f,%.4f,%.4f\n",
                 t,
                 leftRear.getPower(),
                 rightRear.getPower(),
@@ -354,7 +368,11 @@ public class FinalRecorderOp extends OpMode {
                 shootRange,
                 turretOffset,
                 blueTarget,
-                autoAim
+                autoAim,
+                driveFwd,
+                driveStr,
+                driveTurn,
+                outtakeKs
         ));
     }
 }
