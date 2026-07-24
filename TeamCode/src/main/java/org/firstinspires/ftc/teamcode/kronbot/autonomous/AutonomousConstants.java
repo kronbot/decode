@@ -65,6 +65,22 @@ public final class AutonomousConstants {
     public static Coordinates IntakeZoneBack11Blue = new Coordinates(5, -20, 1.5);
     public static Coordinates ParkBackBlue = new Coordinates(30, -50, 0);
 
+
+    /// Replay Correction
+    public static double kP_translation = 0.022;
+    public static double kD_translation = 0.013;
+    public static double kP_rotation    = 0.30;
+    public static double kD_rotation    = 0.08;
+
+    // Constraints
+    public static double BLEND_K                = 0.40;
+    public static double MIN_CORRECTION_CAP     = 0.20;
+    public static double MAX_CORRECTION_CAP     = 0.60;
+    public static double CORRECTION_ERROR_SCALE = 7.0;
+    public static double D_FILTER_ALPHA         = 0.45;
+
+
+
     public static Pose coordinates(Coordinates coord) {
         return new Pose(coord.x, coord.y, coord.heading);
     }

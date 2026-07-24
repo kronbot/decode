@@ -1,5 +1,14 @@
 package org.firstinspires.ftc.teamcode.kronbot.autonomous;
 
+import static org.firstinspires.ftc.teamcode.kronbot.autonomous.AutonomousConstants.BLEND_K;
+import static org.firstinspires.ftc.teamcode.kronbot.autonomous.AutonomousConstants.MAX_CORRECTION_CAP;
+import static org.firstinspires.ftc.teamcode.kronbot.autonomous.AutonomousConstants.MIN_CORRECTION_CAP;
+import static org.firstinspires.ftc.teamcode.kronbot.autonomous.AutonomousConstants.CORRECTION_ERROR_SCALE;
+import static org.firstinspires.ftc.teamcode.kronbot.autonomous.AutonomousConstants.D_FILTER_ALPHA;
+import static org.firstinspires.ftc.teamcode.kronbot.autonomous.AutonomousConstants.kD_rotation;
+import static org.firstinspires.ftc.teamcode.kronbot.autonomous.AutonomousConstants.kP_rotation;
+import static org.firstinspires.ftc.teamcode.kronbot.autonomous.AutonomousConstants.kP_translation;
+import static org.firstinspires.ftc.teamcode.kronbot.autonomous.AutonomousConstants.kD_translation;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.INTAKE_REVERSE;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -44,21 +53,6 @@ public class FinalReplayOp extends LinearOpMode {
     private static final double VOLTAGE_REFRESH_SEC  = 0.10;
     private static final double TIME_SCALING_FACTOR  = 0.5;   // adjust replay speed for voltage drops
 
-    // PD Translation (x, y). These stay low because recorded driver input is
-    // the main motion command; PD only corrects odometry error.
-    public static double kP_translation = 0.018;
-    public static double kD_translation = 0.010;
-
-    // PD Rotation (heading)
-    public static double kP_rotation    = 0.28;
-    public static double kD_rotation    = 0.07;
-
-    // Constraints
-    private static final double BLEND_K              = 0.35;
-    private static final double MIN_CORRECTION_CAP   = 0.20;
-    private static final double MAX_CORRECTION_CAP   = 0.60;
-    private static final double CORRECTION_ERROR_SCALE = 8.0;
-    private static final double D_FILTER_ALPHA       = 0.45;
     private static final double MAX_SLEW_RATE        = 5.0;
     private static final double MIN_DT               = 0.008;
     private static final double MAX_DT               = 0.050;
@@ -160,6 +154,10 @@ public class FinalReplayOp extends LinearOpMode {
         prevRobotStr     = 0;
         prevRobotTurn    = 0;
 
+        double posErrorSum = 0;
+        double posErrorPeak = 0;
+        int posErrorSamples = 0;
+
         robot.follower.startTeleopDrive();
 
         while (opModeIsActive() && idx < recordedFrames.size() - 1) {
@@ -227,6 +225,11 @@ public class FinalReplayOp extends LinearOpMode {
             double corrTurn = eh * kP_rotation + filteredDh * kD_rotation;
 
             double posError = Math.hypot(exField, eyField);
+            posErrorSum += posError;
+            posErrorSamples++;
+            posErrorPeak = Math.max(posErrorPeak, posError);
+            double posErrorMean = posErrorSum / posErrorSamples;
+
             double corrScale = Math.min(posError / CORRECTION_ERROR_SCALE, 1.0);
             double dynamicMaxCorr = lerp(MIN_CORRECTION_CAP, MAX_CORRECTION_CAP, corrScale);
 
@@ -277,7 +280,9 @@ public class FinalReplayOp extends LinearOpMode {
             telemetry.addData("Time",    "%.2f / %.2f s", now, duration);
             telemetry.addData("Lookahead", "%.3f s", lookahead);
             telemetry.addData("PosErr",  "%.2f cm",  posError);
-            telemetry.addData("HeadErr", "%.1f °",   Math.toDegrees(Math.abs(eh)));
+            telemetry.addData("PosErr Mean", "%.2f cm", posErrorMean);
+            telemetry.addData("PosErr Peak", "%.2f cm", posErrorPeak);
+            telemetry.addData("HeadErr", "%.1f °",   Math.toDegrees(Math .abs(eh)));
             telemetry.addData("FF", "fwd=%.2f str=%.2f turn=%.2f", ffFwd, ffStr, ffTurn);
             telemetry.addData("Corr", "fwd=%.2f str=%.2f turn=%.2f w=%.0f%%",
                     corrFwd, corrStr, corrTurn, corrWeight * 100);
