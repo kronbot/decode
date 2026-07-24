@@ -28,7 +28,7 @@ import java.util.List;
  * Drive playback uses the recorded TeleOp commands as feedforward and blends
  * in Pedro odometry PD correction when the robot drifts from the recording.
  */
-@Autonomous(name = "FINAL Replay V3.4", group = "Replay")
+@Autonomous(name = "Replay Vlad", group = "Replay")
 public class FinalReplayOp extends LinearOpMode {
 
     private final Robot robot = Robot.getInstance();
@@ -36,7 +36,7 @@ public class FinalReplayOp extends LinearOpMode {
     // -------------------------------------------------------------------------
     // Configuration
     // -------------------------------------------------------------------------
-    private static final String CSV_PATH = "/sdcard/robot_data.csv";
+    private static final String CSV_PATH = "/sdcard/robot_data_Vlad.csv";
 
     // Playback tuning
     private static final double LOOKAHEAD_TIME       = 0.080; // 80ms lookahead while moving

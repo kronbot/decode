@@ -61,7 +61,7 @@ import java.util.Locale;
  *
  * @version 3.4
  */
-@TeleOp(name = "FINAL Recorder", group = "Replay")
+@TeleOp(name = "Recorder Vlad", group = "Replay")
 public class FinalRecorderOp extends OpMode {
     private final Robot robot = Robot.getInstance();
     private Controls drivingGP;
@@ -126,7 +126,7 @@ public class FinalRecorderOp extends OpMode {
         // first recorded frame, so this is fine.
 
         // Initialize Data Recorder — V3.4 header (27 columns)
-        String filePath = Environment.getExternalStorageDirectory().getPath() + "/robot_data.csv";
+        String filePath = Environment.getExternalStorageDirectory().getPath() + "/robot_data_Vlad.csv";
         try {
             dataRecorder = new FileWriter(filePath);
             dataRecorder.write("Time,LR,RR,LF,RF,X,Y,Heading,Voltage,IntakeVel,LoaderVel,LeftShtrVel,RightShtrVel,TurretPos,AnglePos,FlapPos,IntakeCmd,LoaderCmd,FlapOpen,ShootRange,TurretOffset,BlueTarget,AutoAim,DriveFwd,DriveStr,DriveTurn,OuttakeKs\n");

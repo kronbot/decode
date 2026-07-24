@@ -3,10 +3,6 @@ package org.firstinspires.ftc.teamcode.kronbot.manual;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.INTAKE_DRIVER_POWER;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.INTAKE_DRIVER_REVERSE;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.INTAKE_REVERSE;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_1_VELOCITY;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_2_VELOCITY;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_3_VELOCITY;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_4_VELOCITY;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RedTowerCoords;
 
 import android.os.Environment;
@@ -27,35 +23,39 @@ import java.io.IOException;
 import java.util.Locale;
 
 /**
- * TeleOp data recorder (V3.2).
+ * TeleOp data recorder (V3.3).
  *
  * This OpMode is a faithful copy of MainDrivingOp with data-recording added.
  * Every mechanism control line is identical to MainDrivingOp so the driver
  * experiences exactly the same robot behavior while recording.
  *
- * CSV columns (22 total):
+ * CSV columns (23 total):
  *   Time, LR, RR, LF, RF, X, Y, Heading, Voltage,
  *   IntakeVel, LoaderVel, LeftShtrVel, RightShtrVel,
  *   TurretPos, AnglePos, FlapPos,
- *   IntakeCmd, LoaderCmd, FlapOpen, ShootRange, TurretOffset, BlueTarget
+ *   IntakeCmd, LoaderCmd, FlapOpen, ShootRange, TurretOffset, BlueTarget,
+ *   AutoAimEnabled
  *
- * The first 16 columns are the V3 mechanism-state log (for direct servo
- * and velocity control). The last 6 columns are the high-level mechanism
- * commands the TeleOp applied — these let the replay call the same
- * high-level API (intake.speed, shoot.activateRange, etc.) and let
- * robot.updateAllSystems() drive the motors, exactly like the TeleOp.
+ * V3.3 changes over V3.2:
+ *   - Removed resetIMU() from init() to match MainDrivingOp exactly. The
+ *     recorded path now starts from the same IMU state the driver had at
+ *     init, not from a freshly-reset one. The replay still does setPose()
+ *     with the recorded X/Y/heading, so localizer drift is reset on replay.
+ *   - Added AutoAimEnabled column. Previously auto-aim was only inferable
+ *     from the brittle "velocity matches RANGE_X_VELOCITY" check, which
+ *     breaks for the interpolated auto-aim range (activateRange(0)). The
+ *     recorder now mirrors MainDrivingOp's dpadUp toggle explicitly and
+ *     records the boolean.
+ *   - LastActivateRange tracking: the recorder now wraps each
+ *     robot.shoot.activateRange(N) call to remember the last discrete N
+ *     that was passed in. The replay uses this to fire activateRange()
+ *     with the exact same arguments the driver used, instead of trying
+ *     to reverse-engineer the range from activeConfig.velocity.
  *
- * V3.2 changes:
- *   - Fixed loader scalar: was * 0.9, now * 0.8 (matches MainDrivingOp)
- *   - Added rightStick.button toggle for Blue_Target (matches MainDrivingOp)
- *   - Removed turretAligner.update() from loop (TeleOp doesn't call it)
- *   - Webcam init commented out (matches MainDrivingOp)
- *   - Added 6 high-level mechanism command columns for replay parity
- *
- * @version 3.2
+ * @version 3.3
  */
-@TeleOp(name = "RECORDERRRR", group = "Replay")
-public class DataRecordingOpV3FIXED extends OpMode {
+@TeleOp(name = "Recorder Robert", group = "Replay")
+public class RecorderOpRob extends OpMode {
     private final Robot robot = Robot.getInstance();
     private Controls drivingGP;
     private Controls utilityGP;
@@ -80,6 +80,12 @@ public class DataRecordingOpV3FIXED extends OpMode {
 
     // Direct access to drive motors for recording (follower hides them)
     private DcMotorEx leftFront, rightFront, leftRear, rightRear;
+
+    // Last discrete range passed to robot.shoot.activateRange(N). -2 means
+    // "never called this session" (used by replay to avoid an initial-state
+    // fire if no range was ever activated). -1 means deactivate was called
+    // or outtake was never on.
+    private int lastActivateRange = -2;
 
     @Override
     public void init() {
@@ -106,19 +112,17 @@ public class DataRecordingOpV3FIXED extends OpMode {
         leftRear = hardwareMap.get(DcMotorEx.class, "leftRear");
         rightRear = hardwareMap.get(DcMotorEx.class, "rightRear");
 
-        // Reset IMU for a clean starting pose — done before init_loop so
-        // the driver doesn't notice any difference from MainDrivingOp.
-        try {
-            robot.follower.getPoseTracker().resetIMU();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        // NOTE: MainDrivingOp does NOT call resetIMU() in init(). The
+        // recorder used to (V3.2), which made the recorded path start from
+        // a freshly-zeroed IMU while the actual TeleOp didn't. Removed
+        // for parity. The replay still does its own setPose() at the
+        // first recorded frame, so this is fine.
 
-        // Initialize Data Recorder — V3.2 header (22 columns)
-        String filePath = Environment.getExternalStorageDirectory().getPath() + "/robot_data.csv";
+        // Initialize Data Recorder — V3.3 header (23 columns)
+        String filePath = Environment.getExternalStorageDirectory().getPath() + "/robot_data_Robert.csv";
         try {
             dataRecorder = new FileWriter(filePath);
-            dataRecorder.write("Time,LR,RR,LF,RF,X,Y,Heading,Voltage,IntakeVel,LoaderVel,LeftShtrVel,RightShtrVel,TurretPos,AnglePos,FlapPos,IntakeCmd,LoaderCmd,FlapOpen,ShootRange,TurretOffset,BlueTarget\n");
+            dataRecorder.write("Time,LR,RR,LF,RF,X,Y,Heading,Voltage,IntakeVel,LoaderVel,LeftShtrVel,RightShtrVel,TurretPos,AnglePos,FlapPos,IntakeCmd,LoaderCmd,FlapOpen,ShootRange,TurretOffset,BlueTarget,AutoAim\n");
         } catch (IOException e) {
             telemetry.addData("Error initializing recorder", e.getMessage());
         }
@@ -128,7 +132,7 @@ public class DataRecordingOpV3FIXED extends OpMode {
     public void init_loop() {
         lpsCounter.getLoopTime();
 
-        telemetry.addLine("Initialization Ready (Recording V3.2 Enabled)");
+        telemetry.addLine("Initialization Ready (Recording V3.3 Enabled)");
         telemetry.update();
     }
 
@@ -211,15 +215,19 @@ public class DataRecordingOpV3FIXED extends OpMode {
         //Shoot Close/Far
         if (drivingGP.triangle.justPressed()) {
             robot.shoot.activateRange(1);
+            lastActivateRange = 1;
         }
         if (drivingGP.square.justPressed()) {
             robot.shoot.activateRange(2);
+            lastActivateRange = 2;
         }
         if (drivingGP.cross.justPressed()) {
             robot.shoot.activateRange(3);
+            lastActivateRange = 3;
         }
         if (drivingGP.circle.justPressed()) {
             robot.shoot.activateRange(4);
+            lastActivateRange = 4;
         }
 
         if (robot.outtake.on &&
@@ -233,6 +241,7 @@ public class DataRecordingOpV3FIXED extends OpMode {
             robot.turret.autoAimEnabled = true;
             if (robot.outtake.on) {
                 robot.shoot.deactivate();
+                lastActivateRange = -1; // explicit: deactivated
                 gamepad1.rumble(1, 1, 100);
                 rumbled = false;
             }
@@ -273,7 +282,7 @@ public class DataRecordingOpV3FIXED extends OpMode {
 
     public void _telemetry() {
         telemetry.addData("LPS", "%.1f", 1 / lpsCounter.delta);
-        telemetry.addData("Recording V3.2", "ACTIVE");
+        telemetry.addData("Recording V3.3", "ACTIVE");
         telemetry.addData("x", robot.follower.getPose().getX());
         telemetry.addData("y", robot.follower.getPose().getY());
         telemetry.addData("heading", robot.follower.getPose().getHeading());
@@ -309,19 +318,20 @@ public class DataRecordingOpV3FIXED extends OpMode {
         double anglePos     = robot.angleServo.getPosition();
         double flapPos      = robot.flapsServo.getPosition();
 
-        // High-level mechanism commands (V3.2 columns) — what the TeleOp
+        // High-level mechanism commands (V3.3 columns) — what the TeleOp
         // applied to robot.intake / robot.loader / robot.shoot / etc.
         // The replay uses these to call the same high-level API instead
         // of setting motor powers directly.
         double intakeCmd     = robot.intake.speed;
         double loaderCmd     = robot.loader.speed;
         int    flapOpen      = robot.flap.open ? 1 : 0;
-        int    shootRange    = deriveShootRange();
+        int    shootRange    = lastActivateRange; // -2, -1, 0, 1, 2, 3, 4
         double turretOffset  = robot.turret.driverOffset;
         int    blueTarget    = robot.Blue_Target ? 1 : 0;
+        int    autoAim       = autoAimEnabled ? 1 : 0;
 
         dataRecorder.write(String.format(Locale.US,
-                "%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.2f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%d,%d,%.4f,%d\n",
+                "%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.2f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%d,%d,%.4f,%d,%d\n",
                 t,
                 leftRear.getPower(),
                 rightRear.getPower(),
@@ -343,33 +353,8 @@ public class DataRecordingOpV3FIXED extends OpMode {
                 flapOpen,
                 shootRange,
                 turretOffset,
-                blueTarget
+                blueTarget,
+                autoAim
         ));
-    }
-
-    /**
-     * Derives the current shoot range number (1-4) from the active config.
-     *
-     * RangeConfig doesn't store the range number itself, and Outtake doesn't
-     * track which range is active — that info is only known inside
-     * Shoot.activateRange() at the moment of the call. So we recover it by
-     * matching activeConfig.velocity against the known RANGE_X_VELOCITY
-     * constants. Returns 0 for the auto-aim interpolated range (case 0 in
-     * Shoot.activateRange) and -1 when the outtake is off.
-     *
-     * Brittle: if you change RANGE_X_VELOCITY, the matching may break.
-     * Clean fix: add {@code public int activeRange = -1;} to Robot.Outtake
-     * and set it in Shoot.activateRange / deactivate, then read
-     * {@code robot.outtake.activeRange} here directly.
-     */
-    private int deriveShootRange() {
-        if (!robot.outtake.on) return -1;
-        double vel = robot.outtake.activeConfig.velocity;
-        double eps = 1.0; // velocity tolerance in ticks/sec
-        if (Math.abs(vel - RANGE_1_VELOCITY) < eps) return 1;
-        if (Math.abs(vel - RANGE_2_VELOCITY) < eps) return 2;
-        if (Math.abs(vel - RANGE_3_VELOCITY) < eps) return 3;
-        if (Math.abs(vel - RANGE_4_VELOCITY) < eps) return 4;
-        return 0; // auto-aim interpolated range
     }
 }
