@@ -77,7 +77,7 @@ public final class AutonomousConstants {
     public static double MIN_CORRECTION_CAP     = 0.20;
     public static double MAX_CORRECTION_CAP     = 0.60;
     public static double CORRECTION_ERROR_SCALE = 7.0;
-    public static double D_FILTER_ALPHA         = 0.45;
+    public static double D_FILTER_ALPHA         = 0.25;
 
 
 

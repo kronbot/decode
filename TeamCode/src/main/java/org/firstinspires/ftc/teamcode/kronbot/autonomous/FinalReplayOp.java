@@ -48,7 +48,7 @@ public class FinalReplayOp extends LinearOpMode {
     private static final String CSV_PATH = "/sdcard/robot_data_Vlad.csv";
 
     // Playback tuning
-    private static final double LOOKAHEAD_TIME       = 0.080; // 80ms lookahead while moving
+    private static final double LOOKAHEAD_TIME       = 0.060; // 60ms lookahead while moving
     private static final double LOOKAHEAD_DISABLE_THRESH = 0.04;
     private static final double VOLTAGE_REFRESH_SEC  = 0.10;
     private static final double TIME_SCALING_FACTOR  = 0.5;   // adjust replay speed for voltage drops
@@ -213,9 +213,12 @@ public class FinalReplayOp extends LinearOpMode {
             double exRobot =  cosH * exField + sinH * eyField;
             double eyRobot = -sinH * exField + cosH * eyField;
 
-            double rawDx = (exRobot - prevErrorX) / dt;
-            double rawDy = (eyRobot - prevErrorY) / dt;
-            double rawDh = (eh - prevErrorHeading) / dt;
+            // Do not differentiate the initial lookahead error. That produced
+            // a one-loop correction spike at the start of every replay.
+            double rawDx = prevTime > 0 ? (exRobot - prevErrorX) / dt : 0;
+            double rawDy = prevTime > 0 ? (eyRobot - prevErrorY) / dt : 0;
+            double rawDh = prevTime > 0
+                    ? normalizeAngle(eh - prevErrorHeading) / dt : 0;
             filteredDx = filteredDx + D_FILTER_ALPHA * (rawDx - filteredDx);
             filteredDy = filteredDy + D_FILTER_ALPHA * (rawDy - filteredDy);
             filteredDh = filteredDh + D_FILTER_ALPHA * (rawDh - filteredDh);
@@ -244,7 +247,10 @@ public class FinalReplayOp extends LinearOpMode {
 
             double robotFwd = ffFwd + corrWeight * corrFwd;
             double robotStr = ffStr + corrWeight * corrStr;
-            double robotTurn = ffTurn + corrWeight * corrTurn;
+            // Heading error is independent of position error. Weighting this
+            // by corrWeight disabled heading correction whenever XY tracking
+            // happened to be good.
+            double robotTurn = ffTurn + corrTurn;
 
             double driveMag = Math.hypot(robotFwd, robotStr);
             if (driveMag > 1.0) {
