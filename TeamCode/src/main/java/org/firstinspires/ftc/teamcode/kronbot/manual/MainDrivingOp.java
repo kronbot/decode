@@ -54,9 +54,6 @@ public class MainDrivingOp extends OpMode {
 
     boolean rumbled = false;
 
-    Robot.Limelight ll = new Robot.Limelight();
-
-
     @Override
     public void init() {
         lpsCounter = new LpsCounter();
@@ -79,7 +76,7 @@ public class MainDrivingOp extends OpMode {
         drivingGP = new Controls(gamepad1);
         utilityGP = new Controls(gamepad2);
 
-        ll.init(hardwareMap, telemetry);
+        robot.limelight.init(hardwareMap, telemetry);
     }
 
     @Override
@@ -224,7 +221,6 @@ public class MainDrivingOp extends OpMode {
         //Update robot systems status
         robot.follower.setTeleOpDrive(-drivingGP.leftStick.y, -drivingGP.leftStick.x, -drivingGP.rightStick.x, true);
         robot.updateAllSystems();
-        ll.update();
         _telemetry();
         //robot.webcam.update();
     }
@@ -232,6 +228,7 @@ public class MainDrivingOp extends OpMode {
 
     @Override
     public void stop() {
+        robot.limelight.stop();
         robot.webcam.stop();
     }
 
@@ -250,7 +247,7 @@ public class MainDrivingOp extends OpMode {
         robot.heading.telemetry(telemetry);
         robot.turret.telemetry(telemetry);
         drivingGP.telemetry(telemetry);
-        ll.telemetry();
+        robot.limelight.telemetry();
         telemetry.update();
     }
 }
