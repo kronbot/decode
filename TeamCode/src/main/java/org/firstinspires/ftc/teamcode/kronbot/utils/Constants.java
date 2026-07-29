@@ -52,8 +52,8 @@ public class Constants {
 
     public static double ANGLE_SERVO_FAR = 0.72;
     public static double ANGLE_SERVO_MIN = 0;
-    public static double FLAP_CLOSED = 0.55;
-    public static double FLAP_OPEN = 1;
+    public static double FLAP_CLOSED = 0.3;
+    public static double FLAP_OPEN = 0.6;
 
     public static double INTAKE_DRIVER_POWER = 0.55;
     public static double INTAKE_DRIVER_REVERSE = -0.55;
@@ -108,7 +108,7 @@ public class Constants {
     public static double ANGLE_TOLERANCE = 2.0;
     public static double DELTA_THRESHOLD = 0.01;
     public static double MAX_ROTATION_POWER = 0.5;
-    public static double LIMELIGHT_TURRET_KP = 0.3;
+    public static double LIMELIGHT_TURRET_KP = 0.25;
     public static double LIMELIGHT_TX_DEADBAND = 1.4;
 
     public static double BASKET_Y = -140;

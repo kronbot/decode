@@ -649,7 +649,7 @@ public class Robot extends KronBot {
                     aimSource = "Limelight";
                     limelightTx = limelightResult.getTx();
                     if (Math.abs(limelightTx) > LIMELIGHT_TX_DEADBAND) {
-                        limelightCorrection = -Math.toRadians(limelightTx) * LIMELIGHT_TURRET_KP;
+                        limelightCorrection = Math.toRadians(limelightTx) * LIMELflaIGHT_TURRET_KP;
                     } else {
                         limelightCorrection = 0;
                     }
