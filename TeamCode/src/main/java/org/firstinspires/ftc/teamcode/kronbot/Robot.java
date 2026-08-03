@@ -693,32 +693,6 @@ public class Robot extends KronBot {
             angle = (servoPosition - 0.5) / TURRET_SERVO_UNITS_PER_RAD;
             turretServo.setPosition(servoPosition);
 
-
-//            if (turretServo != null && follower != null) {
-//                if(angle > Math.PI)
-//                    angle = -2 * Math.PI + angle;
-//                if(angle < -Math.PI)
-//                    angle = 2 * Math.PI + angle;
-//
-//                if(driverOffset > Math.PI)
-//                    driverOffset = -2 * Math.PI + driverOffset;
-//                if(driverOffset < -Math.PI)
-//                    driverOffset = 2 * Math.PI + driverOffset;
-//
-//                double fieldRelativeAngle = angle + driverOffset;
-//
-//
-//                if(fieldRelativeAngle > Math.PI)
-//                    fieldRelativeAngle = -2 * Math.PI + fieldRelativeAngle;
-//                if(fieldRelativeAngle < -Math.PI)
-//                    fieldRelativeAngle = 2 * Math.PI + fieldRelativeAngle;
-//
-//                double robotRelativeAngle = fieldRelativeAngle - (follower.getHeading()/* * 0.01745329*/); // deg to radian
-//                servoPosition = robotRelativeAngle * TURRET_SERVO_UNITS_PER_RAD + 0.5;
-//
-//
-//                turretServo.setPosition(Math.clamp(servoPosition, TURRET_SERVO_MIN, TURRET_SERVO_MAX));
-//            }
         }
 
         public void telemetry(Telemetry telemetry) {
