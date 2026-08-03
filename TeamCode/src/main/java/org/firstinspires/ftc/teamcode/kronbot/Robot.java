@@ -5,10 +5,13 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.teamcode.R;
 import org.firstinspires.ftc.teamcode.kronbot.utils.detection.AprilTagWebcam;
 import org.opencv.core.Mat;
 
+import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.hardwareMap;
+import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_CLOSE;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_MAX;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_MIN;
@@ -18,6 +21,8 @@ import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.BASKET_Y;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.DELTA_THRESHOLD;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.FLAP_CLOSED;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.FLAP_OPEN;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.LIMELIGHT_TURRET_KP;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.LIMELIGHT_TX_DEADBAND;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KD;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KF;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KI;
@@ -49,8 +54,16 @@ import android.util.Pair;
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.LLResultTypes;
+import com.qualcomm.hardware.limelightvision.LLStatus;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
+
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 public class Robot extends KronBot {
     // Singleton instance
@@ -67,6 +80,7 @@ public class Robot extends KronBot {
     public final Flap flap;
     public final Shoot shoot;
     public final Heading heading;
+    public final Limelight limelight;
 
     public boolean Blue_Target = false;
 
@@ -93,6 +107,7 @@ public class Robot extends KronBot {
         this.shoot = new Shoot();
         this.flap = new Flap();
         this.heading = new Heading();
+        this.limelight = new Limelight();
     }
 
     // Get the singleton instance
@@ -132,6 +147,7 @@ public class Robot extends KronBot {
     public void updateAllSystems() {
         double rawHeading = follower.getHeading();
         heading.update(rawHeading);
+        limelight.update();
 
         outtake.update();
         intake.update();
@@ -150,6 +166,200 @@ public class Robot extends KronBot {
 
         //Add other updates here
 //        webcam.update();
+    }
+
+    public class Limelight {
+
+        private static final int POLL_RATE_HZ = 30;
+        private static final int PIPELINE_INDEX = 7;
+        private static final long STALE_RESULT_MS = 500;
+        private static final long TARGET_LOST_GRACE_MS = 300;
+
+        private Limelight3A limelight;
+        private Telemetry telemetry;
+        private LLResult result;
+        private long lastFreshTargetTimeMs = 0;
+        private boolean initialized = false;
+        private String lastFault = null;
+
+        // Call this once, from your OpMode's init(), passing in its hardwareMap and telemetry
+        public void init(HardwareMap hardwareMap, Telemetry telemetry) {
+            this.telemetry = telemetry;
+            try {
+                limelight = hardwareMap.get(Limelight3A.class, "limelight");
+                limelight.setPollRateHz(POLL_RATE_HZ);
+                limelight.pipelineSwitch(PIPELINE_INDEX);
+                limelight.start();
+                initialized = true;
+                lastFault = null;
+            } catch (RuntimeException e) {
+                initialized = false;
+                lastFault = e.getClass().getSimpleName() + ": " + e.getMessage();
+            }
+        }
+
+        // Call this once per loop() BEFORE calling telemetry(), so 'result' is fresh
+        public void update() {
+            if (!initialized || limelight == null) {
+                return;
+            }
+
+            try {
+                if (!limelight.isConnected()) {
+                    lastFault = "Disconnected";
+                    result = null;
+                    return;
+                }
+
+                limelight.updateRobotOrientation(heading.get());
+                result = limelight.getLatestResult();
+                if (isFreshTarget(result)) {
+                    lastFreshTargetTimeMs = System.currentTimeMillis();
+                }
+                lastFault = null;
+            } catch (RuntimeException e) {
+                result = null;
+                lastFault = e.getClass().getSimpleName() + ": " + e.getMessage();
+            }
+        }
+
+        public void telemetry() {
+            telemetry.addLine("=== LIMELIGHT STATUS ===");
+
+            if (!initialized || limelight == null) {
+                telemetry.addData("Limelight", "Not initialized");
+                if (lastFault != null) {
+                    telemetry.addData("Fault", lastFault);
+                }
+                return;
+            }
+
+            try {
+                telemetry.addData("Connected", limelight.isConnected());
+                telemetry.addData("Last Update", limelight.getTimeSinceLastUpdate() + " ms");
+            } catch (RuntimeException e) {
+                lastFault = e.getClass().getSimpleName() + ": " + e.getMessage();
+            }
+
+            if (lastFault != null) {
+                telemetry.addData("Fault", lastFault);
+            }
+
+            if (result == null) {
+                telemetry.addData("Limelight", "No data yet");
+                return;
+            }
+
+            long staleness = result.getStaleness();
+            if (staleness > STALE_RESULT_MS) {
+                telemetry.addData("Limelight", "Stale data (" + staleness + " ms)");
+                return;
+            }
+
+            if (result.isValid()) {
+                double tx = result.getTx(); // left/right (degrees)
+                double ty = result.getTy(); // up/down (degrees)
+                double ta = result.getTa(); // target size (0-100%)
+
+                telemetry.addData("Target X", tx);
+                telemetry.addData("Target Y", ty);
+                telemetry.addData("Target Area", ta);
+
+                // First, tell Limelight which way your robot is facing
+                double robotYaw = heading.get();
+                limelight.updateRobotOrientation(robotYaw);
+                if (result != null && result.isValid()) {
+                    Pose3D botpose_mt2 = result.getBotpose_MT2();
+                    if (botpose_mt2 != null) {
+                        double x = botpose_mt2.getPosition().x;
+                        double y = botpose_mt2.getPosition().y;
+                        telemetry.addData("MT2 Location:", "(" + x + ", " + y + ")");
+                    }
+                }
+
+                Pose3D botpose = result.getBotpose();
+                if (botpose != null) {
+                    double x = botpose.getPosition().x;
+                    double y = botpose.getPosition().y;
+                    telemetry.addData("MT1 Location", "(" + x + ", " + y + ")");
+                }
+            } else {
+                telemetry.addData("Limelight", "No Targets");
+                return;
+            }
+
+            List<LLResultTypes.ColorResult> colorTargets = result.getColorResults();
+            for (LLResultTypes.ColorResult colorTarget : colorTargets) {
+                double x = colorTarget.getTargetXDegrees();
+                double y = colorTarget.getTargetYDegrees();
+                double area = colorTarget.getTargetArea();
+                telemetry.addData("Color Target", "x=" + x + " y=" + y + " area=" + area + "%");
+            }
+
+            List<LLResultTypes.FiducialResult> fiducials = result.getFiducialResults();
+            for (LLResultTypes.FiducialResult fiducial : fiducials) {
+                int id = fiducial.getFiducialId();
+                double x = fiducial.getTargetXDegrees();
+                double y = fiducial.getTargetYDegrees();
+                Pose3D poseInTargetSpace = fiducial.getRobotPoseTargetSpace();
+                double distance = poseInTargetSpace != null ? poseInTargetSpace.getPosition().y : -1;
+                telemetry.addData("Fiducial " + id, "x=" + x + " y=" + y + " dist=" + distance + "m");
+            }
+
+            List<LLResultTypes.BarcodeResult> barcodes = result.getBarcodeResults();
+            for (LLResultTypes.BarcodeResult barcode : barcodes) {
+                String data = barcode.getData();
+                String family = barcode.getFamily();
+                telemetry.addData("Barcode", data + " (" + family + ")");
+            }
+
+            List<LLResultTypes.ClassifierResult> classifications = result.getClassifierResults();
+            for (LLResultTypes.ClassifierResult classification : classifications) {
+                String className = classification.getClassName();
+                double confidence = classification.getConfidence();
+                telemetry.addData("I see a", className + " (" + confidence + "%)");
+            }
+
+            if (staleness < 100) {
+                telemetry.addData("Data", "Good");
+            } else {
+                telemetry.addData("Data", "Old (" + staleness + " ms)");
+            }
+        }
+
+        public LLResult getResult() {
+            return result;
+        }
+
+        public LLResult getFreshResult() {
+            return isFreshTarget(result) ? result : null;
+        }
+
+        public boolean hasFreshTarget() {
+            return getFreshResult() != null;
+        }
+
+        public boolean hasRecentTarget() {
+            return System.currentTimeMillis() - lastFreshTargetTimeMs <= TARGET_LOST_GRACE_MS;
+        }
+
+        public long getTimeSinceFreshTargetMs() {
+            return System.currentTimeMillis() - lastFreshTargetTimeMs;
+        }
+
+        private boolean isFreshTarget(LLResult result) {
+            return result != null && result.isValid() && result.getStaleness() <= STALE_RESULT_MS;
+        }
+
+        public void stop() {
+            if (limelight != null) {
+                try {
+                    limelight.stop();
+                } catch (RuntimeException e) {
+                    lastFault = e.getClass().getSimpleName() + ": " + e.getMessage();
+                }
+            }
+        }
     }
 
     public class Outtake {
@@ -414,6 +624,9 @@ public class Robot extends KronBot {
         public double angle = 0;
         public double driverOffset = 0;
         private double servoPosition;
+        private String aimSource = "Odometry";
+        private double limelightTx = 0;
+        private double limelightCorrection = 0;
 
 
         public boolean autoAimEnabled = true;
@@ -429,19 +642,35 @@ public class Robot extends KronBot {
             if (turretServo == null || follower == null) return;
 
             if(autoAimEnabled) {
+                LLResult limelightResult = limelight.getFreshResult();
+                double robotRelativeAngle;
 
-                //Turret angle
-                double robot_X = follower.getPose().getX();
-                double robot_Y = follower.getPose().getY();
-                double robotHeading = heading.get();
+                if (limelightResult != null) {
+                    aimSource = "Limelight";
+                    limelightTx = limelightResult.getTx();
+                    if (Math.abs(limelightTx) > LIMELIGHT_TX_DEADBAND) {
+                        limelightCorrection = Math.toRadians(limelightTx) * LIMELflaIGHT_TURRET_KP;
+                    } else {
+                        limelightCorrection = 0;
+                    }
+                    robotRelativeAngle = angle + limelightCorrection;
+                } else if (limelight.hasRecentTarget()) {
+                    aimSource = "Limelight Hold";
+                    limelightCorrection = 0;
+                    robotRelativeAngle = angle;
+                } else {
+                    aimSource = "Odometry";
+                    limelightTx = 0;
+                    limelightCorrection = 0;
+                    double robot_X = follower.getPose().getX();
+                    double robot_Y = follower.getPose().getY();
+                    double robotHeading = heading.get();
 
-                double dy = (Blue_Target ? BASKET_BLUE_Y : BASKET_Y) - robot_Y;
-                double dx = BASKET_X - robot_X;
-
-                double targetFieldAngle = Math.atan2(dy, dx);
-
-                //calculate
-                double robotRelativeAngle = targetFieldAngle - robotHeading + driverOffset;
+                    double dy = (Blue_Target ? BASKET_BLUE_Y : BASKET_Y) - robot_Y;
+                    double dx = BASKET_X - robot_X;
+                    double targetFieldAngle = Math.atan2(dy, dx);
+                    robotRelativeAngle = targetFieldAngle - robotHeading + driverOffset;
+                }
 
                 //normalize
                 robotRelativeAngle = Math.atan2(
@@ -449,23 +678,31 @@ public class Robot extends KronBot {
                         Math.cos(robotRelativeAngle)
                 );
 
-                servoPosition = robotRelativeAngle * TURRET_SERVO_UNITS_PER_RAD + 0.5;
+                angle = robotRelativeAngle;
+                servoPosition = angle * TURRET_SERVO_UNITS_PER_RAD + 0.5;
 
 
             } else {
+                aimSource = "Driver Offset";
+                angle = driverOffset;
                 servoPosition =
                         driverOffset * TURRET_SERVO_UNITS_PER_RAD + 0.5;
             }
 
-            turretServo.setPosition(
-                    Math.clamp(servoPosition, TURRET_SERVO_MIN, TURRET_SERVO_MAX)
-            );
+            servoPosition = Math.clamp(servoPosition, TURRET_SERVO_MIN, TURRET_SERVO_MAX);
+            angle = (servoPosition - 0.5) / TURRET_SERVO_UNITS_PER_RAD;
+            turretServo.setPosition(servoPosition);
 
         }
 
         public void telemetry(Telemetry telemetry) {
             telemetry.addLine("=== TURRET STATUS ===");
             telemetry.addData("Target Angle", "%.3f", angle);
+            telemetry.addData("Aim Source", aimSource);
+            telemetry.addData("Limelight Target", limelight.hasFreshTarget());
+            telemetry.addData("Limelight Tx", "%.2f", limelightTx);
+            telemetry.addData("Limelight Correction", "%.4f", limelightCorrection);
+            telemetry.addData("Last Limelight Target", limelight.getTimeSinceFreshTargetMs() + " ms");
             telemetry.addData("Robot Heading", "%.4f", follower.getHeading());
             telemetry.addData("Servo Position", "%.3f", turretServo.getPosition());
             telemetry.addData("Servo Range", "%.3f - %.3f", TURRET_SERVO_MIN, TURRET_SERVO_MAX);
@@ -593,4 +830,5 @@ public class Robot extends KronBot {
             telemetry.addData("Left Rear Power", "%.2f", motors.leftRear.getPower());
         }
     }
+
 }

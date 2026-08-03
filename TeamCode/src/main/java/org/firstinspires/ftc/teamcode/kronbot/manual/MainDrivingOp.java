@@ -54,7 +54,6 @@ public class MainDrivingOp extends OpMode {
 
     boolean rumbled = false;
 
-
     @Override
     public void init() {
         lpsCounter = new LpsCounter();
@@ -77,7 +76,7 @@ public class MainDrivingOp extends OpMode {
         drivingGP = new Controls(gamepad1);
         utilityGP = new Controls(gamepad2);
 
-
+        robot.limelight.init(hardwareMap, telemetry);
     }
 
     @Override
@@ -224,6 +223,7 @@ public class MainDrivingOp extends OpMode {
 
     @Override
     public void stop() {
+        robot.limelight.stop();
         robot.webcam.stop();
     }
 
@@ -242,6 +242,7 @@ public class MainDrivingOp extends OpMode {
         robot.heading.telemetry(telemetry);
         robot.turret.telemetry(telemetry);
         drivingGP.telemetry(telemetry);
+        robot.limelight.telemetry();
         telemetry.update();
     }
 }
