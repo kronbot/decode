@@ -111,8 +111,8 @@ public class Constants {
     public static double LIMELIGHT_TURRET_KP = 0.25;
     public static double LIMELIGHT_TX_DEADBAND = 1.4;
 
-    public static double BASKET_Y = -140;
-    public static double BASKET_BLUE_Y = -20;
+    public static double BASKET_Y = 140;
+    public static double BASKET_BLUE_Y = 20;
     public static double BASKET_X = 130;
 
 
