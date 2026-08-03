@@ -107,6 +107,14 @@ public class MainDrivingOp extends OpMode {
         robot.intake.speed = utilityGP.rightStick.y;
         robot.intake.reversed = INTAKE_REVERSE;
 
+//        if (drivingGP.leftStick.button.justPressed())
+//            robot.limelight.togglePipeline();
+
+        if(drivingGP.rightStick.button.justPressed()) {
+            robot.Blue_Target = !robot.Blue_Target;
+            robot.limelight.switchPipeline(robot.Blue_Target);
+        }
+
         //Loader
         if (!drivingGP.rightBumper.pressed()) {
             robot.loader.speed = utilityGP.leftStick.y;
@@ -114,10 +122,11 @@ public class MainDrivingOp extends OpMode {
         } else {
             robot.loader.speed = (drivingGP.rightTrigger - drivingGP.leftTrigger) * 0.8;
             robot.flap.open = true;
+
             if (robot.loader.speed > 0.1)
-                robot.intake.speed = INTAKE_DRIVER_POWER;
+                robot.intake.speed = INTAKE_DRIVER_REVERSE;   // swapped
             else if (robot.loader.speed < -0.2)
-                robot.intake.speed = INTAKE_DRIVER_REVERSE;
+                robot.intake.speed = INTAKE_DRIVER_POWER;     // swapped
             else
                 robot.intake.speed = 0;
         }

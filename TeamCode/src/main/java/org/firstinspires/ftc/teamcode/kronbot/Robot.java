@@ -1,18 +1,11 @@
 package org.firstinspires.ftc.teamcode.kronbot;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
-import org.firstinspires.ftc.teamcode.R;
 import org.firstinspires.ftc.teamcode.kronbot.utils.detection.AprilTagWebcam;
-import org.opencv.core.Mat;
-
-import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.hardwareMap;
-import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_CLOSE;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_MAX;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_MIN;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.BASKET_BLUE_Y;
@@ -173,7 +166,11 @@ public class Robot extends KronBot {
         private static final int POLL_RATE_HZ = 30;
         private static final int PIPELINE_INDEX = 7;
         private static final long STALE_RESULT_MS = 500;
+        private static final int PIPELINE_RED = 8;
+        private static final int PIPELINE_BLUE = 7;
         private static final long TARGET_LOST_GRACE_MS = 300;
+
+        private boolean usingBluePipeline = false;
 
         private Limelight3A limelight;
         private Telemetry telemetry;
@@ -188,7 +185,8 @@ public class Robot extends KronBot {
             try {
                 limelight = hardwareMap.get(Limelight3A.class, "limelight");
                 limelight.setPollRateHz(POLL_RATE_HZ);
-                limelight.pipelineSwitch(PIPELINE_INDEX);
+                limelight.pipelineSwitch(PIPELINE_RED); // default to red at init
+                usingBluePipeline = false;
                 limelight.start();
                 initialized = true;
                 lastFault = null;
@@ -197,6 +195,26 @@ public class Robot extends KronBot {
                 lastFault = e.getClass().getSimpleName() + ": " + e.getMessage();
             }
         }
+
+        public void switchPipeline(boolean blue) {
+            if (!initialized || limelight == null) return;
+            try {
+                limelight.pipelineSwitch(blue ? PIPELINE_BLUE : PIPELINE_RED);
+                usingBluePipeline = blue;
+                lastFault = null;
+            } catch (RuntimeException e) {
+                lastFault = e.getClass().getSimpleName() + ": " + e.getMessage();
+            }
+        }
+
+        public void togglePipeline() {
+            switchPipeline(!usingBluePipeline);
+        }
+        public boolean isUsingBluePipeline() {
+            return usingBluePipeline;
+        }
+
+
 
         // Call this once per loop() BEFORE calling telemetry(), so 'result' is fresh
         public void update() {
@@ -649,7 +667,7 @@ public class Robot extends KronBot {
                     aimSource = "Limelight";
                     limelightTx = limelightResult.getTx();
                     if (Math.abs(limelightTx) > LIMELIGHT_TX_DEADBAND) {
-                        limelightCorrection = Math.toRadians(limelightTx) * LIMELflaIGHT_TURRET_KP;
+                        limelightCorrection = Math.toRadians(limelightTx) * LIMELIGHT_TURRET_KP;
                     } else {
                         limelightCorrection = 0;
                     }
