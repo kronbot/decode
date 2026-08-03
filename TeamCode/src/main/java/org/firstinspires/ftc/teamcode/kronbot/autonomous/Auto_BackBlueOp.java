@@ -164,7 +164,6 @@ public class Auto_BackBlueOp extends OpMode {
                             break;
 
                         case 1:
-                            // Wait for motors to reach speed and launch first 2
                             if (motorVel + 50 >= launchSpeedBack && pathTimer.getElapsedTimeSeconds() > 1.5) {
                                 robot.loaderMotor.setPower(0.8);
                                 launchState++;
