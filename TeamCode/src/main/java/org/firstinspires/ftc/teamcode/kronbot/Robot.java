@@ -462,7 +462,7 @@ public class Robot extends KronBot {
                 }
 
             } else {
-                if(leftOuttake.getVelocity() < 21) {
+                if (leftOuttake.getVelocity() < 21) {
                     leftOuttake.setPower(0);
                     rightOuttake.setPower(0);
 
@@ -478,41 +478,13 @@ public class Robot extends KronBot {
                             OUT_MOTOR_KD,   // D - reduces overshoot
                             OUT_MOTOR_KF    // F - feedforward (VERY important)
                     );
+                } else {
+                    double velocity = leftOuttake.getVelocity();
+                    double brake = Math.min(-(53 * velocity / (velocity * velocity + 10000) - 0.065), 0);
+                    leftOuttake.setPower(brake);
+                    rightOuttake.setPower(brake);
                 }
-                else if(leftOuttake.getVelocity() < 200) {
-                    leftOuttake.setPower(-0.15);
-                    rightOuttake.setPower(-0.15);
-                }
-                else if(leftOuttake.getVelocity() < 300) {
-                    leftOuttake.setPower(-0.1);
-                    rightOuttake.setPower(-0.1);
-                }
-                else if(leftOuttake.getVelocity() < 500) {
-                    leftOuttake.setPower(0.05);
-                    rightOuttake.setPower(0.05);
-                }
-                else {
-                    leftOuttake.setPower(0);
-                    rightOuttake.setPower(0);
-                }
-                /*
-                if(rightOuttake.getVelocity() < 21) {
-                    rightOuttake.setPower(0);
-                }
-                else if(rightOuttake.getVelocity() < 200) {
-                    rightOuttake.setPower(-0.15);
-                }
-                else if(rightOuttake.getVelocity() < 300) {
-                    rightOuttake.setPower(-0.1);
-                }
-                else if(rightOuttake.getVelocity() < 500) {
-                    rightOuttake.setPower(0.05);
-                }
-                else
-                    rightOuttake.setPower(0);
-                 */
             }
-
             angleServo.setPosition(Math.min(Math.max(activeConfig.angle, ANGLE_SERVO_MIN), ANGLE_SERVO_MAX));
         }
 
@@ -707,7 +679,7 @@ public class Robot extends KronBot {
                         driverOffset * TURRET_SERVO_UNITS_PER_RAD + 0.5;
             }
 
-            servoPosition = Math.clamp(servoPosition, TURRET_SERVO_MIN, TURRET_SERVO_MAX);
+            servoPosition = Math.min(Math.max(servoPosition, TURRET_SERVO_MIN), TURRET_SERVO_MAX);
             angle = (servoPosition - 0.5) / TURRET_SERVO_UNITS_PER_RAD;
             turretServo.setPosition(servoPosition);
 
