@@ -1,10 +1,10 @@
 package org.firstinspires.ftc.teamcode.kronbot.autonomous;
 
-import static org.firstinspires.ftc.teamcode.kronbot.autonomous.AutonomousConstants.BLEND_K;
 import static org.firstinspires.ftc.teamcode.kronbot.autonomous.AutonomousConstants.MAX_CORRECTION_CAP;
 import static org.firstinspires.ftc.teamcode.kronbot.autonomous.AutonomousConstants.MIN_CORRECTION_CAP;
 import static org.firstinspires.ftc.teamcode.kronbot.autonomous.AutonomousConstants.CORRECTION_ERROR_SCALE;
 import static org.firstinspires.ftc.teamcode.kronbot.autonomous.AutonomousConstants.D_FILTER_ALPHA;
+import static org.firstinspires.ftc.teamcode.kronbot.autonomous.AutonomousConstants.HEADING_ERROR_SCALE;
 import static org.firstinspires.ftc.teamcode.kronbot.autonomous.AutonomousConstants.kD_rotation;
 import static org.firstinspires.ftc.teamcode.kronbot.autonomous.AutonomousConstants.kP_rotation;
 import static org.firstinspires.ftc.teamcode.kronbot.autonomous.AutonomousConstants.kP_translation;
@@ -16,6 +16,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 import com.pedropathing.geometry.Pose;
+import com.pedropathing.math.Vector;
 
 import org.firstinspires.ftc.teamcode.kronbot.Robot;
 
@@ -29,13 +30,13 @@ import java.util.List;
 /**
  * Replay Autonomous — V3.4 (Feedforward + Odometry Correction)
  *
- * Reads the V3.4 CSV format produced by FinalRecorderOp. Older V3.3 CSVs
- * still load; drive feedforward is approximated from recorded wheel powers.
+ * Reads the V3.6 CSV format produced by FinalRecorderOp. Older V3.3-V3.5
+ * CSVs still load; missing drive commands and velocities are reconstructed.
  *
  * This version uses the recorded servo positions (turretPos, anglePos)
  * directly during replay instead of re-calculating them with live auto-aim.
- * Drive playback uses the recorded TeleOp commands as feedforward and blends
- * in Pedro odometry PD correction when the robot drifts from the recording.
+ * Drive playback uses recorded TeleOp commands as voltage-compensated
+ * feedforward plus field-frame pose and velocity correction.
  */
 @Autonomous(name = "Replay Vlad", group = "Replay")
 public class FinalReplayOp extends LinearOpMode {
@@ -48,14 +49,10 @@ public class FinalReplayOp extends LinearOpMode {
     private static final String CSV_PATH = "/sdcard/robot_data_Vlad.csv";
 
     // Playback tuning
-    private static final double LOOKAHEAD_TIME       = 0.060; // 60ms lookahead while moving
-    private static final double LOOKAHEAD_DISABLE_THRESH = 0.04;
     private static final double VOLTAGE_REFRESH_SEC  = 0.10;
-    private static final double TIME_SCALING_FACTOR  = 0.5;   // adjust replay speed for voltage drops
-
-    private static final double MAX_SLEW_RATE        = 5.0;
+    private static final double MIN_VOLTAGE_FF_SCALE = 0.90;
+    private static final double MAX_VOLTAGE_FF_SCALE = 1.10;
     private static final double MIN_DT               = 0.008;
-    private static final double MAX_DT               = 0.050;
 
     // -------------------------------------------------------------------------
     // State
@@ -63,19 +60,14 @@ public class FinalReplayOp extends LinearOpMode {
     private final List<RobotFrame> recordedFrames = new ArrayList<>();
     private final ElapsedTime runtime = new ElapsedTime();
 
-    private double recordedVoltage = 13.0;
     private double cachedVoltage   = 13.0;
     private double lastVoltageReadTime = -10;
-    private double timeScalingFactor   = 1.0;
 
     private double prevTime;
-    private double prevErrorX, prevErrorY, prevErrorHeading;
-    private double filteredDx, filteredDy, filteredDh;
-
-    private double prevRobotFwd, prevRobotStr, prevRobotTurn;
+    private double prevCurrentHeading;
+    private double filteredVelErrorX, filteredVelErrorY, filteredOmegaError;
 
     private int     prevShootRange = -2;
-    private boolean prevAutoAim    = false;
 
     @Override
     public void runOpMode() {
@@ -87,7 +79,6 @@ public class FinalReplayOp extends LinearOpMode {
 
         try {
             loadRecordedData();
-            calculateRecordedVoltage();
 
             if (recordedFrames.isEmpty()) {
                 telemetry.addData("ERROR", "CSV is empty!");
@@ -105,9 +96,9 @@ public class FinalReplayOp extends LinearOpMode {
 
             if (isStopRequested()) return;
 
-            // Settle localizer
+            // The localizer has already been stationary throughout init. Do
+            // not consume 250 ms of the autonomous period with a dead sleep.
             robot.follower.update();
-            sleep(250);
             robot.follower.setPose(new Pose(recordedFrames.get(0).x, recordedFrames.get(0).y, recordedFrames.get(0).heading));
             robot.follower.update();
 
@@ -141,18 +132,10 @@ public class FinalReplayOp extends LinearOpMode {
 
         int idx = 0;
         prevTime         = 0;
-        prevErrorX       = 0;
-        prevErrorY       = 0;
-        prevErrorHeading = 0;
-        filteredDx       = 0;
-        filteredDy       = 0;
-        filteredDh       = 0;
-        prevShootRange   = -2;
-        prevAutoAim      = false;
-
-        prevRobotFwd     = 0;
-        prevRobotStr     = 0;
-        prevRobotTurn    = 0;
+        prevCurrentHeading = robot.follower.getPose().getHeading();
+        filteredVelErrorX = 0;
+        filteredVelErrorY = 0;
+        filteredOmegaError = 0;
 
         double posErrorSum = 0;
         double posErrorPeak = 0;
@@ -164,16 +147,9 @@ public class FinalReplayOp extends LinearOpMode {
             double now = runtime.seconds();
 
             refreshVoltage(now);
-            updateTimeScaling();
 
-            double recordingTime = now / timeScalingFactor;
-            RobotFrame currentBaseFrame = recordedFrames.get(Math.min(idx, recordedFrames.size() - 1));
-            double currentInputMag = Math.abs(currentBaseFrame.driveFwd)
-                    + Math.abs(currentBaseFrame.driveStr)
-                    + Math.abs(currentBaseFrame.driveTurn);
-            double lookahead = currentInputMag > LOOKAHEAD_DISABLE_THRESH ? LOOKAHEAD_TIME : 0.0;
-            recordingTime += lookahead;
-            double targetTs = startTs + recordingTime;
+            // Voltage must not warp trajectory time or mechanism events.
+            double targetTs = startTs + now;
 
             while (idx < recordedFrames.size() - 1
                     && recordedFrames.get(idx + 1).timestamp <= targetTs) {
@@ -194,38 +170,54 @@ public class FinalReplayOp extends LinearOpMode {
             double targetY = lerp(fA.y, fB.y, t);
             double targetH = lerpAngle(fA.heading, fB.heading, t);
 
-            double ffFwd = Range.clip(lerp(fA.driveFwd, fB.driveFwd, t), -1.0, 1.0);
-            double ffStr = Range.clip(lerp(fA.driveStr, fB.driveStr, t), -1.0, 1.0);
-            double ffTurn = Range.clip(lerp(fA.driveTurn, fB.driveTurn, t), -1.0, 1.0);
+            double recordedFrameVoltage = lerp(fA.voltage, fB.voltage, t);
+            double voltageFfScale = cachedVoltage > 1.0 && recordedFrameVoltage > 1.0
+                    ? Range.clip(recordedFrameVoltage / cachedVoltage,
+                    MIN_VOLTAGE_FF_SCALE, MAX_VOLTAGE_FF_SCALE)
+                    : 1.0;
+            double ffFwd = Range.clip(lerp(fA.driveFwd, fB.driveFwd, t) * voltageFfScale, -1.0, 1.0);
+            double ffStr = Range.clip(lerp(fA.driveStr, fB.driveStr, t) * voltageFfScale, -1.0, 1.0);
+            double ffTurn = Range.clip(lerp(fA.driveTurn, fB.driveTurn, t) * voltageFfScale, -1.0, 1.0);
+
+            double targetVelX = lerp(fA.velocityX, fB.velocityX, t);
+            double targetVelY = lerp(fA.velocityY, fB.velocityY, t);
+            double targetOmega = lerp(fA.angularVelocity, fB.angularVelocity, t);
 
             robot.follower.update();
             Pose cur = robot.follower.getPose();
             double curH = cur.getHeading();
+            Vector currentVelocity = robot.follower.getVelocity();
 
-            double dt = Range.clip(now - prevTime, MIN_DT, MAX_DT);
+            double elapsedDt = prevTime > 0 ? now - prevTime : MIN_DT;
 
             double exField = targetX - cur.getX();
             double eyField = targetY - cur.getY();
             double eh = normalizeAngle(targetH - curH);
 
+            // Calculate velocity error in the fixed field frame. Differentiating
+            // robot-frame position error made pure rotation look like X/Y motion.
+            double velErrorX = targetVelX - currentVelocity.getXComponent();
+            double velErrorY = targetVelY - currentVelocity.getYComponent();
+            double actualOmega = prevTime > 0
+                    ? normalizeAngle(curH - prevCurrentHeading) / Math.max(elapsedDt, 1e-6)
+                    : targetOmega;
+            double omegaError = targetOmega - actualOmega;
+
+            filteredVelErrorX += D_FILTER_ALPHA * (velErrorX - filteredVelErrorX);
+            filteredVelErrorY += D_FILTER_ALPHA * (velErrorY - filteredVelErrorY);
+            filteredOmegaError += D_FILTER_ALPHA * (omegaError - filteredOmegaError);
+
+            double corrFieldX = exField * kP_translation
+                    + filteredVelErrorX * kD_translation;
+            double corrFieldY = eyField * kP_translation
+                    + filteredVelErrorY * kD_translation;
+
+            // Rotate the completed correction into the robot frame once.
             double cosH = Math.cos(curH);
             double sinH = Math.sin(curH);
-            double exRobot =  cosH * exField + sinH * eyField;
-            double eyRobot = -sinH * exField + cosH * eyField;
-
-            // Do not differentiate the initial lookahead error. That produced
-            // a one-loop correction spike at the start of every replay.
-            double rawDx = prevTime > 0 ? (exRobot - prevErrorX) / dt : 0;
-            double rawDy = prevTime > 0 ? (eyRobot - prevErrorY) / dt : 0;
-            double rawDh = prevTime > 0
-                    ? normalizeAngle(eh - prevErrorHeading) / dt : 0;
-            filteredDx = filteredDx + D_FILTER_ALPHA * (rawDx - filteredDx);
-            filteredDy = filteredDy + D_FILTER_ALPHA * (rawDy - filteredDy);
-            filteredDh = filteredDh + D_FILTER_ALPHA * (rawDh - filteredDh);
-
-            double corrFwd = exRobot * kP_translation + filteredDx * kD_translation;
-            double corrStr = eyRobot * kP_translation + filteredDy * kD_translation;
-            double corrTurn = eh * kP_rotation + filteredDh * kD_rotation;
+            double corrFwd =  cosH * corrFieldX + sinH * corrFieldY;
+            double corrStr = -sinH * corrFieldX + cosH * corrFieldY;
+            double corrTurn = eh * kP_rotation + filteredOmegaError * kD_rotation;
 
             double posError = Math.hypot(exField, eyField);
             posErrorSum += posError;
@@ -241,15 +233,15 @@ public class FinalReplayOp extends LinearOpMode {
                 corrFwd *= dynamicMaxCorr / corrMag;
                 corrStr *= dynamicMaxCorr / corrMag;
             }
-            corrTurn = Range.clip(corrTurn, -dynamicMaxCorr, dynamicMaxCorr);
+            double headingCorrScale = Math.min(Math.abs(eh) / HEADING_ERROR_SCALE, 1.0);
+            double dynamicMaxTurnCorr = lerp(
+                    MIN_CORRECTION_CAP, MAX_CORRECTION_CAP, headingCorrScale);
+            corrTurn = Range.clip(corrTurn, -dynamicMaxTurnCorr, dynamicMaxTurnCorr);
 
-            double corrWeight = Range.clip(1.0 - Math.exp(-BLEND_K * posError), 0.0, 1.0);
-
-            double robotFwd = ffFwd + corrWeight * corrFwd;
-            double robotStr = ffStr + corrWeight * corrStr;
-            // Heading error is independent of position error. Weighting this
-            // by corrWeight disabled heading correction whenever XY tracking
-            // happened to be good.
+            // P already goes to zero with error; fading it again allowed small
+            // errors to accumulate for most of the replay.
+            double robotFwd = ffFwd + corrFwd;
+            double robotStr = ffStr + corrStr;
             double robotTurn = ffTurn + corrTurn;
 
             double driveMag = Math.hypot(robotFwd, robotStr);
@@ -259,17 +251,7 @@ public class FinalReplayOp extends LinearOpMode {
             }
             robotTurn = Range.clip(robotTurn, -1.0, 1.0);
 
-            double maxDelta = MAX_SLEW_RATE * dt;
-            robotFwd = prevRobotFwd + Range.clip(robotFwd - prevRobotFwd, -maxDelta, maxDelta);
-            robotStr = prevRobotStr + Range.clip(robotStr - prevRobotStr, -maxDelta, maxDelta);
-            robotTurn = prevRobotTurn + Range.clip(robotTurn - prevRobotTurn, -maxDelta, maxDelta);
-
-            prevRobotFwd     = robotFwd;
-            prevRobotStr     = robotStr;
-            prevRobotTurn    = robotTurn;
-            prevErrorX       = exRobot;
-            prevErrorY       = eyRobot;
-            prevErrorHeading = eh;
+            prevCurrentHeading = curH;
             prevTime         = now;
 
             robot.follower.setTeleOpDrive(robotFwd, robotStr, robotTurn, true);
@@ -280,23 +262,23 @@ public class FinalReplayOp extends LinearOpMode {
             // Hardware Overrides: Ensure servos follow the recording exactly, bypassing live auto-aim.
             robot.turretServo.setPosition(lerp(fA.turretPos, fB.turretPos, t));
             robot.angleServo.setPosition(lerp(fA.anglePos, fB.anglePos, t));
-            robot.flapsServo.setPosition(lerp(fA.flapPos, fB.flapPos, t));
+            robot.flapsServo.setPosition(fA.flapPos);
 
             // Telemetry
             telemetry.addData("Time",    "%.2f / %.2f s", now, duration);
-            telemetry.addData("Lookahead", "%.3f s", lookahead);
-            telemetry.addData("PosErr",  "%.2f cm",  posError);
-            telemetry.addData("PosErr Mean", "%.2f cm", posErrorMean);
-            telemetry.addData("PosErr Peak", "%.2f cm", posErrorPeak);
+            telemetry.addData("PosErr",  "%.2f in",  posError);
+            telemetry.addData("PosErr Mean", "%.2f in", posErrorMean);
+            telemetry.addData("PosErr Peak", "%.2f in", posErrorPeak);
             telemetry.addData("HeadErr", "%.1f °",   Math.toDegrees(Math .abs(eh)));
-            telemetry.addData("FF", "fwd=%.2f str=%.2f turn=%.2f", ffFwd, ffStr, ffTurn);
-            telemetry.addData("Corr", "fwd=%.2f str=%.2f turn=%.2f w=%.0f%%",
-                    corrFwd, corrStr, corrTurn, corrWeight * 100);
+            telemetry.addData("FF", "fwd=%.2f str=%.2f turn=%.2f scale=%.2f",
+                    ffFwd, ffStr, ffTurn, voltageFfScale);
+            telemetry.addData("Corr", "fwd=%.2f str=%.2f turn=%.2f",
+                    corrFwd, corrStr, corrTurn);
             telemetry.addData("Cmd", "fwd=%.2f str=%.2f turn=%.2f", robotFwd, robotStr, robotTurn);
             telemetry.addData("Mech",    "rng=%d aa=%s flap=%s",
-                    (int) Math.round(lerp(fA.shootRange, fB.shootRange, t)),
-                    (t < 0.5 ? fA.autoAim : fB.autoAim) ? "Y" : "N",
-                    lerpBool(fA.flapOpen, fB.flapOpen, t) ? "Y" : "N");
+                    fA.shootRange,
+                    fA.autoAim ? "Y" : "N",
+                    fA.flapOpen ? "Y" : "N");
             telemetry.update();
 
             idle();
@@ -316,7 +298,6 @@ public class FinalReplayOp extends LinearOpMode {
 
         // Force auto-aim off for Replay; we use recorded positions.
         robot.turret.autoAimEnabled = false;
-        prevAutoAim = false;
 
         if (f.shootRange >= 0) {
             if (f.shootRange == 0) {
@@ -341,17 +322,22 @@ public class FinalReplayOp extends LinearOpMode {
     private void applyMechanismCommands(RobotFrame a, RobotFrame b, double t) {
         robot.intake.speed = lerp(a.intakeCmd, b.intakeCmd, t);
         robot.loader.speed = lerp(a.loaderCmd, b.loaderCmd, t);
-        robot.flap.open    = lerpBool(a.flapOpen, b.flapOpen, t);
+        // Discrete controls are step functions. Interpolating an enum such as
+        // ShootRange can activate ranges the driver never selected.
+        robot.flap.open    = a.flapOpen;
         robot.turret.driverOffset = lerp(a.turretOffset, b.turretOffset, t);
-        robot.Blue_Target  = t < 0.5 ? a.blueTarget : b.blueTarget;
+        robot.Blue_Target  = a.blueTarget;
 
         // Ensure auto-aim is off.
         robot.turret.autoAimEnabled = false;
 
-        int curRange = (int) Math.round(lerp(a.shootRange, b.shootRange, t));
+        int curRange = a.shootRange;
         if (curRange == 0) {
-            // Recorded as Auto-Aim: live kS fallback, recorded velocity/angle.
-            robot.shoot.activateRange(0);
+            if (curRange != prevShootRange) {
+                robot.shoot.activateRange(0);
+            }
+            // Recorded as Auto-Aim: use recorded velocity/angle after the
+            // one-time activation rather than recomputing the range each loop.
             robot.outtake.activeConfig.velocity = lerp(a.leftShtrVel, b.leftShtrVel, t);
             robot.outtake.activeConfig.angle    = lerp(a.anglePos, b.anglePos, t);
             double ks = lerp(a.outtakeKs, b.outtakeKs, t);
@@ -361,7 +347,7 @@ public class FinalReplayOp extends LinearOpMode {
         } else if (curRange != prevShootRange) {
             if (curRange > 0) {
                 robot.shoot.activateRange(curRange);
-            } else if (curRange == -1 && prevShootRange > 0) {
+            } else if (curRange == -1) {
                 robot.shoot.deactivate();
             }
         }
@@ -392,14 +378,32 @@ public class FinalReplayOp extends LinearOpMode {
                 }
             }
         }
+        populateMissingVelocities();
     }
 
-    private void calculateRecordedVoltage() {
-        double total = 0; int n = 0;
-        for (RobotFrame f : recordedFrames) {
-            if (f.voltage > 0) { total += f.voltage; n++; }
+    // V3.4 and earlier recordings do not contain localizer velocity. Preserve
+    // compatibility by estimating it in the field frame from neighboring poses.
+    private void populateMissingVelocities() {
+        for (int i = 0; i < recordedFrames.size(); i++) {
+            RobotFrame frame = recordedFrames.get(i);
+            if ((frame.hasRecordedVelocity && frame.hasRecordedAngularVelocity)
+                    || recordedFrames.size() < 2) continue;
+
+            int beforeIndex = Math.max(0, i - 1);
+            int afterIndex = Math.min(recordedFrames.size() - 1, i + 1);
+            RobotFrame before = recordedFrames.get(beforeIndex);
+            RobotFrame after = recordedFrames.get(afterIndex);
+            double dt = after.timestamp - before.timestamp;
+            if (dt > 0) {
+                if (!frame.hasRecordedVelocity) {
+                    frame.velocityX = (after.x - before.x) / dt;
+                    frame.velocityY = (after.y - before.y) / dt;
+                }
+                if (!frame.hasRecordedAngularVelocity) {
+                    frame.angularVelocity = normalizeAngle(after.heading - before.heading) / dt;
+                }
+            }
         }
-        if (n > 0) recordedVoltage = total / n;
     }
 
     private void refreshVoltage(double now) {
@@ -409,19 +413,8 @@ public class FinalReplayOp extends LinearOpMode {
         }
     }
 
-    private void updateTimeScaling() {
-        double ratio = cachedVoltage / recordedVoltage;
-        timeScalingFactor = ratio < 1.0
-                ? Range.clip(1.0 + TIME_SCALING_FACTOR * (1.0 - ratio), 1.0, 2.0)
-                : 1.0;
-    }
-
     private static double lerp(double a, double b, double t) {
         return a + (b - a) * t;
-    }
-
-    private static boolean lerpBool(boolean a, boolean b, double t) {
-        return t < 0.5 ? a : b;
     }
 
     private static double lerpAngle(double a, double b, double t) {
@@ -452,6 +445,11 @@ public class FinalReplayOp extends LinearOpMode {
         double driveStr     = 0;
         double driveTurn    = 0;
         double outtakeKs    = 0;
+        double velocityX    = 0;
+        double velocityY    = 0;
+        double angularVelocity = 0;
+        boolean hasRecordedVelocity = false;
+        boolean hasRecordedAngularVelocity = false;
 
         RobotFrame(String[] d) {
             timestamp    = Double.parseDouble(d[0]);
@@ -489,6 +487,15 @@ public class FinalReplayOp extends LinearOpMode {
             }
             if (d.length >= 27) {
                 outtakeKs = Double.parseDouble(d[26]);
+            }
+            if (d.length >= 29) {
+                velocityX = Double.parseDouble(d[27]);
+                velocityY = Double.parseDouble(d[28]);
+                hasRecordedVelocity = true;
+            }
+            if (d.length >= 30) {
+                angularVelocity = Double.parseDouble(d[29]);
+                hasRecordedAngularVelocity = true;
             }
         }
 
