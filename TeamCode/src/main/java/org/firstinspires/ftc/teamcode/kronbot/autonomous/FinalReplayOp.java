@@ -33,10 +33,11 @@ import java.util.List;
  * Reads the V3.6 CSV format produced by FinalRecorderOp. Older V3.3-V3.5
  * CSVs still load; missing drive commands and velocities are reconstructed.
  *
- * This version uses the recorded servo positions (turretPos, anglePos)
- * directly during replay instead of re-calculating them with live auto-aim.
- * Drive playback uses recorded TeleOp commands as voltage-compensated
- * feedforward plus field-frame pose and velocity correction.
+ * Turret aiming is recalculated live during replay, including Limelight
+ * correction, instead of forcing the recorded turret servo position. Shooter
+ * angle playback remains recorded. Drive playback uses recorded TeleOp
+ * commands as voltage-compensated feedforward plus field-frame pose and
+ * velocity correction.
  */
 @Autonomous(name = "Replay Vlad", group = "Replay")
 public class FinalReplayOp extends LinearOpMode {
@@ -261,8 +262,8 @@ public class FinalReplayOp extends LinearOpMode {
             applyMechanismCommands(fA, fB, t);
             robot.updateAllSystems();
 
-            // Hardware Overrides: Ensure servos follow the recording exactly, bypassing live auto-aim.
-            robot.turretServo.setPosition(lerp(fA.turretPos, fB.turretPos, t));
+            // Keep the recorded shooter angle, but leave the turret position
+            // from Turret.update() intact so replay uses live Limelight aiming.
             robot.angleServo.setPosition(lerp(fA.anglePos, fB.anglePos, t));
             robot.flapsServo.setPosition(fA.flapPos);
 
@@ -303,8 +304,9 @@ public class FinalReplayOp extends LinearOpMode {
         robot.intake.speed        = f.intakeCmd;
         robot.loader.speed        = f.loaderCmd;
 
-        // Force auto-aim off for Replay; we use recorded positions.
-        robot.turret.autoAimEnabled = false;
+        // Turret positions are recalculated from the current pose and live
+        // Limelight target during replay, just as they are while recording.
+        robot.turret.autoAimEnabled = true;
 
         if (f.shootRange >= 0) {
             if (f.shootRange == 0) {
@@ -339,8 +341,9 @@ public class FinalReplayOp extends LinearOpMode {
             prevBlueTarget = robot.Blue_Target;
         }
 
-        // Ensure auto-aim is off.
-        robot.turret.autoAimEnabled = false;
+        // Keep live turret auto-aim enabled. Turret.update() runs after the
+        // Limelight refresh inside updateAllSystems().
+        robot.turret.autoAimEnabled = true;
 
         int curRange = a.shootRange;
         if (curRange == 0) {
