@@ -199,7 +199,7 @@ public class Robot extends KronBot {
         public void switchPipeline(boolean blue) {
             if (!initialized || limelight == null) return;
             try {
-                limelight.pipelineSwitch(blue ? PIPELINE_BLUE : PIPELINE_RED);
+                limelight.pipelineSwitch(blue ? PIPELINE_RED : PIPELINE_BLUE);
                 usingBluePipeline = blue;
                 lastFault = null;
             } catch (RuntimeException e) {

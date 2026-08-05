@@ -121,6 +121,7 @@ public class FinalRecorderOp extends OpMode {
 
         drivingGP = new Controls(gamepad1);
         utilityGP = new Controls(gamepad2);
+        robot.limelight.init(hardwareMap, telemetry);
 
         // Initialize drive motors for recording
         leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
@@ -187,6 +188,11 @@ public class FinalRecorderOp extends OpMode {
         robot.intake.speed = utilityGP.rightStick.y;
         robot.intake.reversed = INTAKE_REVERSE;
 
+        if(drivingGP.rightStick.button.justPressed()) {
+            robot.Blue_Target = !robot.Blue_Target;
+            robot.limelight.switchPipeline(robot.Blue_Target);
+        }
+
         //Loader
         if (!drivingGP.rightBumper.pressed()) {
             robot.loader.speed = utilityGP.leftStick.y;
@@ -195,9 +201,9 @@ public class FinalRecorderOp extends OpMode {
             robot.loader.speed = (drivingGP.rightTrigger - drivingGP.leftTrigger) * 0.8;
             robot.flap.open = true;
             if (robot.loader.speed > 0.1)
-                robot.intake.speed = INTAKE_DRIVER_POWER;
-            else if (robot.loader.speed < -0.2)
                 robot.intake.speed = INTAKE_DRIVER_REVERSE;
+            else if (robot.loader.speed < -0.2)
+                robot.intake.speed = INTAKE_DRIVER_POWER;
             else
                 robot.intake.speed = 0;
         }
@@ -277,9 +283,6 @@ public class FinalRecorderOp extends OpMode {
             }
         }
 
-        if(drivingGP.rightStick.button.justPressed())
-            robot.Blue_Target = !robot.Blue_Target;
-
         //Update robot systems status
         robot.follower.setTeleOpDrive(driveFwd, driveStr, driveTurn, true);
         robot.updateAllSystems();
@@ -310,6 +313,7 @@ public class FinalRecorderOp extends OpMode {
             } catch (IOException ignored) {
             }
         }
+        robot.limelight.stop();
     }
 
     public void _telemetry() {

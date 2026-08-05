@@ -219,9 +219,6 @@ public class MainDrivingOp extends OpMode {
             }
         }
 
-        if(drivingGP.rightStick.button.justPressed())
-            robot.Blue_Target = !robot.Blue_Target;
-
         //Update robot systems status
         robot.follower.setTeleOpDrive(-drivingGP.leftStick.y, -drivingGP.leftStick.x, -drivingGP.rightStick.x, true);
         robot.updateAllSystems();

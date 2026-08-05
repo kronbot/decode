@@ -68,11 +68,13 @@ public class FinalReplayOp extends LinearOpMode {
     private double filteredVelErrorX, filteredVelErrorY, filteredOmegaError;
 
     private int     prevShootRange = -2;
+    private boolean prevBlueTarget = false;
 
     @Override
     public void runOpMode() {
         robot.init(hardwareMap);
         robot.initFollower(hardwareMap, false);
+        robot.limelight.init(hardwareMap, telemetry);
 
         telemetry.addData("Status", "Loading CSV...");
         telemetry.update();
@@ -279,6 +281,9 @@ public class FinalReplayOp extends LinearOpMode {
                     fA.shootRange,
                     fA.autoAim ? "Y" : "N",
                     fA.flapOpen ? "Y" : "N");
+            telemetry.addData("Target", "%s pipeline=%s",
+                    robot.Blue_Target ? "Blue" : "Red",
+                    robot.limelight.isUsingBluePipeline() ? "Blue" : "Red");
             telemetry.update();
 
             idle();
@@ -292,6 +297,8 @@ public class FinalReplayOp extends LinearOpMode {
         robot.intake.reversed    = INTAKE_REVERSE;
         robot.turret.driverOffset = f.turretOffset;
         robot.Blue_Target         = f.blueTarget;
+        robot.limelight.switchPipeline(robot.Blue_Target);
+        prevBlueTarget            = robot.Blue_Target;
         robot.flap.open           = f.flapOpen;
         robot.intake.speed        = f.intakeCmd;
         robot.loader.speed        = f.loaderCmd;
@@ -327,6 +334,10 @@ public class FinalReplayOp extends LinearOpMode {
         robot.flap.open    = a.flapOpen;
         robot.turret.driverOffset = lerp(a.turretOffset, b.turretOffset, t);
         robot.Blue_Target  = a.blueTarget;
+        if (robot.Blue_Target != prevBlueTarget) {
+            robot.limelight.switchPipeline(robot.Blue_Target);
+            prevBlueTarget = robot.Blue_Target;
+        }
 
         // Ensure auto-aim is off.
         robot.turret.autoAimEnabled = false;
@@ -360,6 +371,7 @@ public class FinalReplayOp extends LinearOpMode {
         robot.flap.open = false;
         robot.shoot.deactivate();
         robot.updateAllSystems();
+        robot.limelight.stop();
     }
 
     // -------------------------------------------------------------------------
