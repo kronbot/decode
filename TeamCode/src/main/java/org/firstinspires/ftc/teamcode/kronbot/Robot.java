@@ -686,8 +686,7 @@ public class Robot extends KronBot {
                                     Math.toRadians(limelightTx) * LIMELIGHT_TURRET_KP,
                                     -LIMELIGHT_TURRET_MAX_CORRECTION,
                                     LIMELIGHT_TURRET_MAX_CORRECTION
-                            );
-                        }
+                            );}
                         limelightTargetActive = true;
                     }
                     limelightCorrection = correctionThisUpdate;
