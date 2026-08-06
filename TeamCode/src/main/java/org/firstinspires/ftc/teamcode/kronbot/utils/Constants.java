@@ -114,12 +114,12 @@ public class Constants {
     public static double LIMELIGHT_TURRET_SETTLE_MS = 180;
     public static double LIMELIGHT_TX_DEADBAND = 0.75;
 
-    public static double BASKET_Y = 140;
-    public static double BASKET_BLUE_Y = 20;
+    public static double BASKET_Y = -140;
+    public static double BASKET_BLUE_Y = -20;
     public static double BASKET_X = 130;
 
 
-    public static AutonomousConstants.Coordinates RedTowerCoords = new AutonomousConstants.Coordinates(130, 140, 0);
+    public static AutonomousConstants.Coordinates RedTowerCoords = new AutonomousConstants.Coordinates(130, -140, 0);
     public static AutonomousConstants.Coordinates BlueTowerCoords = new AutonomousConstants.Coordinates(10, 135, 0);
 
 }

@@ -201,7 +201,8 @@ public class Robot extends KronBot {
         public void switchPipeline(boolean blue) {
             if (!initialized || limelight == null) return;
             try {
-                limelight.pipelineSwitch(blue ? PIPELINE_RED : PIPELINE_BLUE);
+//                limelight.pipelineSwitch(blue ? PIPELINE_RED : PIPELINE_BLUE);
+                limelight.pipelineSwitch(blue ? PIPELINE_BLUE : PIPELINE_RED);
                 usingBluePipeline = blue;
                 lastFault = null;
             } catch (RuntimeException e) {
@@ -693,6 +694,7 @@ public class Robot extends KronBot {
                     limelightCorrection = correctionThisUpdate;
                     // This is a one-shot position increment; it is not repeated during settling.
                     robotRelativeAngle = angle + correctionThisUpdate;
+//                    robotRelativeAngle = angle - correctionThisUpdate;
                 } else if (limelight.hasRecentTarget()) {
                     aimSource = "Limelight Hold";
                     limelightCorrection = 0;
