@@ -8,16 +8,20 @@ import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RedTowerCoo
 import android.os.Environment;
 
 import com.acmerobotics.dashboard.FtcDashboard;
+import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.pedropathing.math.Vector;
+import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit;
 
 import org.firstinspires.ftc.teamcode.kronbot.Robot;
 import org.firstinspires.ftc.teamcode.kronbot.utils.Controls;
 import org.firstinspires.ftc.teamcode.kronbot.utils.components.TurretAligner;
 import org.firstinspires.ftc.teamcode.kronbot.utils.misc.LpsCounter;
 
+import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Locale;
@@ -29,12 +33,13 @@ import java.util.Locale;
  * Every mechanism control line is identical to MainDrivingOp so the driver
  * experiences exactly the same robot behavior while recording.
  *
- * CSV columns (27 total):
+ * CSV columns (30 total):
  *   Time, LR, RR, LF, RF, X, Y, Heading, Voltage,
  *   IntakeVel, LoaderVel, LeftShtrVel, RightShtrVel,
  *   TurretPos, AnglePos, FlapPos,
  *   IntakeCmd, LoaderCmd, FlapOpen, ShootRange, TurretOffset, BlueTarget,
- *   AutoAimEnabled, DriveFwd, DriveStr, DriveTurn, OuttakeKs
+ *   AutoAimEnabled, DriveFwd, DriveStr, DriveTurn, OuttakeKs,
+ *   VelX, VelY, AngularVelocity
  *
  * V3.3 changes over V3.2:
  *   - Removed resetIMU() from init() to match MainDrivingOp exactly. The
@@ -59,7 +64,10 @@ import java.util.Locale;
  *   - Records auto-aim as ShootRange 0 and stores the active shooter kS, so
  *     replay can keep the recorded interpolated shooter velocity stable.
  *
- * @version 3.4
+ * V3.6 adds native Pinpoint angular velocity for rotation feedback. V3.5 added
+ * a true t=0 frame, coherent timestamps, X/Y velocity, and buffered output.
+ *
+ * @version 3.6
  */
 @TeleOp(name = "Recorder Vlad", group = "Replay")
 public class FinalRecorderOp extends OpMode {
@@ -80,13 +88,14 @@ public class FinalRecorderOp extends OpMode {
     boolean rumbled = false;
 
     // Data Recording Fields
-    private FileWriter dataRecorder;
+    private BufferedWriter dataRecorder;
     private static final double RECORD_INTERVAL_SEC = 0.020; // 20ms in seconds
     private ElapsedTime recordTimer = new ElapsedTime();
     private double lastRecordTime = 0;
 
     // Direct access to drive motors for recording (follower hides them)
     private DcMotorEx leftFront, rightFront, leftRear, rightRear;
+    private GoBildaPinpointDriver pinpoint;
 
     // Last discrete range passed to robot.shoot.activateRange(N). -2 means
     // "never called this session" (used by replay to avoid an initial-state
@@ -112,12 +121,14 @@ public class FinalRecorderOp extends OpMode {
 
         drivingGP = new Controls(gamepad1);
         utilityGP = new Controls(gamepad2);
+        robot.limelight.init(hardwareMap, telemetry);
 
         // Initialize drive motors for recording
         leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
         rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
         leftRear = hardwareMap.get(DcMotorEx.class, "leftRear");
         rightRear = hardwareMap.get(DcMotorEx.class, "rightRear");
+        pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
 
         // NOTE: MainDrivingOp does NOT call resetIMU() in init(). The
         // recorder used to (V3.2), which made the recorded path start from
@@ -125,11 +136,11 @@ public class FinalRecorderOp extends OpMode {
         // for parity. The replay still does its own setPose() at the
         // first recorded frame, so this is fine.
 
-        // Initialize Data Recorder — V3.4 header (27 columns)
+        // Initialize Data Recorder - V3.6 header (30 columns)
         String filePath = Environment.getExternalStorageDirectory().getPath() + "/robot_data_Vlad.csv";
         try {
-            dataRecorder = new FileWriter(filePath);
-            dataRecorder.write("Time,LR,RR,LF,RF,X,Y,Heading,Voltage,IntakeVel,LoaderVel,LeftShtrVel,RightShtrVel,TurretPos,AnglePos,FlapPos,IntakeCmd,LoaderCmd,FlapOpen,ShootRange,TurretOffset,BlueTarget,AutoAim,DriveFwd,DriveStr,DriveTurn,OuttakeKs\n");
+            dataRecorder = new BufferedWriter(new FileWriter(filePath), 32 * 1024);
+            dataRecorder.write("Time,LR,RR,LF,RF,X,Y,Heading,Voltage,IntakeVel,LoaderVel,LeftShtrVel,RightShtrVel,TurretPos,AnglePos,FlapPos,IntakeCmd,LoaderCmd,FlapOpen,ShootRange,TurretOffset,BlueTarget,AutoAim,DriveFwd,DriveStr,DriveTurn,OuttakeKs,VelX,VelY,AngularVelocity\n");
         } catch (IOException e) {
             telemetry.addData("Error initializing recorder", e.getMessage());
         }
@@ -139,20 +150,27 @@ public class FinalRecorderOp extends OpMode {
     public void init_loop() {
         lpsCounter.getLoopTime();
 
-        telemetry.addLine("Initialization Ready (Recording V3.4 Enabled)");
+        telemetry.addLine("Initialization Ready (Recording V3.6 Enabled)");
         telemetry.update();
     }
 
     @Override
     public void start() {
         robot.follower.startTeleopDrive();
+        robot.follower.update();
         recordTimer.reset();
+        lastRecordTime = 0;
+
+        // Preserve the true starting state instead of dropping the first 20 ms.
+        try {
+            recordData(0, 0, 0, 0);
+        } catch (IOException e) {
+            telemetry.addData("Recording Error", e.getMessage());
+        }
     }
 
     @Override
     public void loop() {
-        double now = recordTimer.seconds();
-
         lpsCounter.getLoopTime();
 
         drivingGP.update();
@@ -170,6 +188,11 @@ public class FinalRecorderOp extends OpMode {
         robot.intake.speed = utilityGP.rightStick.y;
         robot.intake.reversed = INTAKE_REVERSE;
 
+        if(drivingGP.rightStick.button.justPressed()) {
+            robot.Blue_Target = !robot.Blue_Target;
+            robot.limelight.switchPipeline(robot.Blue_Target);
+        }
+
         //Loader
         if (!drivingGP.rightBumper.pressed()) {
             robot.loader.speed = utilityGP.leftStick.y;
@@ -178,9 +201,9 @@ public class FinalRecorderOp extends OpMode {
             robot.loader.speed = (drivingGP.rightTrigger - drivingGP.leftTrigger) * 0.8;
             robot.flap.open = true;
             if (robot.loader.speed > 0.1)
-                robot.intake.speed = INTAKE_DRIVER_POWER;
-            else if (robot.loader.speed < -0.2)
                 robot.intake.speed = INTAKE_DRIVER_REVERSE;
+            else if (robot.loader.speed < -0.2)
+                robot.intake.speed = INTAKE_DRIVER_POWER;
             else
                 robot.intake.speed = 0;
         }
@@ -260,9 +283,6 @@ public class FinalRecorderOp extends OpMode {
             }
         }
 
-        if(drivingGP.rightStick.button.justPressed())
-            robot.Blue_Target = !robot.Blue_Target;
-
         //Update robot systems status
         robot.follower.setTeleOpDrive(driveFwd, driveStr, driveTurn, true);
         robot.updateAllSystems();
@@ -270,13 +290,15 @@ public class FinalRecorderOp extends OpMode {
         // ----- End of MainDrivingOp-identical block -----
 
         // Record Data
-        if (now - lastRecordTime >= RECORD_INTERVAL_SEC) {
+        // Timestamp the exact post-update snapshot read by recordData().
+        double sampleTime = recordTimer.seconds();
+        if (sampleTime - lastRecordTime >= RECORD_INTERVAL_SEC) {
             try {
-                recordData(now, driveFwd, driveStr, driveTurn);
+                recordData(sampleTime, driveFwd, driveStr, driveTurn);
             } catch (IOException e) {
                 telemetry.addData("Recording Error", e.getMessage());
             }
-            lastRecordTime = now;
+            lastRecordTime = sampleTime;
         }
 
         _telemetry();
@@ -291,11 +313,12 @@ public class FinalRecorderOp extends OpMode {
             } catch (IOException ignored) {
             }
         }
+        robot.limelight.stop();
     }
 
     public void _telemetry() {
         telemetry.addData("LPS", "%.1f", 1 / lpsCounter.delta);
-        telemetry.addData("Recording V3.4", "ACTIVE");
+        telemetry.addData("Recording V3.6", "ACTIVE");
         telemetry.addData("x", robot.follower.getPose().getX());
         telemetry.addData("y", robot.follower.getPose().getY());
         telemetry.addData("heading", robot.follower.getPose().getHeading());
@@ -315,6 +338,7 @@ public class FinalRecorderOp extends OpMode {
     }
 
     private void recordData(double t, double driveFwd, double driveStr, double driveTurn) throws IOException {
+        if (dataRecorder == null) return;
 
         double x = robot.follower.getPose().getX();
         double y = robot.follower.getPose().getY();
@@ -343,9 +367,13 @@ public class FinalRecorderOp extends OpMode {
         int    blueTarget    = robot.Blue_Target ? 1 : 0;
         int    autoAim       = autoAimEnabled ? 1 : 0;
         double outtakeKs     = robot.outtake.activeConfig.kS;
+        Vector velocity      = robot.follower.getVelocity();
+        double velocityX     = velocity.getXComponent();
+        double velocityY     = velocity.getYComponent();
+        double angularVelocity = pinpoint.getHeadingVelocity(UnnormalizedAngleUnit.RADIANS);
 
         dataRecorder.write(String.format(Locale.US,
-                "%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.2f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%d,%d,%.4f,%d,%d,%.4f,%.4f,%.4f,%.4f\n",
+                "%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.2f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%d,%d,%.4f,%d,%d,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n",
                 t,
                 leftRear.getPower(),
                 rightRear.getPower(),
@@ -372,7 +400,10 @@ public class FinalRecorderOp extends OpMode {
                 driveFwd,
                 driveStr,
                 driveTurn,
-                outtakeKs
+                outtakeKs,
+                velocityX,
+                velocityY,
+                angularVelocity
         ));
     }
 }

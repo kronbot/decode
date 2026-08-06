@@ -108,15 +108,18 @@ public class Constants {
     public static double ANGLE_TOLERANCE = 2.0;
     public static double DELTA_THRESHOLD = 0.01;
     public static double MAX_ROTATION_POWER = 0.5;
-    public static double LIMELIGHT_TURRET_KP = 0.25;
-    public static double LIMELIGHT_TX_DEADBAND = 1.4;
+    // Make one position correction, then let the servo and camera settle before measuring again.
+    public static double LIMELIGHT_TURRET_KP = 0.65;
+    public static double LIMELIGHT_TURRET_MAX_CORRECTION = 0.06; // radians/correction
+    public static double LIMELIGHT_TURRET_SETTLE_MS = 180;
+    public static double LIMELIGHT_TX_DEADBAND = 0.75;
 
-    public static double BASKET_Y = 140;
-    public static double BASKET_BLUE_Y = 20;
+    public static double BASKET_Y = -140;
+    public static double BASKET_BLUE_Y = -20;
     public static double BASKET_X = 130;
 
 
-    public static AutonomousConstants.Coordinates RedTowerCoords = new AutonomousConstants.Coordinates(130, 130, 0);
+    public static AutonomousConstants.Coordinates RedTowerCoords = new AutonomousConstants.Coordinates(130, -140, 0);
     public static AutonomousConstants.Coordinates BlueTowerCoords = new AutonomousConstants.Coordinates(10, 135, 0);
 
 }

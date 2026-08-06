@@ -120,7 +120,7 @@ public class MainDrivingOp extends OpMode {
             robot.loader.speed = utilityGP.leftStick.y;
             robot.flap.open = false;
         } else {
-            robot.loader.speed = (drivingGP.rightTrigger - drivingGP.leftTrigger) * 0.8;
+            robot.loader.speed = (drivingGP.leftTrigger - drivingGP.rightTrigger) * 0.8;
             robot.flap.open = true;
 
             if (robot.loader.speed > 0.1)
@@ -187,20 +187,17 @@ public class MainDrivingOp extends OpMode {
         if(drivingGP.dpadUp.justPressed())
             autoAimEnabled=!autoAimEnabled;
 
-        if(autoAimEnabled)
+        if(autoAimEnabled) {
             robot.shoot.activateRange(0);
-        //Shoot Close/Far
-        if (drivingGP.triangle.justPressed()) {
-            robot.shoot.activateRange(1);
-        }
-        if (drivingGP.square.justPressed()) {
-            robot.shoot.activateRange(2);
-        }
-        if (drivingGP.cross.justPressed()) {
-            robot.shoot.activateRange(3);
-        }
-        if (drivingGP.circle.justPressed()) {
-            robot.shoot.activateRange(4);
+        } else {
+            if (drivingGP.triangle.justPressed())
+                robot.shoot.activateRange(1);
+            if (drivingGP.square.justPressed())
+                robot.shoot.activateRange(2);
+            if (drivingGP.cross.justPressed())
+                robot.shoot.activateRange(3);
+            if (drivingGP.circle.justPressed())
+                robot.shoot.activateRange(4);
         }
 
         if (robot.outtake.on &&
@@ -218,9 +215,6 @@ public class MainDrivingOp extends OpMode {
                 rumbled = false;
             }
         }
-
-        if(drivingGP.rightStick.button.justPressed())
-            robot.Blue_Target = !robot.Blue_Target;
 
         //Update robot systems status
         robot.follower.setTeleOpDrive(-drivingGP.leftStick.y, -drivingGP.leftStick.x, -drivingGP.rightStick.x, true);
