@@ -61,12 +61,12 @@ public class Constants {
     public static double minVelocity = 1140;
     public static double maxVelocity = 1500;
 
-    public static double RANGE_1 = 20;
+    public static double RANGE_1 = 78;
     public static double RANGE_1_ANGLE = 0;
-    public static double RANGE_1_VELOCITY = 1000;
+    public static double RANGE_1_VELOCITY = 970;
     public static double RANGE_1_KS = 0.15;
 
-    public static double RANGE_2 = 40;
+    public static double RANGE_2 = 80;
     public static double RANGE_2_ANGLE = 0.32;
     public static double RANGE_2_VELOCITY = 1150;
     public static double RANGE_2_KS = 0.2;
@@ -77,9 +77,9 @@ public class Constants {
     public static double RANGE_3_KS = 0.3;
 
 
-    public static double RANGE_4 = 120;
+    public static double RANGE_4 = 140;
     public static double RANGE_4_ANGLE = 0.70;
-    public static double RANGE_4_VELOCITY = 1600;
+    public static double RANGE_4_VELOCITY = 1650;
     public static double RANGE_4_KS = 0.5;
 
     public static AutonomousConstants.Coordinates TestPoseStart = new AutonomousConstants.Coordinates(0, 0, 0);
