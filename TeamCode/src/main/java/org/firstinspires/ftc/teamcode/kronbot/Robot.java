@@ -15,6 +15,8 @@ import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.DELTA_THRES
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.FLAP_CLOSED;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.FLAP_OPEN;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.LIMELIGHT_TURRET_KP;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.LIMELIGHT_TURRET_MAX_CORRECTION;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.LIMELIGHT_TURRET_SETTLE_MS;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.LIMELIGHT_TX_DEADBAND;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KD;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KF;
@@ -165,7 +167,7 @@ public class Robot extends KronBot {
 
         private static final int POLL_RATE_HZ = 30;
         private static final int PIPELINE_INDEX = 7;
-        private static final long STALE_RESULT_MS = 500;
+        private static final long STALE_RESULT_MS = 150;
         private static final int PIPELINE_RED = 8;
         private static final int PIPELINE_BLUE = 7;
         private static final long TARGET_LOST_GRACE_MS = 300;
@@ -383,13 +385,13 @@ public class Robot extends KronBot {
     public class Outtake {
         public boolean on = false;
         public RangeConfig activeConfig;
-//        RangeConfig autoAimConfig;
+        //        RangeConfig autoAimConfig;
         public boolean reversed = false;
 
         boolean braking = false;
         private double selectedRange1, selectedRange2;
         private double distance;
-//        double lastVelocity = 0;
+        //        double lastVelocity = 0;
         private TreeMap<Double, RangeConfig> ranges = new TreeMap<>();
 
         public void init() {
@@ -462,7 +464,7 @@ public class Robot extends KronBot {
                 }
 
             } else {
-                if (leftOuttake.getVelocity() < 21) {
+                if(leftOuttake.getVelocity() < 21) {
                     leftOuttake.setPower(0);
                     rightOuttake.setPower(0);
 
@@ -478,13 +480,41 @@ public class Robot extends KronBot {
                             OUT_MOTOR_KD,   // D - reduces overshoot
                             OUT_MOTOR_KF    // F - feedforward (VERY important)
                     );
-                } else {
-                    double velocity = leftOuttake.getVelocity();
-                    double brake = Math.min(-(53 * velocity / (velocity * velocity + 10000) - 0.065), 0);
-                    leftOuttake.setPower(brake);
-                    rightOuttake.setPower(brake);
                 }
+                else if(leftOuttake.getVelocity() < 200) {
+                    leftOuttake.setPower(-0.15);
+                    rightOuttake.setPower(-0.15);
+                }
+                else if(leftOuttake.getVelocity() < 300) {
+                    leftOuttake.setPower(-0.1);
+                    rightOuttake.setPower(-0.1);
+                }
+                else if(leftOuttake.getVelocity() < 500) {
+                    leftOuttake.setPower(0.05);
+                    rightOuttake.setPower(0.05);
+                }
+                else {
+                    leftOuttake.setPower(0);
+                    rightOuttake.setPower(0);
+                }
+                /*
+                if(rightOuttake.getVelocity() < 21) {
+                    rightOuttake.setPower(0);
+                }
+                else if(rightOuttake.getVelocity() < 200) {
+                    rightOuttake.setPower(-0.15);
+                }
+                else if(rightOuttake.getVelocity() < 300) {
+                    rightOuttake.setPower(-0.1);
+                }
+                else if(rightOuttake.getVelocity() < 500) {
+                    rightOuttake.setPower(0.05);
+                }
+                else
+                    rightOuttake.setPower(0);
+                 */
             }
+
             angleServo.setPosition(Math.min(Math.max(activeConfig.angle, ANGLE_SERVO_MIN), ANGLE_SERVO_MAX));
         }
 
@@ -617,6 +647,8 @@ public class Robot extends KronBot {
         private String aimSource = "Odometry";
         private double limelightTx = 0;
         private double limelightCorrection = 0;
+        private boolean limelightTargetActive = false;
+        private final ElapsedTime limelightControlTimer = new ElapsedTime();
 
 
         public boolean autoAimEnabled = true;
@@ -624,6 +656,7 @@ public class Robot extends KronBot {
         public void init() {
             angle = 0;
             servoPosition = 0.5;
+            resetLimelightController();
         }
 
 
@@ -638,20 +671,38 @@ public class Robot extends KronBot {
                 if (limelightResult != null) {
                     aimSource = "Limelight";
                     limelightTx = limelightResult.getTx();
-                    if (Math.abs(limelightTx) > LIMELIGHT_TX_DEADBAND) {
-                        limelightCorrection = Math.toRadians(limelightTx) * LIMELIGHT_TURRET_KP;
-                    } else {
-                        limelightCorrection = 0;
+                    double correctionThisUpdate = 0;
+
+                    // A positional servo needs time to reach the previous command. Correct once,
+                    // wait for it (and the camera image) to settle, then measure again. Without
+                    // this delay, camera latency makes us add several corrections for motion that
+                    // the servo has already been commanded to perform.
+                    if (!limelightTargetActive
+                            || limelightControlTimer.milliseconds() >= LIMELIGHT_TURRET_SETTLE_MS) {
+                        limelightControlTimer.reset();
+
+                        if (Math.abs(limelightTx) > LIMELIGHT_TX_DEADBAND) {
+                            correctionThisUpdate = Math.clamp(
+                                    Math.toRadians(limelightTx) * LIMELIGHT_TURRET_KP,
+                                    -LIMELIGHT_TURRET_MAX_CORRECTION,
+                                    LIMELIGHT_TURRET_MAX_CORRECTION
+                            );
+                        }
+                        limelightTargetActive = true;
                     }
-                    robotRelativeAngle = angle + limelightCorrection;
+                    limelightCorrection = correctionThisUpdate;
+                    // This is a one-shot position increment; it is not repeated during settling.
+                    robotRelativeAngle = angle + correctionThisUpdate;
                 } else if (limelight.hasRecentTarget()) {
                     aimSource = "Limelight Hold";
                     limelightCorrection = 0;
+                    resetLimelightController();
                     robotRelativeAngle = angle;
                 } else {
                     aimSource = "Odometry";
                     limelightTx = 0;
                     limelightCorrection = 0;
+                    resetLimelightController();
                     double robot_X = follower.getPose().getX();
                     double robot_Y = follower.getPose().getY();
                     double robotHeading = heading.get();
@@ -674,15 +725,23 @@ public class Robot extends KronBot {
 
             } else {
                 aimSource = "Driver Offset";
+                limelightTx = 0;
+                limelightCorrection = 0;
+                resetLimelightController();
                 angle = driverOffset;
                 servoPosition =
                         driverOffset * TURRET_SERVO_UNITS_PER_RAD + 0.5;
             }
 
-            servoPosition = Math.min(Math.max(servoPosition, TURRET_SERVO_MIN), TURRET_SERVO_MAX);
+            servoPosition = Math.clamp(servoPosition, TURRET_SERVO_MIN, TURRET_SERVO_MAX);
             angle = (servoPosition - 0.5) / TURRET_SERVO_UNITS_PER_RAD;
             turretServo.setPosition(servoPosition);
 
+        }
+
+        private void resetLimelightController() {
+            limelightTargetActive = false;
+            limelightControlTimer.reset();
         }
 
         public void telemetry(Telemetry telemetry) {

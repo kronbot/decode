@@ -44,8 +44,8 @@ public class Constants {
     public static UsbFacingDirection USB_FACING_DIRECTION = UsbFacingDirection.UP;
 
     public static boolean LOADER_SERVO_REVERSED = true;
-    public static double TURRET_SERVO_MAX = 0.8;
-    public static double TURRET_SERVO_MIN = 0.15;
+    public static double TURRET_SERVO_MAX = 0.76;
+    public static double TURRET_SERVO_MIN = 0.215;
     public static double TURRET_SERVO_UNITS_PER_RAD = 0.160746493;
     public static double ANGLE_SERVO_MAX = 0.72;
     public static double ANGLE_SERVO_CLOSE = 0.7;
@@ -108,8 +108,11 @@ public class Constants {
     public static double ANGLE_TOLERANCE = 2.0;
     public static double DELTA_THRESHOLD = 0.01;
     public static double MAX_ROTATION_POWER = 0.5;
-    public static double LIMELIGHT_TURRET_KP = 0.25;
-    public static double LIMELIGHT_TX_DEADBAND = 1.4;
+    // Make one position correction, then let the servo and camera settle before measuring again.
+    public static double LIMELIGHT_TURRET_KP = 0.65;
+    public static double LIMELIGHT_TURRET_MAX_CORRECTION = 0.06; // radians/correction
+    public static double LIMELIGHT_TURRET_SETTLE_MS = 180;
+    public static double LIMELIGHT_TX_DEADBAND = 0.75;
 
     public static double BASKET_Y = 140;
     public static double BASKET_BLUE_Y = 20;
