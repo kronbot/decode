@@ -19,6 +19,7 @@ import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.Gamepad;
 
 //import org.firstinspires.ftc.teamcode.kronbot.KronBot;
 import org.firstinspires.ftc.teamcode.kronbot.Robot;
@@ -32,7 +33,6 @@ public class Auto_BackBlueOp extends OpMode {
     private Timer pathTimer, opmodeTimer;
     private int pathState;
     private int launchState=0;
-
     // Define poses
     Pose start = coordinates(StartingPoseBackBlue);
     Pose launchZoneBack = coordinates(LaunchZoneBackBlue);
