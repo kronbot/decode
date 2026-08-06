@@ -16,6 +16,7 @@ import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.FLAP_CLOSED
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.FLAP_OPEN;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.LIMELIGHT_TURRET_KP;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.LIMELIGHT_TURRET_MAX_CORRECTION;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.LIMELIGHT_TURRET_MIN_CORRECTION;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.LIMELIGHT_TURRET_SETTLE_MS;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.LIMELIGHT_TX_DEADBAND;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KD;
@@ -683,11 +684,25 @@ public class Robot extends KronBot {
                         limelightControlTimer.reset();
 
                         if (Math.abs(limelightTx) > LIMELIGHT_TX_DEADBAND) {
+                            double maxCorrection;
+
+                            if (Math.abs(limelightTx) > 10) {
+                                maxCorrection = LIMELIGHT_TURRET_MAX_CORRECTION;
+                            } else {
+                                maxCorrection = LIMELIGHT_TURRET_MIN_CORRECTION;
+                            }
+
                             correctionThisUpdate = Math.clamp(
                                     Math.toRadians(limelightTx) * LIMELIGHT_TURRET_KP,
-                                    -LIMELIGHT_TURRET_MAX_CORRECTION,
-                                    LIMELIGHT_TURRET_MAX_CORRECTION
+                                    -maxCorrection,
+                                    maxCorrection
                             );
+
+//                            correctionThisUpdate = Math.clamp(
+//                                    Math.toRadians(limelightTx) * LIMELIGHT_TURRET_KP,
+//                                    -LIMELIGHT_TURRET_MAX_CORRECTION,
+//                                    LIMELIGHT_TURRET_MAX_CORRECTION
+//                            );
                         }
                         limelightTargetActive = true;
                     }
