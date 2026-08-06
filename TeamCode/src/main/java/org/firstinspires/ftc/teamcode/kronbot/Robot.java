@@ -91,8 +91,6 @@ public class Robot extends KronBot {
         }
     }
 
-
-
     // Private constructor
     public Robot() {
         this.outtake = new Outtake();

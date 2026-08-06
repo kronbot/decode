@@ -119,7 +119,7 @@ public class Constants {
     public static double BASKET_X = 130;
 
 
-    public static AutonomousConstants.Coordinates RedTowerCoords = new AutonomousConstants.Coordinates(130, 130, 0);
+    public static AutonomousConstants.Coordinates RedTowerCoords = new AutonomousConstants.Coordinates(130, 140, 0);
     public static AutonomousConstants.Coordinates BlueTowerCoords = new AutonomousConstants.Coordinates(10, 135, 0);
 
 }
