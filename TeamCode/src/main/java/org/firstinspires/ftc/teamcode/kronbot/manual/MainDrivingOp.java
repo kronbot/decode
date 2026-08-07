@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.kronbot.manual;
 
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.BlueTowerCoords;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.INTAKE_DRIVER_POWER;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.INTAKE_DRIVER_REVERSE;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.INTAKE_REVERSE;
@@ -47,7 +48,7 @@ public class MainDrivingOp extends OpMode {
 
     private FtcDashboard dashboard;
 
-    private boolean autoAimEnabled = false;
+    private boolean autoOuttake = false;
 
     ElapsedTime turretTimer = new ElapsedTime();
 
@@ -107,12 +108,28 @@ public class MainDrivingOp extends OpMode {
 
         robot.follower.update();
 
-        //Intake
-        robot.intake.speed = utilityGP.rightStick.y;
-        robot.intake.reversed = INTAKE_REVERSE;
+        if(drivingGP.leftStick.button.justPressed()) {
+            double heading = robot.heading.get();
+            if(heading < (Math.PI / 4) && heading > (-Math.PI / 4)) {
+                heading = 0;
+            } else if(heading < (3 * Math.PI / 4) && heading > (Math.PI / 4)) {
+                heading = Math.PI / 2;
+            } else if(heading > (-3 * Math.PI / 4) && heading < (-Math.PI / 4)) {
+                heading = -Math.PI / 2;
+            } else {
+                heading = Math.PI;
+            }
 
-//        if (drivingGP.leftStick.button.justPressed())
-//            robot.limelight.togglePipeline();
+            if(robot.follower.getPose().getX() > 72) {
+                robot.follower.setPose(new Pose(135, 9, heading));
+            } else {
+                robot.follower.setPose(new Pose(9, 9, heading));
+            }
+
+            robot.turret.driverOffset = 0;
+        }
+
+        robot.intake.reversed = true;
 
         if(drivingGP.rightStick.button.justPressed()) {
             robot.blueTarget = !robot.blueTarget;
@@ -121,7 +138,8 @@ public class MainDrivingOp extends OpMode {
 
         //Loader
         if (!drivingGP.rightBumper.pressed()) {
-            robot.loader.speed = utilityGP.leftStick.y;
+            robot.loader.speed = (drivingGP.leftTrigger - drivingGP.rightTrigger);
+            robot.intake.speed = -(drivingGP.leftTrigger - drivingGP.rightTrigger);
             robot.flap.open = false;
         } else {
             robot.loader.speed = (drivingGP.leftTrigger - drivingGP.rightTrigger) * 0.8;
@@ -135,8 +153,7 @@ public class MainDrivingOp extends OpMode {
                 robot.intake.speed = 0;
         }
 
-        //AprilTagDetection tag = robot.webcam.getTowerTags();
-        //autoAim.telemetry(telemetry, tag);
+
 
         //Turret/Angle aiming
 
@@ -179,20 +196,20 @@ public class MainDrivingOp extends OpMode {
             turretTimer.reset();
         }
 
-//            //Angle aiming
-//            if(drivingGP.dpadUp.pressed())
-//                robot.outtake.activeConfig.angle += 0.01;
-//            else if(drivingGP.dpadDown.pressed())
-//                robot.outtake.activeConfig.angle -= 0.01;
-
         if(drivingGP.dpadDown.justPressed())
             robot.turret.autoAimEnabled = !robot.turret.autoAimEnabled;
 
-        if(drivingGP.dpadUp.justPressed())
-            autoAimEnabled=!autoAimEnabled;
+        if(drivingGP.dpadUp.justPressed()) {
+            autoOuttake = !autoOuttake;
+            robot.outtake.on = autoOuttake;
+        }
 
-        if(autoAimEnabled) {
-            robot.shoot.activateRange(0);
+        if(robot.turret.autoAimEnabled) {
+            if(robot.blueTarget) {
+                robot.outtake.setRangeOfDistance(robot.follower.getPose().distanceFrom(new Pose(BlueTowerCoords.x, BlueTowerCoords.y)));
+            } else {
+                robot.outtake.setRangeOfDistance(robot.follower.getPose().distanceFrom(new Pose(RedTowerCoords.x, RedTowerCoords.y)));
+            }
         } else {
             if (drivingGP.triangle.justPressed())
                 robot.shoot.activateRange(1);
@@ -211,14 +228,14 @@ public class MainDrivingOp extends OpMode {
             rumbled = true;
         }
 
-        if (!autoAimEnabled && drivingGP.leftBumper.justPressed()) {
-            robot.turret.autoAimEnabled = true;
+        if (!robot.turret.autoAimEnabled && drivingGP.leftBumper.justPressed()) {
             if (robot.outtake.on) {
                 robot.shoot.deactivate();
                 gamepad1.rumble(1, 1, 100);
                 rumbled = false;
             }
         }
+
 
         //Update robot systems status
         robot.follower.setTeleOpDrive(-drivingGP.leftStick.y, -drivingGP.leftStick.x, -drivingGP.rightStick.x, true);

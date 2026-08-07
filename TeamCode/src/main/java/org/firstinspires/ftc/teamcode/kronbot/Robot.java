@@ -41,6 +41,7 @@ import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_4;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_4_ANGLE;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_4_KS;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_4_VELOCITY;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_TPS_MARGIN;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RED_BASKET_X;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.TURRET_RADS_PER_TICK;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.TURRET_SERVO_MAX;
@@ -389,148 +390,103 @@ public class Robot extends KronBot {
     public class Outtake {
         public boolean on = false;
         public RangeConfig activeConfig;
-        //        RangeConfig autoAimConfig;
         public boolean reversed = false;
-
-        boolean braking = false;
-        private double selectedRange1, selectedRange2;
-        private double distance;
-        //        double lastVelocity = 0;
-        private TreeMap<Double, RangeConfig> ranges = new TreeMap<>();
+        private double targetDistance = 0;
 
         public void init() {
             on = false;
             reversed = false;
             activeConfig = new RangeConfig(0,0,0);
+        }
 
-            //Initialize Range based shooter settings
-            ranges.put(RANGE_1, new RangeConfig(RANGE_1_ANGLE, RANGE_1_VELOCITY, RANGE_1_KS));
-            ranges.put(RANGE_2, new RangeConfig(RANGE_2_ANGLE, RANGE_2_VELOCITY, RANGE_2_KS));
-            ranges.put(RANGE_3, new RangeConfig(RANGE_3_ANGLE, RANGE_3_VELOCITY,RANGE_3_KS));
-            ranges.put(RANGE_4, new RangeConfig(RANGE_4_ANGLE, RANGE_4_VELOCITY, RANGE_4_KS));
+        private double lerp(double a, double b, double t) {
+            return (1 - t) * a + t * b;
         }
 
 
-
-        /** Configures the launch angle and launch motor speed for the given distance.<br>
-         *  Returns true if a good configuration is possible (If the distance is in the correct range)
-         * @return  Returns true if a configuration is possible
-         */
-//        public boolean configureDistance(double distance) {
-//            if(distance < 20)
-//                return false;
-//            double shooterVel = 0;
-//            double servoAngle = 0;
-//
-//            // magic numbers for quadratics from desmos
-//            if(distance < 46)
-//                servoAngle = 0;
-//            else if(distance < 150)
-//                servoAngle = -0.0000557692 * (distance * distance) + 0.0181423 * distance - 0.716538;
-//            else
-//                servoAngle = 0.75;
-//
-//            if(distance < 215) {
-//                shooterVel = -0.00460596 * (distance * distance) + 3.42411 * distance + 752.43325;
-//            }
-//            else if(distance > 250 && distance < 375)
-//                shooterVel = 1400; // todo: check if this speed works
-//
-//            on = true;
-//            velocity = shooterVel;
-//            angle = servoAngle;
-//
-//            return true;
-//        }
-
-
         public void update(){
+            double velocity = leftOuttake.getVelocity();
 
             if(on){
                 leftOuttake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                 rightOuttake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-                if(leftOuttake.getVelocity() < activeConfig.velocity * 1) {
+                if(velocity < activeConfig.velocity) {
                     leftOuttake.setPower(1);
                     rightOuttake.setPower(1);
                 }
-                else if(leftOuttake.getVelocity() > activeConfig.velocity * 1.1) {
-                    if(braking) {
-                        leftOuttake.setPower(0);
-                        rightOuttake.setPower(0);
-                    }
-                    leftOuttake.setPower(activeConfig.kS * 0.8);
-                    rightOuttake.setPower(activeConfig.kS * 0.8);
+                else if(velocity > activeConfig.velocity + RANGE_TPS_MARGIN + 200) {
+                    leftOuttake.setPower(0);
+                    rightOuttake.setPower(0);
                 }
-                else {
-                    braking = false;
+                else if(velocity > activeConfig.velocity + RANGE_TPS_MARGIN) {
                     leftOuttake.setPower(activeConfig.kS);
                     rightOuttake.setPower(activeConfig.kS);
                 }
+                else {
+                    double power = Math.cos(Math.PI * (velocity - activeConfig.velocity) / RANGE_TPS_MARGIN) * (1 - RANGE_TPS_MARGIN) / 2 + RANGE_TPS_MARGIN / 2 + 0.5;
+                    leftOuttake.setPower(power);
+                    rightOuttake.setPower(power);
+                }
 
             } else {
-                if(leftOuttake.getVelocity() < 21) {
+                if(velocity < 21) {
                     leftOuttake.setPower(0);
                     rightOuttake.setPower(0);
-
-                    leftOuttake.setVelocityPIDFCoefficients(
-                            OUT_MOTOR_KP,   // P - main stabilizer
-                            OUT_MOTOR_KI,   // I - usually 0
-                            OUT_MOTOR_KD,   // D - reduces overshoot
-                            OUT_MOTOR_KF    // F - feedforward (VERY important)
-                    );
-                    rightOuttake.setVelocityPIDFCoefficients(
-                            OUT_MOTOR_KP,   // P - main stabilizer
-                            OUT_MOTOR_KI,   // I - usually 0
-                            OUT_MOTOR_KD,   // D - reduces overshoot
-                            OUT_MOTOR_KF    // F - feedforward (VERY important)
-                    );
-                }
-                else if(leftOuttake.getVelocity() < 200) {
-                    leftOuttake.setPower(-0.15);
-                    rightOuttake.setPower(-0.15);
-                }
-                else if(leftOuttake.getVelocity() < 300) {
-                    leftOuttake.setPower(-0.1);
-                    rightOuttake.setPower(-0.1);
-                }
-                else if(leftOuttake.getVelocity() < 500) {
-                    leftOuttake.setPower(0.05);
-                    rightOuttake.setPower(0.05);
                 }
                 else {
-                    leftOuttake.setPower(0);
-                    rightOuttake.setPower(0);
+                    double brake = Math.min(-(53 * velocity / (velocity * velocity + 10000) - 0.065), 0);
+                    leftOuttake.setPower(brake);
+                    rightOuttake.setPower(brake);
                 }
-                /*
-                if(rightOuttake.getVelocity() < 21) {
-                    rightOuttake.setPower(0);
-                }
-                else if(rightOuttake.getVelocity() < 200) {
-                    rightOuttake.setPower(-0.15);
-                }
-                else if(rightOuttake.getVelocity() < 300) {
-                    rightOuttake.setPower(-0.1);
-                }
-                else if(rightOuttake.getVelocity() < 500) {
-                    rightOuttake.setPower(0.05);
-                }
-                else
-                    rightOuttake.setPower(0);
-                 */
             }
 
+
             angleServo.setPosition(Math.min(Math.max(activeConfig.angle, ANGLE_SERVO_MIN), ANGLE_SERVO_MAX));
+        }
+
+        public void setRangeOfDistance(double distance) {
+            targetDistance = distance;
+
+            if(distance <= RANGE_1) {
+                activeConfig = new RangeConfig(RANGE_1_ANGLE, RANGE_1_VELOCITY, RANGE_1_KS);
+            }
+            else if(distance < RANGE_2) {
+                double t = (distance - RANGE_1) / (RANGE_2 - RANGE_1);
+                activeConfig = new RangeConfig(
+                        lerp(RANGE_1_ANGLE, RANGE_2_ANGLE, t),
+                        lerp(RANGE_1_VELOCITY, RANGE_2_VELOCITY, t),
+                        lerp(RANGE_1_KS, RANGE_2_KS, t)
+                );
+            }
+            else if(distance < RANGE_3) {
+                double t = (distance - RANGE_2) / (RANGE_3 - RANGE_2);
+                activeConfig = new RangeConfig(
+                        lerp(RANGE_2_ANGLE, RANGE_3_ANGLE, t),
+                        lerp(RANGE_2_VELOCITY, RANGE_3_VELOCITY, t),
+                        lerp(RANGE_2_KS, RANGE_3_KS, t)
+                );
+            }
+            else if(distance < RANGE_4) {
+                double t = (distance - RANGE_3) / (RANGE_4 - RANGE_3);
+                activeConfig = new RangeConfig(
+                        lerp(RANGE_3_ANGLE, RANGE_4_ANGLE, t),
+                        lerp(RANGE_3_VELOCITY, RANGE_4_VELOCITY, t),
+                        lerp(RANGE_3_KS, RANGE_4_KS, t)
+                );
+            }
+            else {
+                activeConfig = new RangeConfig(RANGE_4_ANGLE, RANGE_4_VELOCITY, RANGE_4_KS);
+            }
+
         }
 
 
 
         public void telemetry(Telemetry telemetry) {
             telemetry.addLine("=== OUTTAKE STATUS ===");
-            telemetry.addData("d1", selectedRange1);
-            telemetry.addData("d2", selectedRange2);
-            telemetry.addData("Distance", distance);
             telemetry.addData("On", on);
             telemetry.addData("Reversed", reversed);
+            telemetry.addData("Distance to target", "%.1f", targetDistance);
             telemetry.addData("Target Velocity", "%.0f", activeConfig.velocity);
             telemetry.addData("Left Velocity", "%.0f", leftOuttake.getVelocity());
             telemetry.addData("Left Power", "%.3f", leftOuttake.getPower());
@@ -643,7 +599,7 @@ public class Robot extends KronBot {
 
                     limelightTurretAngle = turretAngle + Math.toRadians(limelightTx);
 
-                    limelightCorrection = limelightTurretAngle;
+                    limelightCorrection = limelightTurretAngle + driverOffset;
                     angle = limelightTurretAngle;
 
                 } else if (limelight.hasRecentTarget()) {
@@ -653,7 +609,7 @@ public class Robot extends KronBot {
                     limelightTx = 0;
                     limelightCorrection = 0;
 
-                    angle = pinpointTurretAngle;
+                    angle = pinpointTurretAngle + driverOffset;
                 }
 
             } else {

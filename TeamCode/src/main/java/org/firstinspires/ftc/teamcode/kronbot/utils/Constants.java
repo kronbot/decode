@@ -62,28 +62,29 @@ public class Constants {
     public static double minVelocity = 1140;
     public static double maxVelocity = 1500;
 
-    public static double RANGE_1 = 78;
+    public static double RANGE_TPS_MARGIN = 50;
+
+    public static double RANGE_1 = 25;
     public static double RANGE_1_ANGLE = 0;
     public static double RANGE_1_VELOCITY = 970;
     public static double RANGE_1_KS = 0.15;
 
-    public static double RANGE_2 = 80;
-    public static double RANGE_2_ANGLE = 0.32;
+    public static double RANGE_2 = 55;
+    public static double RANGE_2_ANGLE = 0.5;
     public static double RANGE_2_VELOCITY = 1150;
     public static double RANGE_2_KS = 0.2;
 
-    public static double RANGE_3 = 90;
-    public static double RANGE_3_ANGLE = 0.64;
+    public static double RANGE_3 = 83;
+    public static double RANGE_3_ANGLE = 0.7;
     public static double RANGE_3_VELOCITY = 1350;
     public static double RANGE_3_KS = 0.3;
 
 
-    public static double RANGE_4 = 140;
-    public static double RANGE_4_ANGLE = 0.70;
-    public static double RANGE_4_VELOCITY = 1650;
-    public static double RANGE_4_KS = 0.5;
+    public static double RANGE_4 = 120;
+    public static double RANGE_4_ANGLE = 0.72;
+    public static double RANGE_4_VELOCITY = 1550;
+    public static double RANGE_4_KS = 0.6;
 
-    public static AutonomousConstants.Coordinates TestPoseStart = new AutonomousConstants.Coordinates(0, 0, 0);
 
     //Tuning Constants
     public static double TEST_LAUNCH_MOTOR_DELTA = 0.1;
