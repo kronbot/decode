@@ -16,6 +16,7 @@ import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.FLAP_CLOSED
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.FLAP_OPEN;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.LIMELIGHT_TURRET_KP;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.LIMELIGHT_TURRET_MAX_CORRECTION;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.LIMELIGHT_TURRET_MIN_CORRECTION;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.LIMELIGHT_TURRET_SETTLE_MS;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.LIMELIGHT_TX_DEADBAND;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KD;
@@ -131,7 +132,7 @@ public class Robot extends KronBot {
         loader.init();
         turret.init();
         flap.init();
-        heading.init();
+        heading.init(follower.getPose().getHeading());
 
         //Add other inits here
 
@@ -162,6 +163,8 @@ public class Robot extends KronBot {
         //Add other updates here
 //        webcam.update();
     }
+
+
 
     public class Limelight {
 
@@ -232,7 +235,7 @@ public class Robot extends KronBot {
                     return;
                 }
 
-                limelight.updateRobotOrientation(heading.get());
+                limelight.updateRobotOrientation(follower.getPose().getHeading());
                 result = limelight.getLatestResult();
                 if (isFreshTarget(result)) {
                     lastFreshTargetTimeMs = System.currentTimeMillis();
@@ -287,7 +290,7 @@ public class Robot extends KronBot {
                 telemetry.addData("Target Area", ta);
 
                 // First, tell Limelight which way your robot is facing
-                double robotYaw = heading.get();
+                double robotYaw = follower.getPose().getHeading();
                 limelight.updateRobotOrientation(robotYaw);
                 if (result != null && result.isValid()) {
                     Pose3D botpose_mt2 = result.getBotpose_MT2();
@@ -683,11 +686,25 @@ public class Robot extends KronBot {
                         limelightControlTimer.reset();
 
                         if (Math.abs(limelightTx) > LIMELIGHT_TX_DEADBAND) {
+                            double maxCorrection;
+
+                            if (Math.abs(limelightTx) > 10) {
+                                maxCorrection = LIMELIGHT_TURRET_MAX_CORRECTION;
+                            } else {
+                                maxCorrection = LIMELIGHT_TURRET_MIN_CORRECTION;
+                            }
+
                             correctionThisUpdate = Math.clamp(
                                     Math.toRadians(limelightTx) * LIMELIGHT_TURRET_KP,
-                                    -LIMELIGHT_TURRET_MAX_CORRECTION,
-                                    LIMELIGHT_TURRET_MAX_CORRECTION
+                                    -maxCorrection,
+                                    maxCorrection
                             );
+
+//                            correctionThisUpdate = Math.clamp(
+//                                    Math.toRadians(limelightTx) * LIMELIGHT_TURRET_KP,
+//                                    -LIMELIGHT_TURRET_MAX_CORRECTION,
+//                                    LIMELIGHT_TURRET_MAX_CORRECTION
+//                            );
                         }
                         limelightTargetActive = true;
                     }
@@ -707,7 +724,7 @@ public class Robot extends KronBot {
                     resetLimelightController();
                     double robot_X = follower.getPose().getX();
                     double robot_Y = follower.getPose().getY();
-                    double robotHeading = heading.get();
+                    double robotHeading = follower.getPose().getHeading();
 
                     double dy = (Blue_Target ? BASKET_BLUE_Y : BASKET_Y) - robot_Y;
                     double dx = BASKET_X - robot_X;
@@ -792,7 +809,13 @@ public class Robot extends KronBot {
          */
 
         public void init(){
-            filteredHeading = 0;
+            init(0);
+        }
+
+        public void init(double initialHeading){
+            lastRawHeading = initialHeading;
+            lastFilteredRate = 0;
+            filteredHeading = initialHeading;
         }
 
         public void update (double rawHeading) {
