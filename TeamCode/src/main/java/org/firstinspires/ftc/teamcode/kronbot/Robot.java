@@ -16,6 +16,11 @@ import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.COMMON_BASK
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.DELTA_THRESHOLD;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.FLAP_CLOSED;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.FLAP_OPEN;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.LIMELIGHT_TURRET_KP;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.LIMELIGHT_TURRET_MAX_CORRECTION;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.LIMELIGHT_TURRET_MIN_CORRECTION;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.LIMELIGHT_TURRET_SETTLE_MS;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.LIMELIGHT_TX_DEADBAND;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KD;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KF;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KI;
@@ -123,7 +128,7 @@ public class Robot extends KronBot {
         loader.init();
         turret.init();
         flap.init();
-        heading.init();
+        heading.init(follower.getPose().getHeading());
 
         //Add other inits here
 
@@ -158,6 +163,8 @@ public class Robot extends KronBot {
         //Add other updates here
 //        webcam.update();
     }
+
+
 
     public class Limelight {
 
@@ -228,7 +235,7 @@ public class Robot extends KronBot {
                     return;
                 }
 
-                limelight.updateRobotOrientation(heading.get());
+                limelight.updateRobotOrientation(follower.getPose().getHeading());
                 result = limelight.getLatestResult();
                 if (isFreshTarget(result)) {
                     lastFreshTargetTimeMs = System.currentTimeMillis();
@@ -283,7 +290,7 @@ public class Robot extends KronBot {
                 telemetry.addData("Target Area", ta);
 
                 // First, tell Limelight which way your robot is facing
-                double robotYaw = heading.get();
+                double robotYaw = follower.getPose().getHeading();
                 limelight.updateRobotOrientation(robotYaw);
                 if (result != null && result.isValid()) {
                     Pose3D botpose_mt2 = result.getBotpose_MT2();
@@ -723,7 +730,13 @@ public class Robot extends KronBot {
          */
 
         public void init(){
-            filteredHeading = 0;
+            init(0);
+        }
+
+        public void init(double initialHeading){
+            lastRawHeading = initialHeading;
+            lastFilteredRate = 0;
+            filteredHeading = initialHeading;
         }
 
         public void update (double rawHeading) {

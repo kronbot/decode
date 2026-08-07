@@ -19,6 +19,7 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.math.Vector;
 
 import org.firstinspires.ftc.teamcode.kronbot.Robot;
+import org.firstinspires.ftc.teamcode.kronbot.utils.PoseStorage;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -375,6 +376,9 @@ public class FinalReplayOp extends LinearOpMode {
         robot.shoot.deactivate();
         robot.updateAllSystems();
         robot.limelight.stop();
+        // Save za position
+        Pose finalPose = robot.follower.getPose();
+        PoseStorage.savePose(finalPose);
     }
 
     // -------------------------------------------------------------------------

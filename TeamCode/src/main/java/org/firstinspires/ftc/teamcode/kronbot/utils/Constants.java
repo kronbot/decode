@@ -111,7 +111,9 @@ public class Constants {
     public static double MAX_ROTATION_POWER = 0.5;
     // Make one position correction, then let the servo and camera settle before measuring again.
     public static double LIMELIGHT_TURRET_KP = 0.65;
-    public static double LIMELIGHT_TURRET_MAX_CORRECTION = 0.06; // radians/correction
+    public static double LIMELIGHT_TURRET_MAX_CORRECTION = 0.12; // radians/correction
+    public static double LIMELIGHT_TURRET_MIN_CORRECTION = 0.05; // radians/correction
+
     public static double LIMELIGHT_TURRET_SETTLE_MS = 180;
     public static double LIMELIGHT_TX_DEADBAND = 0.75;
 

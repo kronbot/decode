@@ -184,9 +184,11 @@ public class FinalRecorderOp extends OpMode {
 
         // ----- Everything below this point is identical to MainDrivingOp -----
 
-        //Intake
         robot.intake.speed = utilityGP.rightStick.y;
         robot.intake.reversed = INTAKE_REVERSE;
+
+//        if (drivingGP.leftStick.button.justPressed())
+//            robot.limelight.togglePipeline();
 
         if(drivingGP.rightStick.button.justPressed()) {
             robot.blueTarget = !robot.blueTarget;
@@ -198,45 +200,66 @@ public class FinalRecorderOp extends OpMode {
             robot.loader.speed = utilityGP.leftStick.y;
             robot.flap.open = false;
         } else {
-            robot.loader.speed = (drivingGP.rightTrigger - drivingGP.leftTrigger) * 0.8;
+            robot.loader.speed = (drivingGP.leftTrigger - drivingGP.rightTrigger) * 0.8;
             robot.flap.open = true;
+
             if (robot.loader.speed > 0.1)
-                robot.intake.speed = INTAKE_DRIVER_REVERSE;
+                robot.intake.speed = INTAKE_DRIVER_REVERSE;   // swapped
             else if (robot.loader.speed < -0.2)
-                robot.intake.speed = INTAKE_DRIVER_POWER;
+                robot.intake.speed = INTAKE_DRIVER_POWER;     // swapped
             else
                 robot.intake.speed = 0;
         }
 
+        //AprilTagDetection tag = robot.webcam.getTowerTags();
+        //autoAim.telemetry(telemetry, tag);
+
+        //Turret/Angle aiming
+
         //Turret aiming
         if (drivingGP.dpadLeft.pressed()) {
+
+            //if button is pressed for longer, increase increment
             if (turretTimer.seconds() == 0) {
                 turretTimer.reset();
             }
             double increment = 0.03;
+
             if (turretTimer.seconds() > 1) {
                 increment = 0.07;
             }
+
             if (turretTimer.seconds() > 1.5) {
                 increment = 0.1;
             }
             robot.turret.driverOffset += increment;
 
         } else if (drivingGP.dpadRight.pressed()) {
+
             double decrement = 0.03;
+
             if (turretTimer.seconds() == 0) {
                 turretTimer.reset();
             }
+
             if (turretTimer.seconds() > 1) {
                 decrement = 0.07;
             }
+
             if (turretTimer.seconds() > 1.5) {
                 decrement = 0.1;
             }
+
             robot.turret.driverOffset -= decrement;
         } else {
             turretTimer.reset();
         }
+
+//            //Angle aiming
+//            if(drivingGP.dpadUp.pressed())
+//                robot.outtake.activeConfig.angle += 0.01;
+//            else if(drivingGP.dpadDown.pressed())
+//                robot.outtake.activeConfig.angle -= 0.01;
 
         if(drivingGP.dpadDown.justPressed())
             robot.turret.autoAimEnabled = !robot.turret.autoAimEnabled;
@@ -244,26 +267,26 @@ public class FinalRecorderOp extends OpMode {
         if(drivingGP.dpadUp.justPressed())
             autoAimEnabled=!autoAimEnabled;
 
-        if(autoAimEnabled) {
+        if (autoAimEnabled) {
             robot.shoot.activateRange(0);
             lastActivateRange = 0;
-        }
-        //Shoot Close/Far
-        if (drivingGP.triangle.justPressed()) {
-            robot.shoot.activateRange(1);
-            lastActivateRange = 1;
-        }
-        if (drivingGP.square.justPressed()) {
-            robot.shoot.activateRange(2);
-            lastActivateRange = 2;
-        }
-        if (drivingGP.cross.justPressed()) {
-            robot.shoot.activateRange(3);
-            lastActivateRange = 3;
-        }
-        if (drivingGP.circle.justPressed()) {
-            robot.shoot.activateRange(4);
-            lastActivateRange = 4;
+        } else {
+            if (drivingGP.triangle.justPressed()) {
+                robot.shoot.activateRange(1);
+                lastActivateRange = 1;
+            }
+            if (drivingGP.square.justPressed()) {
+                robot.shoot.activateRange(2);
+                lastActivateRange = 2;
+            }
+            if (drivingGP.cross.justPressed()) {
+                robot.shoot.activateRange(3);
+                lastActivateRange = 3;
+            }
+            if (drivingGP.circle.justPressed()) {
+                robot.shoot.activateRange(4);
+                lastActivateRange = 4;
+            }
         }
 
         if (robot.outtake.on &&
@@ -277,7 +300,7 @@ public class FinalRecorderOp extends OpMode {
             robot.turret.autoAimEnabled = true;
             if (robot.outtake.on) {
                 robot.shoot.deactivate();
-                lastActivateRange = -1; // explicit: deactivated
+                lastActivateRange = -1;
                 gamepad1.rumble(1, 1, 100);
                 rumbled = false;
             }

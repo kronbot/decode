@@ -22,6 +22,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.kronbot.Robot;
 import org.firstinspires.ftc.teamcode.kronbot.utils.Controls;
+import org.firstinspires.ftc.teamcode.kronbot.utils.PoseStorage;
 import org.firstinspires.ftc.teamcode.kronbot.utils.components.AutoAim;
 import org.firstinspires.ftc.teamcode.kronbot.utils.components.FieldCentricDrive;
 import org.firstinspires.ftc.teamcode.kronbot.utils.components.RobotCentricDrive;
@@ -231,6 +232,8 @@ public class MainDrivingOp extends OpMode {
     public void stop() {
         robot.limelight.stop();
         robot.webcam.stop();
+        Pose finalPose = robot.follower.getPose();
+        PoseStorage.savePose(finalPose);
     }
 
     public void _telemetry() {
