@@ -284,7 +284,7 @@ public class FinalReplayOp extends LinearOpMode {
                     fA.autoAim ? "Y" : "N",
                     fA.flapOpen ? "Y" : "N");
             telemetry.addData("Target", "%s pipeline=%s",
-                    robot.Blue_Target ? "Blue" : "Red",
+                    robot.blueTarget ? "Blue" : "Red",
                     robot.limelight.isUsingBluePipeline() ? "Blue" : "Red");
             telemetry.update();
 
@@ -298,9 +298,9 @@ public class FinalReplayOp extends LinearOpMode {
     private void applyInitialMechanismState(RobotFrame f) {
         robot.intake.reversed    = INTAKE_REVERSE;
         robot.turret.driverOffset = f.turretOffset;
-        robot.Blue_Target         = f.blueTarget;
-        robot.limelight.switchPipeline(robot.Blue_Target);
-        prevBlueTarget            = robot.Blue_Target;
+        robot.blueTarget         = f.blueTarget;
+        robot.limelight.switchPipeline(robot.blueTarget);
+        prevBlueTarget            = robot.blueTarget;
         robot.flap.open           = f.flapOpen;
         robot.intake.speed        = f.intakeCmd;
         robot.loader.speed        = f.loaderCmd;
@@ -336,10 +336,10 @@ public class FinalReplayOp extends LinearOpMode {
         // ShootRange can activate ranges the driver never selected.
         robot.flap.open    = a.flapOpen;
         robot.turret.driverOffset = lerp(a.turretOffset, b.turretOffset, t);
-        robot.Blue_Target  = a.blueTarget;
-        if (robot.Blue_Target != prevBlueTarget) {
-            robot.limelight.switchPipeline(robot.Blue_Target);
-            prevBlueTarget = robot.Blue_Target;
+        robot.blueTarget  = a.blueTarget;
+        if (robot.blueTarget != prevBlueTarget) {
+            robot.limelight.switchPipeline(robot.blueTarget);
+            prevBlueTarget = robot.blueTarget;
         }
 
         // Keep live turret auto-aim enabled. Turret.update() runs after the

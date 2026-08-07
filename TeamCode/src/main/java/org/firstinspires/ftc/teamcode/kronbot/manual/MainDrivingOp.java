@@ -84,12 +84,15 @@ public class MainDrivingOp extends OpMode {
     public void init_loop() {
         lpsCounter.getLoopTime();
 
+
+
         telemetry.addLine("Initialization Ready");
         telemetry.update();
     }
 
     @Override
     public void start() {
+        robot.onStart();
         robot.follower.startTeleopDrive();
     }
 
@@ -112,8 +115,8 @@ public class MainDrivingOp extends OpMode {
 //            robot.limelight.togglePipeline();
 
         if(drivingGP.rightStick.button.justPressed()) {
-            robot.Blue_Target = !robot.Blue_Target;
-            robot.limelight.switchPipeline(robot.Blue_Target);
+            robot.blueTarget = !robot.blueTarget;
+            robot.limelight.switchPipeline(robot.blueTarget);
         }
 
         //Loader

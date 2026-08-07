@@ -414,7 +414,7 @@ public class ReplayOpRob extends LinearOpMode {
         // first updateAllSystems() call applies the correct direction.
         robot.intake.reversed    = INTAKE_REVERSE;
         robot.turret.driverOffset = f.turretOffset;
-        robot.Blue_Target         = f.blueTarget;
+        robot.blueTarget         = f.blueTarget;
         robot.flap.open           = f.flapOpen;
         robot.intake.speed        = f.intakeCmd;
         robot.loader.speed        = f.loaderCmd;
@@ -453,7 +453,7 @@ public class ReplayOpRob extends LinearOpMode {
         robot.loader.speed = lerp(a.loaderCmd, b.loaderCmd, t);
         robot.flap.open    = lerpBool(a.flapOpen, b.flapOpen, t);
         robot.turret.driverOffset = lerp(a.turretOffset, b.turretOffset, t);
-        robot.Blue_Target  = t < 0.5 ? a.blueTarget : b.blueTarget;
+        robot.blueTarget  = t < 0.5 ? a.blueTarget : b.blueTarget;
 
         // autoAimEnabled: in the TeleOp this is toggled by dpadUp.justPressed().
         // The replay treats it as a recorded state and mirrors it (uses the

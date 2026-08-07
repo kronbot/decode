@@ -248,7 +248,7 @@ public class RecorderOpRob extends OpMode {
         }
 
         if(drivingGP.rightStick.button.justPressed())
-            robot.Blue_Target = !robot.Blue_Target;
+            robot.blueTarget = !robot.blueTarget;
 
         //Update robot systems status
         robot.follower.setTeleOpDrive(-drivingGP.leftStick.y, -drivingGP.leftStick.x, -drivingGP.rightStick.x, true);
@@ -327,7 +327,7 @@ public class RecorderOpRob extends OpMode {
         int    flapOpen      = robot.flap.open ? 1 : 0;
         int    shootRange    = lastActivateRange; // -2, -1, 0, 1, 2, 3, 4
         double turretOffset  = robot.turret.driverOffset;
-        int    blueTarget    = robot.Blue_Target ? 1 : 0;
+        int    blueTarget    = robot.blueTarget ? 1 : 0;
         int    autoAim       = autoAimEnabled ? 1 : 0;
 
         dataRecorder.write(String.format(Locale.US,
