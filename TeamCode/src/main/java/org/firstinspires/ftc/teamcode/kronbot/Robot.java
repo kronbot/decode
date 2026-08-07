@@ -722,7 +722,7 @@ public class Robot extends KronBot {
                     resetLimelightController();
                     double robot_X = follower.getPose().getX();
                     double robot_Y = follower.getPose().getY();
-                    double robotHeading = heading.get();
+                    double robotHeading = follower.getPose().getHeading();
 
                     double dy = (Blue_Target ? BASKET_BLUE_Y : BASKET_Y) - robot_Y;
                     double dx = BASKET_X - robot_X;
