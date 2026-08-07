@@ -24,7 +24,7 @@ public class KronBot {
     // Use this instead
     public Follower follower = null;
     public ControlHubGyroscope gyroscope;
-    public DcMotorEx intakeMotor, leftOuttake, rightOuttake, loaderMotor;
+    public DcMotorEx intakeMotor, leftOuttake, rightOuttake, loaderMotor, turretEncoder;
     public Servo loaderServo, turretServo, angleServo, flapsServo;
 
 
@@ -54,6 +54,8 @@ public class KronBot {
         rightOuttake.setDirection(DcMotorSimple.Direction.REVERSE);
         rightOuttake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rightOuttake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        turretEncoder = hardwareMap.get(DcMotorEx.class, "leftRear");
     }
 
 

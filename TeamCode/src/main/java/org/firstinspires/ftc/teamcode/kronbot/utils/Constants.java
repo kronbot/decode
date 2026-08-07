@@ -47,6 +47,7 @@ public class Constants {
     public static double TURRET_SERVO_MAX = 0.76;
     public static double TURRET_SERVO_MIN = 0.215;
     public static double TURRET_SERVO_UNITS_PER_RAD = 0.160746493;
+    public static double TURRET_RADS_PER_TICK = -1.535480280347E-4;
     public static double ANGLE_SERVO_MAX = 0.72;
     public static double ANGLE_SERVO_CLOSE = 0.7;
 

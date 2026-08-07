@@ -7,6 +7,8 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.teamcode.kronbot.utils.detection.AprilTagWebcam;
+import org.firstinspires.ftc.teamcode.kronbot.utils.misc.EMA;
+
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_MAX;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_MIN;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.BLUE_BASKET_X;
@@ -35,6 +37,7 @@ import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_4_ANG
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_4_KS;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_4_VELOCITY;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RED_BASKET_X;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.TURRET_RADS_PER_TICK;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.TURRET_SERVO_MAX;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.TURRET_SERVO_MIN;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.TURRET_SERVO_UNITS_PER_RAD;
@@ -124,6 +127,10 @@ public class Robot extends KronBot {
 
         //Add other inits here
 
+    }
+
+    public void onStart() {
+        turret.zeroPositionTicks = turretEncoder.getCurrentPosition();
     }
 
     // Updates all systems
@@ -583,6 +590,12 @@ public class Robot extends KronBot {
         private double limelightCorrection = 0;
         private boolean limelightTargetActive = false;
         private final ElapsedTime limelightControlTimer = new ElapsedTime();
+        public int zeroPositionTicks;
+
+        private EMA headingDriftEMA = EMA.ofPeriod(20);
+        private double pinpointTurretAngle = 0;
+        private double limelightTurretAngle = 0;
+        private double targetBearing = 0;
 
 
         public boolean autoAimEnabled = true;
@@ -591,17 +604,11 @@ public class Robot extends KronBot {
             angle = 0;
             servoPosition = 0.5;
             resetLimelightController();
+            headingDriftEMA.add(0);
         }
 
-        private double getTargetBearing(double targetX, double targetY) {
-            /// Bearing from robot to target
-
-            Pose robotPose = follower.getPose().setHeading(heading.get());
-
-            double dx = targetX - robotPose.getX();
-            double dy = targetY - robotPose.getY();
-
-            return Math.atan2(dy, dx);
+        private double getAngle() {
+            return (turretEncoder.getCurrentPosition() - zeroPositionTicks) * TURRET_RADS_PER_TICK;
         }
 
 
@@ -609,23 +616,28 @@ public class Robot extends KronBot {
             //angle to the basket
             if (turretServo == null || follower == null) return;
 
+
+
             if(autoAimEnabled) {
                 LLResult limelightResult = limelight.getFreshResult();
                 Pose robotPose = follower.getPose().setHeading(heading.get());
                 double dx = (blueTarget ? BLUE_BASKET_X : RED_BASKET_X) - robotPose.getX();
                 double dy = COMMON_BASKET_Y - robotPose.getY();
-                double targetBearing = Math.atan2(dy, dx);
+                targetBearing = Math.atan2(dy, dx);
+
+                double turretAngle = getAngle();
+
+                pinpointTurretAngle = targetBearing - robotPose.getHeading();
 
 
                 if (limelightResult != null) {
                     aimSource = "Limelight & Pinpoint";
                     limelightTx = limelightResult.getTx();
 
-                    double predictedTurretAngle = targetBearing - robotPose.getHeading() + limelightTx;
+                    limelightTurretAngle = turretAngle + Math.toRadians(limelightTx);
 
-
-
-
+                    limelightCorrection = limelightTurretAngle;
+                    angle = limelightTurretAngle;
 
                 } else if (limelight.hasRecentTarget()) {
                     aimSource = "Limelight old & Pinpoint";
@@ -634,7 +646,7 @@ public class Robot extends KronBot {
                     limelightTx = 0;
                     limelightCorrection = 0;
 
-                    angle = targetBearing - robotPose.getHeading();
+                    angle = pinpointTurretAngle;
                 }
 
             } else {
@@ -661,7 +673,9 @@ public class Robot extends KronBot {
 
         public void telemetry(Telemetry telemetry) {
             telemetry.addLine("=== TURRET STATUS ===");
-            telemetry.addData("Target Angle", "%.3f", angle);
+            telemetry.addData("Command Angle", "%.3f", angle);
+            telemetry.addData("Target Bearing", "%.3f", targetBearing);
+            telemetry.addData("Turret Angle", "%.3f", getAngle());
             telemetry.addData("Aim Source", aimSource);
             telemetry.addData("Limelight Target", limelight.hasFreshTarget());
             telemetry.addData("Limelight Tx", "%.2f", limelightTx);
@@ -670,6 +684,10 @@ public class Robot extends KronBot {
             telemetry.addData("Robot Heading", "%.4f", follower.getHeading());
             telemetry.addData("Servo Position", "%.3f", turretServo.getPosition());
             telemetry.addData("Servo Range", "%.3f - %.3f", TURRET_SERVO_MIN, TURRET_SERVO_MAX);
+            telemetry.addData("Target Coordinates", "%.3f, %.3f", (blueTarget ? BLUE_BASKET_X : RED_BASKET_X), COMMON_BASKET_Y);
+            telemetry.addData("PinPoint Angle", "%.3f", pinpointTurretAngle);
+            telemetry.addData("LimeLight Angle", "%.3f", limelightTurretAngle);
+            telemetry.addData("Angle Error", "%.3f", pinpointTurretAngle - limelightTurretAngle);
         }
     }
 
