@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.kronbot;
 
+import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
@@ -8,16 +9,11 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.teamcode.kronbot.utils.detection.AprilTagWebcam;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_MAX;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.ANGLE_SERVO_MIN;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.BASKET_BLUE_Y;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.BASKET_X;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.BASKET_Y;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.BLUE_BASKET_X;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.COMMON_BASKET_Y;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.DELTA_THRESHOLD;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.FLAP_CLOSED;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.FLAP_OPEN;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.LIMELIGHT_TURRET_KP;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.LIMELIGHT_TURRET_MAX_CORRECTION;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.LIMELIGHT_TURRET_SETTLE_MS;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.LIMELIGHT_TX_DEADBAND;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KD;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KF;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.OUT_MOTOR_KI;
@@ -38,24 +34,17 @@ import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_4;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_4_ANGLE;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_4_KS;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RANGE_4_VELOCITY;
+import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.RED_BASKET_X;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.TURRET_SERVO_MAX;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.TURRET_SERVO_MIN;
 import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.TURRET_SERVO_UNITS_PER_RAD;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.maxVelocity;
-import static org.firstinspires.ftc.teamcode.kronbot.utils.Constants.minVelocity;
 
-import android.util.Pair;
-
-import java.util.ArrayList;
-import java.util.Dictionary;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
-import com.qualcomm.hardware.limelightvision.LLStatus;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -77,7 +66,7 @@ public class Robot extends KronBot {
     public final Heading heading;
     public final Limelight limelight;
 
-    public boolean Blue_Target = false;
+    public boolean blueTarget = false;
 
     public static class RangeConfig {
         public double angle;
@@ -521,62 +510,6 @@ public class Robot extends KronBot {
 
 
 
-        public RangeConfig interpolateRange() {
-            double robot_X = follower.getPose().getX();
-            double robot_Y = follower.getPose().getY();
-
-            double dy = (Blue_Target ? BASKET_BLUE_Y : BASKET_Y) - robot_Y;
-            double dx = BASKET_X - robot_X;
-
-            distance = Math.sqrt(dx*dx + dy*dy);
-
-            if(distance <= ranges.firstKey())
-                return new RangeConfig(ranges.get(ranges.firstKey()).angle, ranges.get(ranges.firstKey()).velocity, ranges.get(ranges.firstKey()).kS);
-
-            if(distance >= ranges.lastKey())
-                return new RangeConfig(ranges.get(ranges.lastKey()).angle, ranges.get(ranges.lastKey()).velocity, ranges.get(ranges.lastKey()).kS);
-
-            //I used TreeMaps as its ordered and offers floorEntry (the biggest entry smaller than the value searched) and ceilingEntry (the opposite)
-            Map.Entry<Double, RangeConfig> lower = ranges.floorEntry(distance);
-            Map.Entry<Double, RangeConfig> upper = ranges.ceilingEntry(distance);
-
-            // Null checks moved before d1/d2 are accessed
-            if (lower == null && upper != null) return upper.getValue();
-            if (upper == null && lower != null) return lower.getValue();
-            if (lower == null) return new RangeConfig(0, 0, 0);
-
-            //Linear interpolation between the two ranges
-            double d1 = lower.getKey();
-            double d2 = upper.getKey();
-            selectedRange1=d1; selectedRange2=d2;
-
-
-            if (lower.getKey().equals(upper.getKey()))
-                return lower.getValue();
-
-
-            double angle1 = lower.getValue().angle;
-            double vel1   = lower.getValue().velocity;
-            double kS1 = lower.getValue().kS;
-
-            double angle2 = upper.getValue().angle;
-            double vel2   = upper.getValue().velocity;
-            double kS2 = upper.getValue().kS;
-
-            double t = (distance - d1) / (d2 - d1);
-
-            double interpAngle = angle1 + (angle2 - angle1) * t;
-            double interpVel = vel1 + (vel2   - vel1) * t;
-            double interpKs = kS1 + (kS2 - kS1) * t;
-
-            //Clamp manual ca Math.Clamp nu merge cu double
-            interpAngle = Math.max(ANGLE_SERVO_MIN, interpAngle);
-            interpAngle = Math.min(ANGLE_SERVO_MAX, interpAngle);
-
-            return new RangeConfig(interpAngle, interpVel, interpKs);
-        }
-
-
         public void telemetry(Telemetry telemetry) {
             telemetry.addLine("=== OUTTAKE STATUS ===");
             telemetry.addData("d1", selectedRange1);
@@ -660,6 +593,17 @@ public class Robot extends KronBot {
             resetLimelightController();
         }
 
+        private double getTargetBearing(double targetX, double targetY) {
+            /// Bearing from robot to target
+
+            Pose robotPose = follower.getPose().setHeading(heading.get());
+
+            double dx = targetX - robotPose.getX();
+            double dy = targetY - robotPose.getY();
+
+            return Math.atan2(dy, dx);
+        }
+
 
         public void update() {
             //angle to the basket
@@ -667,63 +611,31 @@ public class Robot extends KronBot {
 
             if(autoAimEnabled) {
                 LLResult limelightResult = limelight.getFreshResult();
-                double robotRelativeAngle;
+                Pose robotPose = follower.getPose().setHeading(heading.get());
+                double dx = (blueTarget ? BLUE_BASKET_X : RED_BASKET_X) - robotPose.getX();
+                double dy = COMMON_BASKET_Y - robotPose.getY();
+                double targetBearing = Math.atan2(dy, dx);
+
 
                 if (limelightResult != null) {
-                    aimSource = "Limelight";
+                    aimSource = "Limelight & Pinpoint";
                     limelightTx = limelightResult.getTx();
-                    double correctionThisUpdate = 0;
 
-                    // A positional servo needs time to reach the previous command. Correct once,
-                    // wait for it (and the camera image) to settle, then measure again. Without
-                    // this delay, camera latency makes us add several corrections for motion that
-                    // the servo has already been commanded to perform.
-                    if (!limelightTargetActive
-                            || limelightControlTimer.milliseconds() >= LIMELIGHT_TURRET_SETTLE_MS) {
-                        limelightControlTimer.reset();
+                    double predictedTurretAngle = targetBearing - robotPose.getHeading() + limelightTx;
 
-                        if (Math.abs(limelightTx) > LIMELIGHT_TX_DEADBAND) {
-                            correctionThisUpdate = Math.clamp(
-                                    Math.toRadians(limelightTx) * LIMELIGHT_TURRET_KP,
-                                    -LIMELIGHT_TURRET_MAX_CORRECTION,
-                                    LIMELIGHT_TURRET_MAX_CORRECTION
-                            );
-                        }
-                        limelightTargetActive = true;
-                    }
-                    limelightCorrection = correctionThisUpdate;
-                    // This is a one-shot position increment; it is not repeated during settling.
-                    robotRelativeAngle = angle + correctionThisUpdate;
-//                    robotRelativeAngle = angle - correctionThisUpdate;
+
+
+
+
                 } else if (limelight.hasRecentTarget()) {
-                    aimSource = "Limelight Hold";
-                    limelightCorrection = 0;
-                    resetLimelightController();
-                    robotRelativeAngle = angle;
+                    aimSource = "Limelight old & Pinpoint";
                 } else {
-                    aimSource = "Odometry";
+                    aimSource = "Pinpoint";
                     limelightTx = 0;
                     limelightCorrection = 0;
-                    resetLimelightController();
-                    double robot_X = follower.getPose().getX();
-                    double robot_Y = follower.getPose().getY();
-                    double robotHeading = heading.get();
 
-                    double dy = (Blue_Target ? BASKET_BLUE_Y : BASKET_Y) - robot_Y;
-                    double dx = BASKET_X - robot_X;
-                    double targetFieldAngle = Math.atan2(dy, dx);
-                    robotRelativeAngle = targetFieldAngle - robotHeading + driverOffset;
+                    angle = targetBearing - robotPose.getHeading();
                 }
-
-                //normalize
-                robotRelativeAngle = Math.atan2(
-                        Math.sin(robotRelativeAngle),
-                        Math.cos(robotRelativeAngle)
-                );
-
-                angle = robotRelativeAngle;
-                servoPosition = angle * TURRET_SERVO_UNITS_PER_RAD + 0.5;
-
 
             } else {
                 aimSource = "Driver Offset";
@@ -731,12 +643,13 @@ public class Robot extends KronBot {
                 limelightCorrection = 0;
                 resetLimelightController();
                 angle = driverOffset;
-                servoPosition =
-                        driverOffset * TURRET_SERVO_UNITS_PER_RAD + 0.5;
             }
 
-            servoPosition = Math.clamp(servoPosition, TURRET_SERVO_MIN, TURRET_SERVO_MAX);
-            angle = (servoPosition - 0.5) / TURRET_SERVO_UNITS_PER_RAD;
+            angle = Math.atan2(
+                    Math.sin(angle),
+                    Math.cos(angle)
+            );
+            servoPosition = Math.min(Math.max(TURRET_SERVO_MIN, angle * TURRET_SERVO_UNITS_PER_RAD + 0.5), TURRET_SERVO_MAX);
             turretServo.setPosition(servoPosition);
 
         }
@@ -853,7 +766,7 @@ public class Robot extends KronBot {
                     break;
                 case 0:
                     outtake.on = true;
-                    config = outtake.interpolateRange();
+                    config = new RangeConfig(0, 0, 0);
                     break;
             }
             outtake.activeConfig=config;
