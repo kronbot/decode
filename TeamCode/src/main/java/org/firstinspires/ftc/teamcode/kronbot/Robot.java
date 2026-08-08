@@ -599,8 +599,7 @@ public class Robot extends KronBot {
 
                     limelightTurretAngle = turretAngle + Math.toRadians(limelightTx);
 
-                    limelightCorrection = limelightTurretAngle + driverOffset;
-                    angle = limelightTurretAngle;
+                    angle = limelightTurretAngle + driverOffset;
 
                 } else if (limelight.hasRecentTarget()) {
                     aimSource = "Limelight old & Pinpoint";
