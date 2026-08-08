@@ -77,13 +77,13 @@ public class Constants {
     public static double RANGE_3 = 83;
     public static double RANGE_3_ANGLE = 0.7;
     public static double RANGE_3_VELOCITY = 1350;
-    public static double RANGE_3_KS = 0.3;
+    public static double RANGE_3_KS = 0.29;
 
 
-    public static double RANGE_4 = 120;
+    public static double RANGE_4 = 140;
     public static double RANGE_4_ANGLE = 0.72;
     public static double RANGE_4_VELOCITY = 1550;
-    public static double RANGE_4_KS = 0.6;
+    public static double RANGE_4_KS = 0.5;
 
 
     //Tuning Constants

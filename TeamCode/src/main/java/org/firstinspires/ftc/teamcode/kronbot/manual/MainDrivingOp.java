@@ -195,31 +195,46 @@ public class MainDrivingOp extends OpMode {
         } else {
             turretTimer.reset();
         }
+//
+//        if(drivingGP.dpadDown.justPressed())
+//            robot.turret.autoAimEnabled = !robot.turret.autoAimEnabled;
+//
+//        if(drivingGP.dpadUp.justPressed()) {
+//            autoOuttake = !autoOuttake;
+//            robot.outtake.on = autoOuttake;
+//        }
 
-        if(drivingGP.dpadDown.justPressed())
-            robot.turret.autoAimEnabled = !robot.turret.autoAimEnabled;
+        if(drivingGP.dpadUp.justPressed()){
+            autoOuttake=!autoOuttake;
+            robot.outtake.on=true;
 
-        if(drivingGP.dpadUp.justPressed()) {
-            autoOuttake = !autoOuttake;
-            robot.outtake.on = autoOuttake;
         }
 
-        if(robot.turret.autoAimEnabled) {
+        if(autoOuttake) {
             if(robot.blueTarget) {
                 robot.outtake.setRangeOfDistance(robot.follower.getPose().distanceFrom(new Pose(BlueTowerCoords.x, BlueTowerCoords.y)));
             } else {
                 robot.outtake.setRangeOfDistance(robot.follower.getPose().distanceFrom(new Pose(RedTowerCoords.x, RedTowerCoords.y)));
             }
-        } else {
-            if (drivingGP.triangle.justPressed())
-                robot.shoot.activateRange(1);
-            if (drivingGP.square.justPressed())
-                robot.shoot.activateRange(2);
-            if (drivingGP.cross.justPressed())
-                robot.shoot.activateRange(3);
-            if (drivingGP.circle.justPressed())
-                robot.shoot.activateRange(4);
         }
+            if (drivingGP.triangle.justPressed()) {
+                robot.shoot.activateRange(1);
+                autoOuttake=false;
+            }
+            else if (drivingGP.square.justPressed()){
+                robot.shoot.activateRange(2);
+                autoOuttake=false;
+            }
+            else if (drivingGP.cross.justPressed()){
+                robot.shoot.activateRange(3);
+                autoOuttake=false;
+            }
+            else if (drivingGP.circle.justPressed())
+            {
+                robot.shoot.activateRange(4);
+                autoOuttake=false;
+            }
+
 
         if (robot.outtake.on &&
                 robot.leftOuttake.getVelocity() >= robot.outtake.activeConfig.velocity - 30 &&
@@ -228,11 +243,12 @@ public class MainDrivingOp extends OpMode {
             rumbled = true;
         }
 
-        if (!robot.turret.autoAimEnabled && drivingGP.leftBumper.justPressed()) {
+        if ( drivingGP.leftBumper.justPressed()) {
             if (robot.outtake.on) {
                 robot.shoot.deactivate();
                 gamepad1.rumble(1, 1, 100);
                 rumbled = false;
+                autoOuttake = false;
             }
         }
 
