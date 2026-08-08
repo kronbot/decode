@@ -64,7 +64,6 @@ public class Robot extends KronBot {
     private static Robot instance = null;
 
     // Systems used in all opModes
-    public AprilTagWebcam webcam = new AprilTagWebcam();
 
     public final Outtake outtake;
     public final Intake intake;
@@ -410,17 +409,14 @@ public class Robot extends KronBot {
             if(on){
                 leftOuttake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                 rightOuttake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-                if(velocity < activeConfig.velocity) {
+                if(leftOuttake.getVelocity() < activeConfig.velocity * 1) {
                     leftOuttake.setPower(1);
                     rightOuttake.setPower(1);
                 }
-                else if(velocity > activeConfig.velocity + RANGE_TPS_MARGIN + 200) {
-                    leftOuttake.setPower(0);
-                    rightOuttake.setPower(0);
-                }
-                else if(velocity > activeConfig.velocity + RANGE_TPS_MARGIN) {
-                    leftOuttake.setPower(activeConfig.kS);
-                    rightOuttake.setPower(activeConfig.kS);
+                else if(leftOuttake.getVelocity() > activeConfig.velocity * 1.1) {
+
+                    leftOuttake.setPower(activeConfig.kS * 0.8);
+                    rightOuttake.setPower(activeConfig.kS * 0.8);
                 }
                 else {
                     double power = Math.cos(Math.PI * (velocity - activeConfig.velocity) / RANGE_TPS_MARGIN) * (1 - RANGE_TPS_MARGIN) / 2 + RANGE_TPS_MARGIN / 2 + 0.5;
@@ -601,8 +597,6 @@ public class Robot extends KronBot {
 
                     angle = limelightTurretAngle + driverOffset;
 
-                } else if (limelight.hasRecentTarget()) {
-                    aimSource = "Limelight old & Pinpoint";
                 } else {
                     aimSource = "Pinpoint";
                     limelightTx = 0;
